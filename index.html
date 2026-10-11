@@ -422,6 +422,134 @@ button { cursor: pointer; }
 .flist .it.g { border-color: var(--uber); }
 .flist .it.g em { font-style: normal; font-size: 11px; font-weight: 700; color: var(--uber); }
 .flist .it em.bn { font-style: normal; font-size: 11px; font-weight: 600; color: var(--muted); }
+/* ---------- 요약 4칸 · 다음 11연 · 목표까지 경로 · 나란히 비교 · 저장한 시드 ---------- */
+.summary.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 760px) { .summary.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .summary.four { grid-template-columns: 1fr; } }
+button.tile { font: inherit; color: inherit; text-align: left; cursor: pointer; }
+button.tile:hover { border-color: var(--muted); }
+button.tile .eyebrow::after { content: ' ›'; }
+.tile.blue .v { color: var(--blue); }
+.tile.buster .v { color: var(--yel); }
+
+.eleven { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 12px 14px; display: grid; gap: 10px; }
+.ehead { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; }
+.ehead h3 { margin: 0; font-size: 15px; }
+.ehead span { font-size: 12px; color: var(--muted); }
+.ehead b { color: var(--ink); }
+.elist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.ec { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: var(--r-sm); background: var(--rare-bg); color: var(--ink); font-size: 13px; font-weight: 600; min-width: 0; }
+.ec i { font-style: normal; font-family: var(--font-mono); font-size: 11px; color: var(--muted); min-width: 1.4em; flex: none; }
+.ec span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ec.r-common { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-weight: 500; }
+.ec.r-supa { background: var(--supa-bg); color: var(--supa); }
+.ec.r-uber { background: var(--uber-bg); color: var(--uber); font-weight: 700; }
+.ec.r-legend { background: var(--legend-bg); color: var(--legend); font-weight: 700; }
+.ec.c-blue { background: var(--blue-bg); color: var(--blue); font-weight: 700; }
+.ec.c-buster { background: var(--yel-bg); color: var(--yel); font-weight: 700; }
+.eacts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 560px) {
+  .elist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eacts .btn { flex: 1 1 0; justify-content: center; }
+}
+
+.tbtns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-left: auto; }
+.tbtns .btn { min-height: 42px; }
+.seg { display: inline-flex; padding: 3px; gap: 3px; background: var(--sunk); border: 1px solid var(--line); border-radius: 999px; }
+.seg button { border: 0; background: transparent; border-radius: 999px; padding: 0 12px; min-height: 36px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px color-mix(in srgb, #000 12%, transparent); }
+
+.fchip[aria-pressed="true"] { box-shadow: inset 0 0 0 2px currentColor; }
+.ftoggle[data-grp="blue"] { color: var(--blue); }
+.ftoggle[data-grp="blue"][aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: var(--on-ink); }
+.ftoggle[data-grp="buster"] { color: var(--yel); }
+.ftoggle[data-grp="buster"][aria-pressed="true"] { background: var(--yel-bg); border-color: var(--yel); color: var(--yel); box-shadow: inset 0 0 0 1px var(--yel); }
+.ftoggle[data-grp="legend"] { color: var(--legend); }
+.ftoggle[data-grp="legend"][aria-pressed="true"] { background: var(--legend); border-color: var(--legend); color: var(--on-ink); }
+.flist .it em { font-style: normal; font-weight: 600; }
+.chk { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); font-weight: 500; min-height: 40px; }
+.chk input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }
+.route { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: rt; }
+.route li { position: relative; padding: 10px 12px 10px 42px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); display: grid; gap: 4px; counter-increment: rt; min-width: 0; }
+.route li::before {
+  content: counter(rt); position: absolute; left: 11px; top: 10px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--ink); color: var(--on-ink); font-family: var(--font-mono); font-size: 12px; font-weight: 600; display: grid; place-items: center;
+}
+.route .rh { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; font-size: 14px; }
+.route .rh em { font-style: normal; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
+.route .rd { font-size: 14px; font-weight: 600; }
+.route .rd .mono { color: var(--muted); font-weight: 500; font-size: 12px; margin-left: 4px; }
+.route .rc { display: flex; flex-wrap: wrap; gap: 4px; }
+.route .rc span { font-size: 12px; padding: 1px 6px; border-radius: 6px; background: var(--rare-bg); color: var(--ink); }
+.route .rc .r-supa { background: var(--supa-bg); color: var(--supa); }
+.route .rc .r-uber { background: var(--uber-bg); color: var(--uber); font-weight: 600; }
+.route .rc .r-legend { background: var(--legend-bg); color: var(--legend); font-weight: 600; }
+.route .rc .c-blue { background: var(--blue-bg); color: var(--blue); font-weight: 600; }
+.route .rc .c-buster { background: var(--yel-bg); color: var(--yel); font-weight: 600; }
+.route .rc .goal { box-shadow: inset 0 0 0 2px currentColor; font-weight: 700; }
+.route .rc .more { background: transparent; color: var(--muted); }
+.fresult .alone { font-size: 13px; color: var(--muted); }
+
+.cmpwrap { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: clip; }
+.cmpbar { display: flex; gap: 6px; padding: 10px; overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.cchip {
+  flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; min-height: 36px;
+  font-size: 13px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; color: var(--muted);
+}
+.cchip small { font-size: 11px; font-weight: 500; font-family: var(--font-mono); }
+.cchip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.cmpscroll { overflow: auto; max-height: min(78vh, 980px); overscroll-behavior: contain; }
+.cmp { border-collapse: separate; border-spacing: 0; min-width: 100%; }
+.cmp th, .cmp td { padding: 3px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cmp tr.tb > * { border-bottom-color: color-mix(in srgb, var(--line) 50%, transparent); }
+.cmp thead th {
+  position: sticky; top: 0; z-index: 2; background: var(--surface); font-size: 12px; font-weight: 700; color: var(--muted);
+  text-align: left; padding: 8px 6px; min-width: 128px; max-width: 170px; line-height: 1.3;
+}
+.cmp thead th.sel { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+.cmp thead th:first-child { left: 0; z-index: 3; min-width: 44px; }
+.cmp tbody th { position: sticky; left: 0; z-index: 1; background: var(--surface); font-size: 11px; color: var(--muted); font-weight: 500; padding: 9px 6px; text-align: left; }
+.cc {
+  width: 100%; border: 0; border-radius: 6px; padding: 5px 7px; min-height: 34px; display: flex; align-items: center; justify-content: space-between;
+  gap: 6px; text-align: left; font-size: 13px; font-weight: 600; background: var(--rare-bg); color: var(--ink);
+}
+.cc .nm { overflow-wrap: anywhere; line-height: 1.25; }
+.cc .step {
+  flex: none; font-family: var(--font-mono); font-size: 10px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px;
+  background: var(--path); color: var(--on-ink); display: inline-grid; place-items: center;
+}
+.cc.r-supa { background: var(--supa-bg); color: var(--supa); }
+.cc.r-uber { background: var(--uber-bg); color: var(--uber); font-weight: 700; }
+.cc.r-legend { background: var(--legend-bg); color: var(--legend); font-weight: 700; }
+.cc.c-blue { background: var(--blue-bg); color: var(--blue); font-weight: 700; }
+.cc.c-buster { background: var(--yel-bg); color: var(--yel); font-weight: 700; }
+.cc.on-path { box-shadow: inset 0 0 0 2px var(--path); }
+.cc.hit { box-shadow: inset 0 0 0 3px var(--hit); }
+.cc.on-path.hit { box-shadow: inset 0 0 0 2px var(--path), inset 0 0 0 5px var(--hit); }
+.cc.rr { background: transparent; min-height: 0; padding: 3px 7px; margin-top: 2px; font-size: 11px; color: var(--warn); font-weight: 600; justify-content: flex-start; }
+.cc:hover { filter: brightness(0.97); }
+
+.slots { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.slots .lbl { font-size: 12px; color: var(--muted); font-weight: 500; margin-right: 2px; }
+.slot { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); max-width: 100%; }
+.slot[aria-current="true"] { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+.slot .sw { border: 0; background: transparent; color: inherit; padding: 4px 2px 4px 12px; min-height: 36px; font-size: 13px; font-weight: 700; display: inline-flex; gap: 6px; align-items: baseline; min-width: 0; }
+.slot .sw small { font-size: 11px; font-weight: 500; opacity: 0.7; }
+.slot .x { border: 0; background: transparent; color: inherit; opacity: 0.6; width: 30px; height: 30px; border-radius: 50%; margin-right: 3px; flex: none; }
+.slot .x:hover { opacity: 1; background: color-mix(in srgb, currentColor 14%, transparent); }
+.slotplus { border: 1px dashed var(--line); background: transparent; border-radius: 999px; padding: 4px 12px; min-height: 36px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.slotform { display: flex; gap: 8px; flex-wrap: wrap; }
+.slotform input { flex: 1 1 140px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: var(--r-md); padding: 9px 12px; font-size: 15px; min-height: 44px; }
+.slotform input[aria-invalid="true"] { border-color: var(--warn); }
+.ftools .chk { flex: none; }
+.ftools .chk input { flex: none; width: 18px; height: 18px; min-height: 0; padding: 0; border-radius: 4px; }
+.fchip.c-blue { background: var(--blue-bg); color: var(--blue); }
+.fchip.c-buster { background: var(--yel-bg); color: var(--yel); }
+@media (max-width: 560px) {
+  .summary.four .tile { grid-template-columns: 116px minmax(0, 1fr); }
+  .tbtns { width: 100%; margin-left: 0; }
+  .tbtns .btn { flex: 1 1 auto; justify-content: center; }
+}
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: up 180ms ease-out; }
   @keyframes up { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
@@ -448,6 +576,7 @@ button { cursor: pointer; }
 
   <div id="rareMode" class="mode">
   <section class="seedbar" aria-label="시드">
+    <div class="slots" id="slots" hidden></div>
     <div class="seedrow">
       <div class="field">
         <label for="seed">내 시드</label>
@@ -462,6 +591,13 @@ button { cursor: pointer; }
       <span id="lastWrap" hidden class="chip">직전: <b id="lastName"></b><button type="button" id="clearLast" aria-label="직전 캐릭 지우기">×</button></span>
       <span id="seedNote"></span>
       <button type="button" class="linkbtn" id="rfind">내 시드 찾기</button>
+      <button type="button" class="linkbtn" id="slotAdd">시드 저장</button>
+    </div>
+    <div class="slotform" id="slotForm" hidden>
+      <input id="slotName" type="text" maxlength="12" placeholder="이름 (예: 본계정)" aria-label="저장할 이름" autocomplete="off">
+      <input id="slotSeed" class="mono" inputmode="numeric" placeholder="시드" aria-label="저장할 시드" autocomplete="off">
+      <button type="button" class="btn primary" id="slotSave">저장</button>
+      <button type="button" class="btn" id="slotCancel">취소</button>
     </div>
   </section>
 
@@ -494,10 +630,30 @@ button { cursor: pointer; }
     </div>
   </section>
 
-  <section class="summary" id="summary" aria-label="요약">
+  <section class="summary four" id="summary" aria-label="요약">
     <div class="tile uber"><span class="eyebrow">다음 울트라</span><span class="v">—</span><span class="m">가챠를 고르면 계산돼요</span></div>
     <div class="tile legend"><span class="eyebrow">다음 레전드</span><span class="v">—</span><span class="m">&nbsp;</span></div>
-    <div class="tile"><span class="eyebrow">11연차</span><span class="v">—</span><span class="m">&nbsp;</span></div>
+    <div class="tile blue"><span class="eyebrow">다음 블루 아이즈</span><span class="v">—</span><span class="m">&nbsp;</span></div>
+    <div class="tile buster"><span class="eyebrow">다음 버스터즈 대장</span><span class="v">—</span><span class="m">&nbsp;</span></div>
+  </section>
+
+  <section class="eleven" id="eleven" aria-label="다음 11연" hidden></section>
+
+  <section class="finder" id="planner" hidden aria-labelledby="plTitle">
+    <div class="sec-head" style="margin:0"><h2 id="plTitle">목표 캐릭까지 경로</h2><button type="button" class="btn" id="plClose">닫기</button></div>
+    <p>받고 싶은 캐릭을 고르면 지금 위치에서 <b>제일 적게 쓰고</b> 받는 순서를 찾아줘. 단챠, 확정 11연, 다른 가챠로 트랙 갈아타기까지 다 따져봐. 단챠 1번은 통조림 150개(레어 티켓 1장), 확정 11연은 1500개로 치고, 플래티넘·레전드 티켓은 아껴 쓰도록 1장을 3000개로 쳐.</p>
+    <div class="ftools" id="plGrp">
+      <button type="button" class="ftoggle" data-grp="blue" aria-pressed="false">블루 아이즈 아무나</button>
+      <button type="button" class="ftoggle" data-grp="buster" aria-pressed="false">버스터즈 대장 아무나</button>
+      <button type="button" class="ftoggle" data-grp="legend" aria-pressed="false">레전드 아무나</button>
+    </div>
+    <div class="ftools">
+      <input id="plQ" type="search" placeholder="캐릭 이름으로 찾기" aria-label="목표 캐릭 이름으로 찾기" autocomplete="off">
+      <label class="chk"><input type="checkbox" id="plAll" checked>진행 중인 다른 가챠도 쓰기</label>
+    </div>
+    <div class="fpalbox"><div class="fpal" id="plPal"></div></div>
+    <div class="flist" id="plList" aria-live="polite"></div>
+    <div id="plOut" aria-live="polite"></div>
   </section>
 
   <section aria-label="배열">
@@ -507,6 +663,10 @@ button { cursor: pointer; }
         <input id="q" type="search" placeholder="캐릭 이름으로 찾기" aria-label="캐릭 이름으로 찾기" autocomplete="off">
       </div>
       <span class="hitinfo" id="hitinfo"></span>
+      <div class="tbtns">
+        <button type="button" class="btn" id="plOpen">목표까지 경로</button>
+        <div class="seg" id="viewSeg" role="group" aria-label="보기"><button type="button" data-view="one" aria-pressed="true">한 가챠</button><button type="button" data-view="cmp" aria-pressed="false">나란히 비교</button></div>
+      </div>
     </div>
     <div class="legendkey" style="margin-bottom:10px">
       <span><i style="background:var(--rare-bg);box-shadow:inset 0 0 0 1px var(--rare)"></i>레어</span>
@@ -524,6 +684,11 @@ button { cursor: pointer; }
       </div>
       <div class="more" id="moreWrap" hidden><button class="btn" id="more" type="button">100줄 더 보기</button></div>
     </div>
+    <div class="cmpwrap" id="cmpwrap" hidden>
+      <div class="cmpbar" id="cmpBar" role="group" aria-label="비교할 가챠"></div>
+      <div class="cmpscroll" id="cmpBox"></div>
+      <div class="more" id="cmoreWrap" hidden><button class="btn" id="cmore" type="button">100줄 더 보기</button></div>
+    </div>
   </section>
 
   <section class="help">
@@ -533,6 +698,11 @@ button { cursor: pointer; }
       <li>검은 테두리와 숫자는 지금부터 <b>단챠만 돌렸을 때</b> 실제로 나오는 순서예요.</li>
       <li><b>중복</b> 줄은 직전 레어와 같은 레어가 나올 때 다시 뽑히는 캐릭이에요. 시드를 하나 더 써서 반대 트랙으로 넘어가요.</li>
       <li><b>확정</b> 줄은 그 칸에서 확정 11연을 돌렸을 때 11번째 울트라와 다음 위치예요.</li>
+      <li><b>다음 블루 아이즈·버스터즈 대장</b> 칸은 지금 고른 가챠에서 단챠와 확정 11연을 섞어 제일 싸게 받는 방법이에요. 누르면 다른 가챠까지 써서 찾는 <b>목표까지 경로</b>가 열려요.</li>
+      <li><b>목표까지 경로</b>는 진행 중인 가챠를 오가며 트랙을 갈아타는 것까지 따져서 통조림을 제일 적게 쓰는 순서를 알려줘요. 그대로 뽑았으면 "이 경로대로 다 뽑았어"를 누르면 돼요.</li>
+      <li><b>다음 11연</b> 버튼으로 단챠 1번이나 11연 1번 한 걸 칸을 안 찾고 바로 넘길 수 있어요.</li>
+      <li><b>나란히 비교</b>는 같은 칸에서 가챠마다 뭐가 나오는지 옆으로 보여줘요. 칸을 누르면 그 가챠에서 거기까지 뽑은 걸로 넘어가요.</li>
+      <li><b>시드 저장</b>으로 계정마다 시드를 이름 붙여 두고 눌러서 바꿀 수 있어요. 냥코 티켓 시드도 같이 바뀌어요.</li>
       <li><b>내 시드 찾기</b>는 고른 가챠에서 연속으로 나온 캐릭을 순서대로 넣으면 시드 42억 개를 이 기기 안에서 전부 확인해요. 확정 11연의 11번째는 "다음은 확정 울트라"를 켜고 넣어줘.</li>
       <li>계산 규칙은 시드 트래커 사이트(고드팻)의 표와 대조해 모두 일치했어요. 플래티넘·레전드 뽑기도 같은 시드를 써요.</li>
       <li>이 사이트는 Claude 없이 도는 복사본이라, 가챠 일정은 위에 적힌 데이터 기준 날짜까지만 들어 있어요. 시드와 진행 기록은 이 기기 브라우저에만 저장돼요.</li>
@@ -583,6 +753,8 @@ button { cursor: pointer; }
     </section>
 
     <section class="summary" id="nsummary" aria-label="요약"></section>
+
+    <section class="eleven" id="nnext" aria-label="다음 10장" hidden></section>
 
     <section aria-label="일반 뽑기 배열">
       <div class="tools" style="margin-bottom:10px">
@@ -1265,6 +1437,107 @@ window.NyankoUI = (function () {
 })();
 </script>
 <script>
+/* 목표 캐릭까지 가장 적게 쓰는 경로 (다익스트라)
+ * 상태: (쓴 시드 수 c, 직전 레어) — 직전이 레어가 아니면 중복이 안 나서 하나로 묶음
+ * 한 번에 할 수 있는 것: 가챠마다 단챠 1번, 확정 11연이 있는 가챠면 확정 11연 1번
+ * 비용: 단챠 150(통조림/레어 티켓 1장), 확정 11연 1500, 플래티넘·레전드 티켓 1장 3000
+ */
+(function (root) {
+  'use strict';
+  const E = root.NyankoEngine || (typeof require === 'function' ? require('./engine.js') : null);
+
+  function Heap() { this.a = []; }
+  const less = (x, y) => x[0] < y[0] || (x[0] === y[0] && (x[1] < y[1] || (x[1] === y[1] && x[2] < y[2])));
+  Heap.prototype.push = function (x) {
+    const a = this.a; a.push(x);
+    let i = a.length - 1;
+    while (i > 0) { const p = (i - 1) >> 1; if (!less(a[i], a[p])) break; const t = a[i]; a[i] = a[p]; a[p] = t; i = p; }
+  };
+  Heap.prototype.pop = function () {
+    const a = this.a, top = a[0], end = a.pop();
+    if (a.length) {
+      a[0] = end;
+      let i = 0;
+      for (;;) {
+        const l = 2 * i + 1, r = l + 1; let m = i;
+        if (l < a.length && less(a[l], a[m])) m = l;
+        if (r < a.length && less(a[r], a[m])) m = r;
+        if (m === i) break;
+        const t = a[i]; a[i] = a[m]; a[m] = t; i = m;
+      }
+    }
+    return top;
+  };
+
+  const lastKey = (cat, rarity) => (cat && rarity === 0 ? E.catKey(cat) : '-');
+
+  // opts: { s, last, helpers: [{ b, single, eleven }], isTarget(cat, rarity), maxC, budget }
+  // 반환: { cost, edges: [{ kind: 's'|'e', bi, c, end, cats: [{ cat, rarity, c, rr, g }], last }], hitIdx, end, last } 또는 null
+  function find(opts) {
+    const { s, helpers, isTarget, maxC } = opts;
+    const nodes = new Map();
+    const k0 = '0|' + (opts.last ? E.catKey(opts.last) : '-');
+    nodes.set(k0, { c: 0, last: opts.last || null, cost: 0, n: 0, prev: null, edge: null, done: false });
+    const heap = new Heap();
+    heap.push([0, 0, 0, k0, null]);
+    let budget = opts.budget || 300000;
+
+    function relax(fromKey, cost, n, end, last, lk, edge, hitIdx) {
+      if (hitIdx >= 0) { heap.push([cost, n, end, null, { from: fromKey, edge, hitIdx, cost }]); return; }
+      const key = end + '|' + lk;
+      const cur = nodes.get(key);
+      if (cur && (cur.cost < cost || (cur.cost === cost && cur.n <= n))) return;
+      nodes.set(key, { c: end, last, cost, n, prev: fromKey, edge, done: false });
+      heap.push([cost, n, end, key, null]);
+    }
+
+    while (heap.a.length) {
+      const [cost, n, c, key, goal] = heap.pop();
+      if (goal) return build(nodes, goal);
+      const node = nodes.get(key);
+      if (!node || node.done || node.cost !== cost || node.n !== n) continue;
+      node.done = true;
+      if (c > maxC) continue;
+      if (--budget < 0) break;
+      for (let bi = 0; bi < helpers.length; bi++) {
+        const h = helpers[bi];
+        if (h.single) {
+          const p = E.pull(s, c, h.b, node.last);
+          if (p.cat) {
+            const edge = { kind: 's', bi, c, end: p.end, cats: [{ cat: p.cat, rarity: p.rarity, c, rr: p.rerolled }], last: p.cat };
+            relax(key, cost + h.single, n + 1, p.end, p.cat, lastKey(p.cat, p.rarity), edge, isTarget(p.cat, p.rarity) ? 0 : -1);
+          }
+        }
+        if (h.eleven) {
+          const g = E.guaranteedAt(s, c, h.b, node.last);
+          if (g && g.steps.every((p) => p.cat)) {
+            const cats = g.steps.map((p) => ({ cat: p.cat, rarity: p.rarity, c: p.c, rr: p.rerolled }));
+            cats.push({ cat: g.uber, rarity: 2, c, g: true });
+            let hit = -1;
+            for (let i = 0; i < cats.length; i++) if (isTarget(cats[i].cat, cats[i].rarity)) { hit = i; break; }
+            const edge = { kind: 'e', bi, c, end: g.end, cats, last: g.uber };
+            relax(key, cost + h.eleven, n + 1, g.end, g.uber, '-', edge, hit);
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function build(nodes, goal) {
+    const edges = [goal.edge];
+    let k = goal.from;
+    while (k) { const nd = nodes.get(k); if (!nd || !nd.edge) break; edges.push(nd.edge); k = nd.prev; }
+    edges.reverse();
+    return { cost: goal.cost, edges, hitIdx: goal.hitIdx, end: goal.edge.end, last: goal.edge.last };
+  }
+
+  const api = { find };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  root.NyankoPlan = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+<script>
 (function () {
   'use strict';
   const E = window.NyankoEngine;
@@ -1284,7 +1557,7 @@ window.NyankoUI = (function () {
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   // ---------- state ----------
-  const state = { seed: null, last: null, bannerId: null, history: [], updatedAt: 0 };
+  const state = { seed: null, last: null, bannerId: null, history: [], updatedAt: 0, slots: [], slotId: null, view: 'one', cmpIds: null };
   let rows = STEP;
   let banners = [];
   let meta = null;
@@ -1306,6 +1579,7 @@ window.NyankoUI = (function () {
   let userRef = null;
   let writeTimer = null, writing = false, dirty = false;
   function persist() {
+    syncSlot();
     state.updatedAt = Date.now();
     writeLocal();
     if (!userRef) return;
@@ -1317,7 +1591,7 @@ window.NyankoUI = (function () {
     if (writing || !dirty || !userRef) return;
     writing = true; dirty = false;
     try {
-      await userRef.set({ seed: state.seed, last: state.last, bannerId: state.bannerId, history: state.history.slice(-40), updatedAt: state.updatedAt });
+      await userRef.set({ seed: state.seed, last: state.last, bannerId: state.bannerId, history: state.history.slice(-40), updatedAt: state.updatedAt, slots: state.slots || [], slotId: state.slotId || null });
     } catch (e) {
       if (e && e.code === 'invalid_argument') userRef = null; // this viewer cannot save; keep local only
     } finally {
@@ -1515,6 +1789,10 @@ window.NyankoUI = (function () {
   }
 
   function renderTable() {
+    const cmp = state.view === 'cmp';
+    $('cmpwrap').hidden = !cmp;
+    document.querySelector('#rareMode .trackwrap').hidden = cmp;
+    if (cmp) { renderCompare(); return; }
     const box = $('rows');
     if (!current) {
       const b = currentBanner();
@@ -1538,43 +1816,29 @@ window.NyankoUI = (function () {
     const box = $('summary');
     if (!current) {
       box.innerHTML = tile('uber', '다음 울트라', '—', '가챠와 시드를 넣으면 계산돼요')
-        + tile('legend', '다음 레전드', '—', '&nbsp;') + tile('', '11연차', '—', '&nbsp;');
+        + tile('legend', '다음 레전드', '—', '&nbsp;') + tile('blue', '다음 블루 아이즈', '—', '&nbsp;') + tile('buster', '다음 버스터즈 대장', '—', '&nbsp;');
       return;
     }
-    const { pathPulls, b, T } = current;
-    if (b.kind === 'platinum' || b.kind === 'legend') {
-      const tiles = [];
-      if (b.kind === 'legend') {
-        const li = pathPulls.findIndex((p) => p.cat && p.rarity === 3);
-        tiles.push(li < 0 ? tile('legend', '다음 레전드', '없음', '표 범위 안에서는 안 나와요')
-          : tile('legend', '다음 레전드', esc(pathPulls[li].cat.name), '티켓 ' + (li + 1) + '장째 · ' + E.label(pathPulls[li].c)));
-      }
-      for (let i = 0; tiles.length < 3 && i < pathPulls.length; i++) {
-        const p = pathPulls[i];
-        tiles.push(tile(p.rarity === 3 ? 'legend' : 'uber', '티켓 ' + (i + 1) + '장째', esc(p.cat ? p.cat.name : '-'), E.label(p.c)));
-      }
-      box.innerHTML = tiles.join('');
-      return;
-    }
+    const { pathPulls, b } = current;
+    const tk = isTk(b);
     const findR = (r) => { const i = pathPulls.findIndex((p) => p.cat && p.rarity === r); return i < 0 ? null : { i, p: pathPulls[i] }; };
-    const u = findR(2), l = findR(3);
-    let html = u
-      ? tile('uber', '다음 울트라', esc(u.p.cat.name), '단챠 ' + (u.i + 1) + '번째 · ' + E.label(u.p.c))
-      : tile('uber', '다음 울트라', '없음', '표 범위 안에서는 안 나와요');
-    html += l
-      ? tile('legend', '다음 레전드', esc(l.p.cat.name), '단챠 ' + (l.i + 1) + '번째 · ' + E.label(l.p.c))
-      : tile('legend', '다음 레전드', '없음', b.rates[3] ? '표 범위 안에서는 안 나와요' : '이 가챠엔 레전드가 없어요');
-    if (b.guaranteed) {
-      const g = E.guaranteedAt(T.s, 0, b, state.last);
-      html += g ? tile('uber', '확정 11연', esc(g.uber.name), '다음 시작 ' + E.label(g.end)) : tile('', '확정 11연', '—', '');
-    } else {
-      const eleven = pathPulls.slice(0, 11);
-      const cnt = [0, 0, 0, 0]; eleven.forEach((p) => cnt[p.rarity]++);
-      const best = eleven.filter((p) => p.cat && p.rarity >= 2).map((p) => p.cat.name);
-      const end = eleven.length === 11 ? E.label(eleven[10].end) : '?';
-      html += tile('', '11연차', best.length ? esc(best.join(', ')) : '울트라 없음', '슈퍼 ' + cnt[1] + ' · 레어 ' + cnt[0] + ' · 다음 ' + end);
+    const tiles = [];
+    if (!tk) {
+      const u = findR(2);
+      tiles.push(u ? tile('uber', '다음 울트라', esc(u.p.cat.name), '단챠 ' + (u.i + 1) + '번째 · ' + E.label(u.p.c))
+        : tile('uber', '다음 울트라', '없음', '표 범위 안에서는 안 나와요'));
     }
-    box.innerHTML = html;
+    if (!tk || b.kind === 'legend') {
+      const l = findR(3);
+      tiles.push(l ? tile('legend', '다음 레전드', esc(l.p.cat.name), (tk ? '티켓 ' + (l.i + 1) + '장째' : '단챠 ' + (l.i + 1) + '번째') + ' · ' + E.label(l.p.c))
+        : tile('legend', '다음 레전드', '없음', b.rates[3] ? '표 범위 안에서는 안 나와요' : '이 가챠엔 레전드가 없어요'));
+    }
+    tiles.push(goalTile('blue', 'blue', '다음 블루 아이즈'), goalTile('buster', 'buster', '다음 버스터즈 대장'));
+    for (let i = 0; tiles.length < 4 && i < pathPulls.length; i++) {
+      const p = pathPulls[i];
+      tiles.push(tile(p.rarity === 3 ? 'legend' : 'uber', '티켓 ' + (i + 1) + '장째', esc(p.cat ? p.cat.name : '-'), E.label(p.c)));
+    }
+    box.innerHTML = tiles.join('');
   }
   function tile(cls, k, v, m) {
     return '<div class="tile ' + cls + '"><span class="eyebrow">' + k + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span></div>';
@@ -1636,7 +1900,7 @@ window.NyankoUI = (function () {
     rows = STEP;
     persist();
     renderAll();
-    UI.toast(done.cat + ' 뽑음', '되돌리기', undo, '다음 냥코부터 1A로 다시 시작');
+    UI.toast(done.msg || (done.cat + ' 뽑음'), '되돌리기', undo, '다음 냥코부터 1A로 다시 시작');
     const tw = document.querySelector('#rareMode .trackwrap');
     if (tw && tw.getBoundingClientRect().top < 0) tw.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
@@ -1653,10 +1917,451 @@ window.NyankoUI = (function () {
     renderBanners();
     if (state.seed == null) { const b = currentBanner(); if (b && b.sample) state.seed = DEMO_SEED; }
     renderSeed();
+    renderSlots();
     compute();
     renderSummary();
+    renderEleven();
+    paintView();
     renderTable();
+    renderPlanner();
   }
+
+  // ---------- 다음 11연 · 목표까지 경로 · 나란히 비교 · 저장한 시드 ----------
+  const isTk = (b) => !!b && (b.kind === 'platinum' || b.kind === 'legend');
+  const helperOf = (b) => ({ b, single: isTk(b) ? 3000 : 150, eleven: b.guaranteed && !isTk(b) ? 1500 : 0 });
+  const PKEYS = ['rare', 'supa', 'uber', 'legend'];
+  const pCatOf = (e) => (Array.isArray(e) ? { id: e[0], name: e[1] } : (e && typeof e === 'object' ? { id: e.id ?? null, name: e.name } : { id: null, name: String(e) }));
+  const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+  const GRP = { blue: '블루 아이즈 아무나', buster: '버스터즈 대장 아무나', legend: '레전드 아무나' };
+  const longName = (b) => (b.kind === 'legend' ? '레전드 뽑기' : b.kind === 'platinum' ? '플래티넘 뽑기' : shortName(b));
+
+  function goalFn(grp, keys) {
+    return (cat, rarity) => !!cat && ((!!keys && keys.has(E.catKey(cat)))
+      || (grp.has('blue') && BLUE_IDS.has(Number(cat.id)))
+      || (grp.has('buster') && BUSTER_IDS.has(Number(cat.id)))
+      || (grp.has('legend') && rarity === 3));
+  }
+  // 지금 시드에서 목표까지 제일 싼 경로 (표에 보이는 줄 안에서)
+  function planRun(helpers, isT) {
+    if (state.seed == null || isNaN(state.seed) || !helpers.length) return { none: 'seed' };
+    const any = helpers.some((h) => PKEYS.some((k, r) => (h.b.pools[k] || []).some((e) => isT(pCatOf(e), r))));
+    if (!any) return { none: 'pool' };
+    const s = E.seeds(state.seed, rows * 2 + 80);
+    const res = window.NyankoPlan.find({ s, last: state.last, helpers, isTarget: isT, maxC: rows * 2 - 1 });
+    if (!res) return { none: 'range' };
+    res.s = s;
+    return res;
+  }
+  function planCount(res, helpers) {
+    const n = { rare: 0, ele: 0, plat: 0, leg: 0 };
+    for (const e of res.edges) {
+      const b = helpers[e.bi].b;
+      if (e.kind === 'e') n.ele++;
+      else if (b.kind === 'platinum') n.plat++;
+      else if (b.kind === 'legend') n.leg++;
+      else n.rare++;
+    }
+    const parts = [];
+    if (n.rare) parts.push('단챠 ' + n.rare + '번');
+    if (n.ele) parts.push('확정 11연 ' + n.ele + '번');
+    if (n.plat) parts.push('플래티넘 티켓 ' + n.plat + '장');
+    if (n.leg) parts.push('레전드 티켓 ' + n.leg + '장');
+    n.text = parts.join(' + ');
+    n.cans = n.rare * 150 + n.ele * 1500;
+    return n;
+  }
+  function planHit(res) {
+    const e = res.edges[res.edges.length - 1], x = e.cats[res.hitIdx];
+    return { cat: x.cat, rarity: x.rarity, label: x.g ? E.label(e.c) + ' 확정' : E.label(x.c) + (x.rr ? ' 중복' : '') };
+  }
+  function goalTile(cls, grp, title) {
+    const hs = [helperOf(current.b)];
+    const r = planRun(hs, goalFn(new Set([grp]), null));
+    let v, m;
+    if (r.none === 'pool') { v = '이 가챠엔 없어요'; m = '눌러서 다른 가챠까지 찾아보기'; }
+    else if (r.none) { v = '표 범위엔 없어요'; m = '100줄 더 보기로 늘려봐'; }
+    else { const hi = planHit(r); v = esc(hi.cat.name); m = esc(planCount(r, hs).text) + ' · ' + hi.label; }
+    return '<button type="button" class="tile ' + cls + '" data-goal="' + grp + '"><span class="eyebrow">' + title + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span></button>';
+  }
+
+  // 다음 11연 미리보기와 +1 / +11
+  function renderEleven() {
+    const box = $('eleven');
+    if (!current) { box.hidden = true; return; }
+    const { b, T, pathPulls } = current;
+    const tk = isTk(b);
+    let items, end, title;
+    if (b.guaranteed && !tk) {
+      const g = E.guaranteedAt(T.s, 0, b, state.last);
+      if (!g) { box.hidden = true; return; }
+      items = g.steps.map((p) => ({ cat: p.cat, rarity: p.rarity, c: p.c, rr: p.rerolled })).concat([{ cat: g.uber, rarity: 2, c: 0, g: true }]);
+      end = g.end; title = '다음 확정 11연';
+    } else {
+      items = pathPulls.slice(0, 11).map((p) => ({ cat: p.cat, rarity: p.rarity, c: p.c, rr: p.rerolled }));
+      end = items.length === 11 ? pathPulls[10].end : null;
+      title = tk ? '다음 티켓 11장' : '다음 11연';
+    }
+    box.hidden = false;
+    box.innerHTML = '<div class="ehead"><h3>' + title + '</h3><span>1A부터' + (end != null ? ' · 다 뽑으면 다음 시작 <b class="mono">' + E.label(end) + '</b>' : '') + '</span></div>'
+      + '<ol class="elist">' + items.map((it, i) => '<li class="ec ' + RCLS[it.rarity] + ' ' + tagCls(it.cat) + '" title="' + (it.g ? '확정 울트라' : E.label(it.c) + (it.rr ? ' 중복' : '')) + '"><i>' + (it.g ? '확정' : i + 1) + '</i><span>' + esc(it.cat ? it.cat.name : '-') + '</span></li>').join('') + '</ol>'
+      + '<div class="eacts"><button type="button" class="btn" data-adv="1">' + (tk ? '1장 썼음' : '단챠 1번 했음') + '</button>'
+      + '<button type="button" class="btn primary" data-adv="11"' + (end == null ? ' disabled' : '') + '>' + (tk ? '11장 썼음' : b.guaranteed ? '확정 11연 했음' : '11연 했음') + '</button></div>';
+  }
+  function advance(n) {
+    if (!current) return;
+    const { b, T, pathPulls } = current;
+    const tk = isTk(b);
+    let end, cat, msg, tag;
+    if (n === 1) {
+      const p = pathPulls[0]; if (!p || !p.cat) return;
+      end = p.end; cat = p.cat; msg = cat.name + ' 뽑음'; tag = cat.name;
+    } else if (b.guaranteed && !tk) {
+      const g = E.guaranteedAt(T.s, 0, b, state.last); if (!g) return;
+      end = g.end; cat = g.uber; msg = '확정 11연 · ' + cat.name; tag = '확정 11연';
+    } else {
+      const p = pathPulls[10]; if (!p || !p.cat) return;
+      end = p.end; cat = p.cat; tag = tk ? '티켓 11장' : '11연'; msg = tag + ' 뽑음';
+    }
+    pending = { seed: T.s[end], last: { id: cat.id ?? null, name: cat.name }, label: n === 1 ? '+1' : '+11', cat: tag, msg };
+    applyPending();
+  }
+
+  // 목표까지 경로
+  const pl = { grp: new Set(), keys: new Set(), names: new Map(), all: true, res: null };
+  function plHelpers() {
+    const sel = currentBanner();
+    if (!sel) return [];
+    // 같은 비용이면 지금 열려 있는 가챠를 먼저 씀 (고른 가챠가 아직 시작 전이면 맨 뒤로)
+    const selNow = ['live', 'demo'].includes(statusOf(sel, today()).k);
+    const list = selNow ? [sel] : [], seen = new Set([sel.gacha + '|' + sel.rates.join(',')]);
+    if (pl.all) {
+      for (const { b, s } of sortedBanners()) {
+        if (s.k !== 'live' || b.sample || b.id === sel.id) continue;
+        const k = b.gacha + '|' + b.rates.join(',');
+        if (seen.has(k)) continue;
+        seen.add(k); list.push(b);
+      }
+    }
+    if (!selNow) list.push(sel);
+    return list.map(helperOf);
+  }
+  function plOpen(grp) {
+    if (grp) { pl.grp = new Set([grp]); pl.keys = new Set(); }
+    $('plQ').value = '';
+    $('planner').hidden = false;
+    renderPlanner();
+    $('planner').scrollIntoView({ block: 'start', behavior: smooth() });
+  }
+  function renderPlanner() {
+    if ($('planner').hidden) return;
+    $('plAll').checked = pl.all;
+    $('plGrp').querySelectorAll('button[data-grp]').forEach((x) => x.setAttribute('aria-pressed', String(pl.grp.has(x.dataset.grp))));
+    const cats = new Map();
+    for (const h of plHelpers()) {
+      PKEYS.forEach((k, r) => (h.b.pools[k] || []).forEach((e) => {
+        const c = pCatOf(e), key = E.catKey(c);
+        if (!cats.has(key)) cats.set(key, Object.assign(c, { rarity: r }));
+      }));
+    }
+    const q = norm($('plQ').value);
+    const groups = [3, 2, 1, 0].map((r) => {
+      const items = [...cats.entries()].filter(([, c]) => c.rarity === r && (!q || norm(c.name).includes(q)));
+      if (!items.length) return '';
+      return '<div class="grp"><span>' + RNAME[r] + ' ' + items.length + '</span>' + items.map(([k, c]) =>
+        '<button type="button" class="fchip ' + RCLS[r] + ' ' + tagCls(c) + '" data-k="' + esc(k) + '" aria-pressed="' + pl.keys.has(k) + '">' + esc(c.name) + '</button>').join('') + '</div>';
+    }).join('');
+    $('plPal').innerHTML = groups || '<span style="color:var(--muted);font-size:13px">맞는 캐릭이 없어요</span>';
+    const chosen = [...pl.grp].map((g) => '<span class="it"><em>' + GRP[g] + '</em><button type="button" data-rmg="' + g + '" aria-label="' + GRP[g] + ' 빼기">×</button></span>')
+      .concat([...pl.keys].map((k) => '<span class="it">' + esc(pl.names.get(k) || k) + '<button type="button" data-rmk="' + esc(k) + '" aria-label="빼기">×</button></span>'));
+    $('plList').innerHTML = chosen.length ? chosen.join('') : '<span class="ph">목표를 골라줘. 여러 개 고르면 그중 제일 싸게 받는 걸 찾아.</span>';
+    runPlanner();
+  }
+  function runPlanner() {
+    const out = $('plOut');
+    pl.res = null;
+    if (!pl.grp.size && !pl.keys.size) { out.innerHTML = ''; return; }
+    const helpers = plHelpers();
+    const isT = goalFn(pl.grp, pl.keys);
+    const r = planRun(helpers, isT);
+    if (r.none) {
+      const msg = r.none === 'seed' ? '시드랑 가챠를 먼저 골라줘.'
+        : r.none === 'pool' ? '고른 목표가 ' + (pl.all ? '진행 중인 가챠' : '지금 고른 가챠') + '에 없어요.'
+        : '지금 표 범위(' + rows + '줄) 안에서는 못 받아. 표 아래 "100줄 더 보기"로 늘리면 더 멀리까지 찾아.';
+      out.innerHTML = '<div class="fresult"><strong>경로가 없어</strong><span>' + msg + '</span></div>';
+      return;
+    }
+    pl.res = { r, helpers };
+    const hi = planHit(r), n = planCount(r, helpers);
+    const sel = current ? current.b : null;
+    let alone = '';
+    if (current) {
+      const unit = isTk(sel) ? '티켓으로만' : '단챠로만';
+      const i = current.pathPulls.findIndex((p) => p.cat && isT(p.cat, p.rarity));
+      alone = i < 0 ? '참고로 지금 고른 가챠에서 ' + unit + ' 하면 표 범위 안엔 없어.'
+        : '참고로 지금 고른 가챠에서 ' + unit + ' 하면 ' + (i + 1) + (isTk(sel) ? '장째' : '번째') + '에 ' + esc(current.pathPulls[i].cat.name) + '.';
+    }
+    const groups = [];
+    for (const e of r.edges) {
+      const g = groups[groups.length - 1];
+      if (g && g.kind === 's' && e.kind === 's' && g.bi === e.bi) g.edges.push(e);
+      else groups.push({ kind: e.kind, bi: e.bi, edges: [e] });
+    }
+    const lastEdge = r.edges[r.edges.length - 1];
+    const t = today();
+    const steps = groups.map((g) => {
+      const b = helpers[g.bi].b;
+      const first = g.edges[0], end = g.edges[g.edges.length - 1];
+      const cats = [];
+      g.edges.forEach((e) => e.cats.forEach((x, xi) => cats.push({ x, goal: e === lastEdge && xi === r.hitIdx })));
+      const head = g.kind === 'e'
+        ? '확정 11연 <span class="mono">' + E.label(first.c) + '에서</span>'
+        : (isTk(b) ? '티켓 ' + g.edges.length + '장' : '단챠 ' + g.edges.length + '번') + ' <span class="mono">' + E.label(first.c) + (g.edges.length > 1 ? ' → ' + E.label(end.c) : '') + '</span>';
+      const shown = cats.length > 14 ? cats.slice(-14) : cats;
+      return '<li><div class="rh"><b>' + esc(longName(b)) + '</b>' + (sel && b.id === sel.id ? '<em>지금 고른 가챠</em>' : '') + (b.start && b.start > t ? '<em>' + md(b.start) + '부터</em>' : '') + '</div>'
+        + '<div class="rd">' + head + '</div>'
+        + '<div class="rc">' + (cats.length > shown.length ? '<span class="more">앞 ' + (cats.length - shown.length) + '마리 …</span>' : '')
+        + shown.map(({ x, goal }) => '<span class="' + RCLS[x.rarity] + ' ' + tagCls(x.cat) + (goal ? ' goal' : '') + '">' + (x.g ? '확정 ' : '') + esc(x.cat.name) + '</span>').join('') + '</div></li>';
+    }).join('');
+    out.innerHTML = '<div class="fresult"><strong>' + esc(hi.cat.name) + ' · ' + esc(n.text) + '</strong>'
+      + '<span>' + (n.cans ? '통조림으로 치면 ' + n.cans.toLocaleString('ko-KR') + '개 · ' : '') + '받는 칸 ' + hi.label + ' · 끝나면 다음 시작 <b class="mono">' + E.label(r.end) + '</b></span>'
+      + '<ol class="route">' + steps + '</ol>'
+      + (alone ? '<span class="alone">' + alone + '</span>' : '')
+      + '<div class="frow"><button type="button" class="btn primary" id="plApply">이 경로대로 다 뽑았어</button></div></div>';
+  }
+  function plApply() {
+    if (!pl.res) return;
+    const { r } = pl.res, hi = planHit(r);
+    pending = { seed: r.s[r.end], last: { id: r.last.id ?? null, name: r.last.name }, label: '경로', cat: hi.cat.name + ' 경로', msg: hi.cat.name + '까지 경로대로 뽑음' };
+    $('planner').hidden = true;
+    applyPending();
+  }
+
+  // 나란히 비교
+  function paintView() {
+    const v = state.view === 'cmp' ? 'cmp' : 'one';
+    document.querySelectorAll('#viewSeg button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.view === v)));
+  }
+  function cmpBanners() {
+    const list = sortedBanners().filter((x) => x.s.k !== 'past');
+    const ids = Array.isArray(state.cmpIds) ? state.cmpIds.filter((id) => list.some((x) => x.b.id === id)) : [];
+    const on = new Set(ids.length ? ids : list.filter((x) => x.s.k === 'live').map((x) => x.b.id));
+    if (!on.size && list.length) on.add(list[0].b.id);
+    return { list, on };
+  }
+  function renderCompare() {
+    const { list, on } = cmpBanners();
+    $('cmpBar').innerHTML = list.map(({ b, s }) => '<button type="button" class="cchip" data-id="' + esc(b.id) + '" aria-pressed="' + on.has(b.id) + '">'
+      + esc(shortName(b)) + '<small>' + (s.k === 'live' ? '~' + md(b.end) : md(b.start) + '~') + '</small></button>').join('');
+    const box = $('cmpBox');
+    const cols = list.filter((x) => on.has(x.b.id)).map((x) => x.b);
+    if (state.seed == null || isNaN(state.seed) || !cols.length) {
+      box.innerHTML = '<div class="empty" style="border:0;border-radius:0">' + (cols.length ? '시드를 넣으면 가챠별 배열이 나란히 나와요.' : '비교할 가챠를 위에서 골라줘.') + '</div>';
+      $('cmoreWrap').hidden = true; $('hitinfo').textContent = '';
+      return;
+    }
+    const n = rows * 2;
+    const s = E.seeds(state.seed, n + 70);
+    const q = query();
+    const data = cols.map((b) => {
+      const cells = new Array(n);
+      for (let c = 0; c < n; c++) cells[c] = E.rollAt(s, c, b, c >= 2 ? cells[c - 2].cat : (state.last || null));
+      const path = new Map();
+      let c = 0, last = state.last || null, i = 0;
+      while (c < n && i < n) {
+        const p = E.pull(s, c, b, last);
+        if (!p.cat) break;
+        i++; path.set(c + (p.rerolled ? 'R' : ''), { n: i, p });
+        c = p.end; last = p.cat;
+      }
+      return { b, cells, path };
+    });
+    let hits = 0, firstHit = '';
+    let h = '<table class="cmp"><thead><tr><th scope="col">칸</th>' + data.map((d) => '<th scope="col"' + (d.b.id === state.bannerId ? ' class="sel"' : '') + '>' + esc(shortName(d.b)) + '</th>').join('') + '</tr></thead><tbody>';
+    for (let c = 0; c < n; c++) {
+      h += '<tr class="' + (c % 2 ? 'tb' : 'ta') + '"><th scope="row" class="mono">' + E.label(c) + '</th>';
+      for (const d of data) {
+        const cell = d.cells[c];
+        const name = cell.cat ? cell.cat.name : '-';
+        const stp = d.path.get(String(c)), rstp = d.path.get(c + 'R');
+        const cls = ['cc', RCLS[cell.rarity], tagCls(cell.cat)];
+        if (stp) cls.push('on-path');
+        if (q && matches(name, q)) { cls.push('hit'); hits++; if (!firstHit) firstHit = E.label(c); }
+        h += '<td><button type="button" class="' + cls.join(' ') + '" data-c="' + c + '" data-b="' + esc(d.b.id) + '" data-v="n"><span class="nm">' + esc(name) + '</span>' + (stp ? '<span class="step">' + stp.n + '</span>' : '') + '</button>';
+        const rc = cell.rerolled ? cell.rerolled.cat : (rstp ? rstp.p.cat : null);
+        if (rc) {
+          const c2 = ['cc', 'rr'];
+          if (rstp) c2.push('on-path');
+          if (q && matches(rc.name, q)) { c2.push('hit'); hits++; if (!firstHit) firstHit = E.label(c) + ' 중복'; }
+          h += '<button type="button" class="' + c2.join(' ') + '" data-c="' + c + '" data-b="' + esc(d.b.id) + '" data-v="r">중복 시 ' + esc(rc.name) + (rstp ? ' · ' + rstp.n : '') + '</button>';
+        }
+        h += '</td>';
+      }
+      h += '</tr>';
+    }
+    box.innerHTML = h + '</tbody></table>';
+    $('cmoreWrap').hidden = rows >= 1000;
+    $('hitinfo').textContent = !q ? '' : hits ? hits + '칸 · 처음 ' + firstHit : '이 범위엔 없어요';
+  }
+
+  // 저장한 시드 (계정마다 레어 뽑기 시드 + 냥코 티켓 시드)
+  const NB = () => window.NyankoNormalBridge || null;
+  function syncSlot() {
+    const sl = state.slotId && (state.slots || []).find((x) => x.id === state.slotId);
+    if (!sl) return;
+    sl.seed = state.seed; sl.last = state.last; sl.history = state.history.slice(-30);
+  }
+  function captureNormal(sl) {
+    const nb = NB();
+    if (!nb || !sl) return;
+    const v = nb.get();
+    sl.nseed = v.seed; sl.nlast = v.last; sl.nhistory = v.history;
+  }
+  function snapshot() {
+    const nb = NB();
+    return { slotId: state.slotId, seed: state.seed, last: state.last, history: state.history.slice(), n: nb ? nb.get() : null };
+  }
+  function restore(snap) {
+    syncSlot();
+    captureNormal((state.slots || []).find((x) => x.id === state.slotId));
+    state.slotId = snap.slotId; state.seed = snap.seed; state.last = snap.last; state.history = snap.history; rows = STEP;
+    const nb = NB();
+    if (nb && snap.n) nb.set(snap.n.seed, snap.n.last, snap.n.history);
+    persist(); renderAll();
+  }
+  function renderSlots() {
+    const list = state.slots || [];
+    const box = $('slots');
+    $('slotAdd').hidden = list.length > 0;
+    box.hidden = !list.length;
+    if (!list.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '<span class="lbl">저장한 시드</span>' + list.map((sl) => {
+      const on = sl.id === state.slotId;
+      return '<span class="slot"' + (on ? ' aria-current="true"' : '') + '><button type="button" class="sw" data-id="' + esc(sl.id) + '">' + esc(sl.name)
+        + '<small class="mono">' + esc(on ? state.seed : sl.seed) + '</small></button>'
+        + '<button type="button" class="x" data-del="' + esc(sl.id) + '" aria-label="' + esc(sl.name) + ' 지우기">×</button></span>';
+    }).join('') + (list.length < 10 ? '<button type="button" class="slotplus" data-add="1">+ 저장</button>' : '');
+  }
+  function openSlotForm() {
+    $('slotForm').hidden = false;
+    $('slotName').value = '';
+    $('slotSeed').value = state.seed != null && !isNaN(state.seed) ? String(state.seed) : '';
+    $('slotSeed').setAttribute('aria-invalid', 'false');
+    $('slotName').focus();
+  }
+  function saveSlot() {
+    const v = parseSeed($('slotSeed').value);
+    if (v === null || isNaN(v)) { $('slotSeed').setAttribute('aria-invalid', 'true'); $('slotSeed').focus(); return; }
+    if (!Array.isArray(state.slots)) state.slots = [];
+    const list = state.slots;
+    if (list.length >= 10) { toast('시드는 10개까지 저장돼요'); return; }
+    const name = ($('slotName').value.trim() || ('시드 ' + (list.length + 1))).slice(0, 12);
+    const snap = snapshot();
+    const from = list.find((x) => x.id === state.slotId);
+    if (from) { syncSlot(); captureNormal(from); }
+    const sl = { id: 's' + Date.now().toString(36), name, seed: v, last: null, history: [] };
+    const same = v === state.seed;
+    if (same) { sl.last = state.last; sl.history = state.history.slice(-30); captureNormal(sl); }
+    list.push(sl);
+    state.slotId = sl.id;
+    if (!same) {
+      state.seed = v; state.last = null; state.history = []; rows = STEP;
+      const nb = NB();
+      if (nb && from) nb.set(null);
+    }
+    $('slotForm').hidden = true;
+    persist(); renderAll();
+    UI.toast(name + ' 저장했어요', '되돌리기', () => {
+      const i = list.indexOf(sl); if (i >= 0) list.splice(i, 1);
+      state.slotId = null; restore(snap);
+    }, '눌러서 시드를 바꿀 수 있어요');
+  }
+  function switchSlot(id) {
+    const to = (state.slots || []).find((x) => x.id === id);
+    if (!to || id === state.slotId) return;
+    const snap = snapshot();
+    const from = state.slots.find((x) => x.id === state.slotId);
+    if (from) { syncSlot(); captureNormal(from); }
+    state.slotId = id;
+    state.seed = to.seed ?? null; state.last = to.last || null;
+    state.history = Array.isArray(to.history) ? to.history.slice() : [];
+    rows = STEP;
+    const nb = NB();
+    if (nb) nb.set(to.nseed ?? null, to.nlast || null, to.nhistory || []);
+    persist(); renderAll();
+    UI.toast(to.name + ' 시드로 바꿨어요', '되돌리기', () => restore(snap), '냥코 티켓 시드도 같이 바뀌어요');
+  }
+  function delSlot(id) {
+    const list = state.slots || [];
+    const i = list.findIndex((x) => x.id === id);
+    if (i < 0) return;
+    const gone = list.splice(i, 1)[0];
+    const was = state.slotId === id;
+    if (was) state.slotId = null;
+    persist(); renderSlots();
+    UI.toast(gone.name + ' 지웠어요', '되돌리기', () => {
+      list.splice(Math.min(i, list.length), 0, gone);
+      if (was) state.slotId = id;
+      persist(); renderSlots();
+    });
+  }
+
+  $('summary').addEventListener('click', (e) => { const t = e.target.closest('[data-goal]'); if (t) plOpen(t.dataset.goal); });
+  $('eleven').addEventListener('click', (e) => { const t = e.target.closest('button[data-adv]'); if (t && !t.disabled) advance(Number(t.dataset.adv)); });
+  $('plOpen').addEventListener('click', () => plOpen(null));
+  $('plClose').addEventListener('click', () => { $('planner').hidden = true; });
+  $('plGrp').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-grp]'); if (!t) return;
+    const g = t.dataset.grp;
+    if (pl.grp.has(g)) pl.grp.delete(g); else pl.grp.add(g);
+    renderPlanner();
+  });
+  $('plPal').addEventListener('click', (e) => {
+    const t = e.target.closest('.fchip'); if (!t) return;
+    const k = t.dataset.k;
+    if (pl.keys.has(k)) pl.keys.delete(k); else { pl.keys.add(k); pl.names.set(k, t.textContent); }
+    renderPlanner();
+  });
+  $('plList').addEventListener('click', (e) => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.rmg) pl.grp.delete(t.dataset.rmg);
+    if (t.dataset.rmk) pl.keys.delete(t.dataset.rmk);
+    renderPlanner();
+  });
+  let plqTimer = null;
+  $('plQ').addEventListener('input', () => { clearTimeout(plqTimer); plqTimer = setTimeout(renderPlanner, 150); });
+  $('plAll').addEventListener('change', (e) => { pl.all = e.target.checked; renderPlanner(); });
+  $('plOut').addEventListener('click', (e) => { if (e.target.id === 'plApply') plApply(); });
+  $('viewSeg').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-view]'); if (!t) return;
+    state.view = t.dataset.view === 'cmp' ? 'cmp' : 'one';
+    persist(); paintView(); renderTable();
+  });
+  $('cmpBar').addEventListener('click', (e) => {
+    const t = e.target.closest('.cchip'); if (!t) return;
+    const { list, on } = cmpBanners();
+    if (on.has(t.dataset.id)) { if (on.size > 1) on.delete(t.dataset.id); } else on.add(t.dataset.id);
+    state.cmpIds = list.map((x) => x.b.id).filter((id) => on.has(id));
+    persist(); renderCompare();
+  });
+  $('cmpBox').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-c]'); if (!t) return;
+    const b = banners.find((x) => x.id === t.dataset.b && usable(x)); if (!b) return;
+    if (state.bannerId !== b.id) { state.bannerId = b.id; persist(); compute(); }
+    const before = state.seed;
+    openSheet(Number(t.dataset.c), t.dataset.v);
+    if (state.seed === before) renderAll();
+  });
+  $('cmore').addEventListener('click', () => { rows += STEP; compute(); renderTable(); });
+  $('slotAdd').addEventListener('click', openSlotForm);
+  $('slots').addEventListener('click', (e) => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.add) openSlotForm();
+    else if (t.dataset.del) delSlot(t.dataset.del);
+    else if (t.dataset.id) switchSlot(t.dataset.id);
+  });
+  $('slotSave').addEventListener('click', saveSlot);
+  $('slotCancel').addEventListener('click', () => { $('slotForm').hidden = true; });
+  ['slotName', 'slotSeed'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveSlot(); } }));
 
   // ---------- events ----------
   $('strip').addEventListener('click', (e) => {
@@ -2067,7 +2772,7 @@ window.NyankoUI = (function () {
   }
 
   function render() {
-    renderBanners(); renderSeed(); compute(); renderSummary(); renderTable();
+    renderBanners(); renderSeed(); compute(); renderSummary(); renderNext(); renderTable();
   }
 
   function openSheet(c, v) {
@@ -2277,6 +2982,43 @@ window.NyankoUI = (function () {
     if (e.target.id === 'fCancel') { F.cancel(); fs.busy = false; $('fOut').innerHTML = ''; fRender(); }
     if (e.target.id === 'fApply') fApply();
   });
+
+  // ---------- 다음 10장 · 빠른 진행 · 계정 시드 연결 ----------
+  function renderNext() {
+    const box = $('nnext');
+    if (!cur) { box.hidden = true; return; }
+    box.hidden = false;
+    const ten = cur.pulls.slice(0, 10);
+    const end = ten.length === 10 ? label(ten[9].end) : null;
+    box.innerHTML = '<div class="ehead"><h3>다음 10장</h3><span>1A부터' + (end ? ' · 다 쓰면 다음 시작 <b class="mono">' + end + '</b>' : '') + '</span></div>'
+      + '<ol class="elist">' + ten.map((p, i) => '<li class="ec ' + RCLS[p.rarity] + '" title="' + label(p.c) + (p.rerolled ? ' 중복' : '') + '"><i>' + (i + 1) + '</i><span>' + esc(nm(p.item)) + '</span></li>').join('') + '</ol>'
+      + '<div class="eacts"><button type="button" class="btn" data-adv="1">1장 썼음</button><button type="button" class="btn primary" data-adv="10"' + (end ? '' : ' disabled') + '>10장 썼음</button></div>';
+  }
+  function nAdvance(n) {
+    if (!cur) return;
+    const p = cur.pulls[n - 1];
+    if (!p) return;
+    st.history.push({ seed: st.seed, last: st.last, item: n === 1 ? p.item : null });
+    if (st.history.length > 60) st.history.shift();
+    const ticket = cur.b.ticket;
+    st.seed = cur.T.s[p.end]; st.last = p.item; demo = false; rows = STEP;
+    persist(); render();
+    UI.toast(n === 1 ? nm(p.item) + ' 뽑음' : ticket + ' ' + n + '장 씀', '되돌리기', () => $('nundo').click(), '다음 결과부터 1A로 다시 시작');
+  }
+  $('nnext').addEventListener('click', (e) => { const t = e.target.closest('button[data-adv]'); if (t && !t.disabled) nAdvance(Number(t.dataset.adv)); });
+  // 레어 뽑기 쪽 "저장한 시드"가 계정을 바꿀 때 냥코 티켓 시드도 같이 바꿈
+  window.NyankoNormalBridge = {
+    get: () => ({ seed: demo ? null : st.seed, last: st.last, history: st.history.slice(-30) }),
+    set: (seed, last, history) => {
+      st.last = seed == null ? null : (last || null);
+      st.history = seed == null || !Array.isArray(history) ? [] : history.slice();
+      st.seed = seed == null ? null : seed;
+      demo = false; rows = STEP;
+      persist();
+      if (st.seed == null) { st.seed = DEMO; demo = true; }
+      render();
+    },
+  };
 
   // ---------- boot ----------
   readLocal();
