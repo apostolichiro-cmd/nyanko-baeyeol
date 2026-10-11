@@ -289,7 +289,9 @@ button { cursor: pointer; }
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   background: var(--ink); color: var(--on-ink); padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 30;
   max-width: calc(100% - 32px);
+  display: flex; align-items: center; gap: 12px;
 }
+.toast button { border: 0; background: transparent; color: var(--hit); font-weight: 700; font-size: 14px; padding: 4px 2px; white-space: nowrap; }
 .modes {
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px;
   background: var(--sunk); border: 1px solid var(--line);
@@ -481,7 +483,7 @@ button { cursor: pointer; }
   <section class="help">
     <h2>보는 법</h2>
     <ul>
-      <li>칸을 누르면 <b>그 칸까지 뽑았을 때</b>로 시드가 넘어가요. 잘못 눌렀으면 되돌리기.</li>
+      <li>내가 뽑은 마지막 냥코 칸을 누르면 바로 그 다음 냥코가 <b>1A</b>가 되도록 배열이 새로 시작해요. 잘못 눌렀으면 알림이나 위의 되돌리기를 눌러.</li>
       <li>검은 테두리와 숫자는 지금부터 <b>단챠만 돌렸을 때</b> 실제로 나오는 순서예요.</li>
       <li><b>중복</b> 줄은 직전 레어와 같은 레어가 나올 때 다시 뽑히는 캐릭이에요. 시드를 하나 더 써서 반대 트랙으로 넘어가요.</li>
       <li><b>확정</b> 줄은 그 칸에서 확정 11연을 돌렸을 때 11번째 울트라와 다음 위치예요.</li>
@@ -563,7 +565,7 @@ button { cursor: pointer; }
       <h2>보는 법</h2>
       <ul>
         <li>냥코 티켓·럭키 티켓 뽑기는 레어 뽑기와 <b>다른 시드</b>를 써요. 여섯 뽑기가 이 시드 하나를 같이 써서, 어느 뽑기를 돌려도 같은 표에서 위치가 넘어가요.</li>
-        <li>칸을 누르면 <b>그 칸까지 뽑았을 때</b>로 시드가 넘어가요. 뽑기를 바꿔 가며 돌려도 그때그때 누르면 돼요.</li>
+        <li>내가 뽑은 마지막 결과 칸을 누르면 바로 그 다음 결과가 <b>1A</b>가 되도록 배열이 새로 시작해요. 뽑기를 바꿔 가며 돌려도 그때그때 누르면 돼요.</li>
         <li><b>중복</b> 줄은 직전에 얻은 아이템과 같은 게 나올 때 다시 뽑히는 결과예요. 다른 뽑기에서 얻은 아이템도 직전으로 쳐요. 다시 뽑은 횟수가 홀수면 반대 트랙으로 넘어가요.</li>
         <li>아이템 칸 순서와 확률은 영문판 기준이고, 영문판 트래커(ampuri) 표 960칸과 대조해 모두 일치했어요. 한국판 구성이 다르면 어긋날 수 있으니 처음 몇 장은 실제 결과와 맞춰봐.</li>
         <li><b>내 시드 찾기</b>는 결과를 순서대로 넣으면 가능한 시드 42억 개를 이 기기 안에서 전부 확인해요. 희귀한 아이템이 앞에 있으면 더 빨라요.</li>
@@ -1133,17 +1135,21 @@ window.NyankoUI = (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
   let onGo = null, toastTimer = null;
+  // 칸을 누르면 확인 창 없이 바로 그 칸까지 뽑은 걸로 진행 (되돌리기는 알림에서)
   function open(titleHTML, factsHTML, go) {
-    $('sheetTitle').innerHTML = titleHTML;
-    $('sheetFacts').innerHTML = factsHTML;
-    onGo = go;
-    $('scrim').hidden = false; $('sheet').hidden = false;
-    $('sheetGo').focus();
+    if (go) go();
   }
   function close() { $('scrim').hidden = true; $('sheet').hidden = true; onGo = null; }
-  function toast(msg) {
-    const t = $('toast'); t.textContent = msg; t.hidden = false;
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+  function toast(msg, actionLabel, action) {
+    const t = $('toast'); t.textContent = '';
+    const span = document.createElement('span'); span.textContent = msg; t.appendChild(span);
+    if (actionLabel && action) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = actionLabel;
+      b.addEventListener('click', () => { t.hidden = true; action(); });
+      t.appendChild(b);
+    }
+    t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, actionLabel ? 5000 : 2200);
   }
   $('sheetCancel').addEventListener('click', close);
   $('scrim').addEventListener('click', close);
@@ -1535,8 +1541,9 @@ window.NyankoUI = (function () {
     rows = STEP;
     persist();
     renderAll();
-    toast(done.cat + ' 까지 진행했어요');
-    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    UI.toast(done.cat + ' 뽑음 · 다음 냥코부터 1A', '되돌리기', undo);
+    const tw = document.querySelector('#rareMode .trackwrap');
+    if (tw && tw.getBoundingClientRect().top < 0) tw.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
   function undo() {
     const h = state.history.pop();
@@ -1987,7 +1994,9 @@ window.NyankoUI = (function () {
         if (st.history.length > 60) st.history.shift();
         st.seed = newSeed; st.last = item; demo = false; rows = STEP;
         persist(); render();
-        UI.toast(nm(item) + ' 까지 진행했어요');
+        UI.toast(nm(item) + ' 뽑음 · 다음 결과부터 1A', '되돌리기', () => $('nundo').click());
+        const tw = document.querySelector('#normalMode .trackwrap');
+        if (tw && tw.getBoundingClientRect().top < 0) tw.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
       });
   }
 
