@@ -514,7 +514,7 @@ button { cursor: pointer; }
       <span><i style="background:var(--uber)"></i>울트라</span>
       <span><i style="background:linear-gradient(90deg,var(--legend),var(--legend-2))"></i>레전드</span>
       <span><i style="background:var(--blue)"></i>블루 아이즈</span>
-      <span><i style="background:var(--yel-bg);box-shadow:inset 0 0 0 1px var(--yel)"></i>버스터즈</span>
+      <span><i style="background:var(--yel-bg);box-shadow:inset 0 0 0 1px var(--yel)"></i>버스터즈 대장</span>
       <span><i style="background:transparent;box-shadow:inset 0 0 0 2px var(--path)"></i>단챠 경로</span>
     </div>
     <div class="trackwrap">
@@ -1271,9 +1271,10 @@ window.NyankoUI = (function () {
   const UI = window.NyankoUI;
   const RNAME = ['레어', '슈퍼레어', '울트라', '레전드'];
   const RCLS = ['r-rare', 'r-supa', 'r-uber', 'r-legend'];
-  // 블루 아이즈: 초극·극 냥코 축제 한정 캐릭 / 버스터즈: 버스터즈 뽑기 캐릭 (고드팻 한국판 기준)
+  // 블루 아이즈: 초·하이퍼 고양이 축제 한정 20종 (레전드 이자나기·이자나미 포함) / 버스터즈: 바스터즈 시리즈별 대장 5마리
   const BLUE_IDS = new Set([838, 780, 691, 642, 586, 530, 381, 319, 270, 860, 788, 706, 658, 610, 544, 442, 379, 334, 732, 739]);
-  const BUSTER_IDS = new Set([60, 76, 84, 85, 107, 108, 136, 144, 197, 287, 44, 73, 195, 241, 259, 437, 520, 560, 43, 77, 87, 88, 106, 125, 137, 213, 284, 306, 534, 621, 58, 139, 171, 262, 317, 359, 398, 716, 648, 650, 656, 661, 669, 675, 683, 687]);
+  // 레드 묘반권 파이파이 · 에어 광전기병 레이 · 메탈 사쿠라 · 파동 지옥 경찰 엠마 · 초생명체 빛의 여신 시리우스
+  const BUSTER_IDS = new Set([284, 287, 398, 560, 687]);
   const tagCls = (cat) => (!cat || cat.id == null) ? '' : BLUE_IDS.has(Number(cat.id)) ? 'c-blue' : BUSTER_IDS.has(Number(cat.id)) ? 'c-buster' : '';
   const DEMO_SEED = 139026851;
   const STEP = 100;
