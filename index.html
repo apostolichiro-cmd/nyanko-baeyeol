@@ -34,6 +34,8 @@ img { max-width: 100%; }
   --supa: #0B7F82;   --supa-bg: #DDF2F0;
   --uber: #A9640A;   --uber-bg: #FCEFD6;
   --legend: #B02F86; --legend-2: #6347D3; --legend-bg: #F5E6F3;
+  --blue: #1D5FD1; --blue-bg: #DFEAFE;
+  --yel: #7A5A00; --yel-bg: #FFEB80;
   --hit: #F5D90A;
   --path: #15171C;
   --warn: #B4471E;
@@ -54,6 +56,8 @@ img { max-width: 100%; }
     --supa: #45CBC4; --supa-bg: #12302F;
     --uber: #F2B54E; --uber-bg: #35290F;
     --legend: #F26BC4; --legend-2: #A08BFF; --legend-bg: #2F1832;
+    --blue: #84B4FF; --blue-bg: #14284D;
+    --yel: #FFE15A; --yel-bg: #3D3410;
     --hit: #E8CB10; --path: #ECEEF2; --warn: #FF8A5C;
     color-scheme: dark;
   }
@@ -65,6 +69,8 @@ img { max-width: 100%; }
   --supa: #45CBC4; --supa-bg: #12302F;
   --uber: #F2B54E; --uber-bg: #35290F;
   --legend: #F26BC4; --legend-2: #A08BFF; --legend-bg: #2F1832;
+  --blue: #84B4FF; --blue-bg: #14284D;
+  --yel: #FFE15A; --yel-bg: #3D3410;
   --hit: #E8CB10; --path: #ECEEF2; --warn: #FF8A5C;
   color-scheme: dark;
 }
@@ -255,6 +261,15 @@ button { cursor: pointer; }
 .sub.rr .k { color: var(--warn); }
 .sub.g .k { color: var(--uber); }
 .sub.g .nm.r-uber { color: var(--uber); }
+/* 블루 아이즈(축제 한정) 파랑 · 버스터즈 노랑 */
+.cell.c-blue { background: var(--blue-bg); }
+.cell.c-buster { background: var(--yel-bg); }
+.cell.c-blue .nm, .cell.r-legend.c-blue .nm { color: var(--blue); font-weight: 700; background: none; -webkit-text-fill-color: currentColor; }
+.cell.c-buster .nm { color: var(--yel); font-weight: 700; }
+.sub.g .nm.c-blue { color: var(--blue); }
+.sub.g .nm.c-buster { color: var(--yel); }
+.fchip.c-blue { background: var(--blue-bg); color: var(--blue); }
+.fchip.c-buster { background: var(--yel-bg); color: var(--yel); }
 .sub.on-path { box-shadow: inset 0 0 0 2px var(--path); }
 .sub.hit { box-shadow: inset 0 0 0 2px var(--hit); }
 .more { padding: 12px; display: flex; justify-content: center; border-top: 1px solid var(--line); }
@@ -498,6 +513,8 @@ button { cursor: pointer; }
       <span><i style="background:var(--supa)"></i>슈퍼레어</span>
       <span><i style="background:var(--uber)"></i>울트라</span>
       <span><i style="background:linear-gradient(90deg,var(--legend),var(--legend-2))"></i>레전드</span>
+      <span><i style="background:var(--blue)"></i>블루 아이즈</span>
+      <span><i style="background:var(--yel-bg);box-shadow:inset 0 0 0 1px var(--yel)"></i>버스터즈</span>
       <span><i style="background:transparent;box-shadow:inset 0 0 0 2px var(--path)"></i>단챠 경로</span>
     </div>
     <div class="trackwrap">
@@ -1254,6 +1271,10 @@ window.NyankoUI = (function () {
   const UI = window.NyankoUI;
   const RNAME = ['레어', '슈퍼레어', '울트라', '레전드'];
   const RCLS = ['r-rare', 'r-supa', 'r-uber', 'r-legend'];
+  // 블루 아이즈: 초극·극 냥코 축제 한정 캐릭 / 버스터즈: 버스터즈 뽑기 캐릭 (고드팻 한국판 기준)
+  const BLUE_IDS = new Set([838, 780, 691, 642, 586, 530, 381, 319, 270, 860, 788, 706, 658, 610, 544, 442, 379, 334, 732, 739]);
+  const BUSTER_IDS = new Set([60, 76, 84, 85, 107, 108, 136, 144, 197, 287, 44, 73, 195, 241, 259, 437, 520, 560, 43, 77, 87, 88, 106, 125, 137, 213, 284, 306, 534, 621, 58, 139, 171, 262, 317, 359, 398, 716, 648, 650, 656, 661, 669, 675, 683, 687]);
+  const tagCls = (cat) => (!cat || cat.id == null) ? '' : BLUE_IDS.has(Number(cat.id)) ? 'c-blue' : BUSTER_IDS.has(Number(cat.id)) ? 'c-buster' : '';
   const DEMO_SEED = 139026851;
   const STEP = 100;
   const LS_KEY = 'nyanko-tracker-v1';
@@ -1460,6 +1481,7 @@ window.NyankoUI = (function () {
     const q = query();
     const name = cell.cat ? cell.cat.name : '(풀 없음)';
     const cls = ['cell', RCLS[cell.rarity]];
+    const tc = tagCls(cell.cat); if (tc) cls.push(tc);
     if (step) cls.push('on-path');
     if (q && matches(name, q)) cls.push('hit');
     let h = '<button type="button" class="' + cls.join(' ') + '" data-c="' + key + '" data-v="n">'
@@ -1480,12 +1502,12 @@ window.NyankoUI = (function () {
       const c3 = ['sub', 'g'];
       if (q && matches(cell.g.uber.name, q)) c3.push('hit');
       h += '<button type="button" class="' + c3.join(' ') + '" data-c="' + key + '" data-v="g">'
-        + '<span class="k">확정</span><span class="nm r-uber">' + esc(cell.g.uber.name) + '</span><span class="to">→' + nextLabel(cell.g.end) + '</span></button>';
+        + '<span class="k">확정</span><span class="nm r-uber ' + tagCls(cell.g.uber) + '">' + esc(cell.g.uber.name) + '</span><span class="to">→' + nextLabel(cell.g.end) + '</span></button>';
       if (rr && rr.g) {
         const c4 = ['sub', 'g'];
         if (q && matches(rr.g.uber.name, q)) c4.push('hit');
         h += '<button type="button" class="' + c4.join(' ') + '" data-c="' + key + '" data-v="rg">'
-          + '<span class="k">중복 후 확정</span><span class="nm r-uber">' + esc(rr.g.uber.name) + '</span><span class="to">→' + nextLabel(rr.g.end) + '</span></button>';
+          + '<span class="k">중복 후 확정</span><span class="nm r-uber ' + tagCls(rr.g.uber) + '">' + esc(rr.g.uber.name) + '</span><span class="to">→' + nextLabel(rr.g.end) + '</span></button>';
       }
     }
     return h;
@@ -1744,7 +1766,7 @@ window.NyankoUI = (function () {
       const items = [...cats.entries()].filter(([, c]) => c.rarity === r && (!q || norm(c.name).includes(q)));
       if (!items.length) return '';
       return '<div class="grp"><span>' + RNAME[r] + ' ' + items.length + '</span>' + items.map(([k, c]) =>
-        '<button type="button" class="fchip ' + RCLS[r] + '" data-k="' + esc(k) + '"' + (rf.gNext && r !== 2 ? ' disabled' : '') + '>' + esc(c.name) + '</button>').join('') + '</div>';
+        '<button type="button" class="fchip ' + RCLS[r] + ' ' + tagCls(c) + '" data-k="' + esc(k) + '"' + (rf.gNext && r !== 2 ? ' disabled' : '') + '>' + esc(c.name) + '</button>').join('') + '</div>';
     }).join('');
     $('rfPal').innerHTML = groups || '<span class="ph" style="color:var(--muted);font-size:13px">맞는 캐릭이 없어요</span>';
     const mixed = new Set(rf.bx).size > 1;
