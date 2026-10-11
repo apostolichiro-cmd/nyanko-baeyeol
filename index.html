@@ -286,12 +286,23 @@ button { cursor: pointer; }
 .rbadge.r-uber { background: var(--uber-bg); color: var(--uber); }
 .rbadge.r-legend { background: var(--legend-bg); color: var(--legend); }
 .toast {
-  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  background: var(--ink); color: var(--on-ink); padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 30;
-  max-width: calc(100% - 32px);
-  display: flex; align-items: center; gap: 12px;
+  position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); margin: 0 auto; max-width: 440px;
+  display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; min-height: 52px;
+  background: var(--ink); color: var(--on-ink); border-radius: 16px; z-index: 30;
+  box-shadow: 0 10px 30px color-mix(in srgb, #000 22%, transparent);
 }
-.toast button { border: 0; background: transparent; color: var(--hit); font-weight: 700; font-size: 14px; padding: 4px 2px; white-space: nowrap; }
+.toast .msg { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.toast .msg b { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast .msg small { font-size: 12px; opacity: 0.72; }
+.toast button {
+  flex: none; border: 0; border-radius: 10px; padding: 0 14px; min-height: 36px;
+  background: color-mix(in srgb, var(--on-ink) 14%, transparent); color: var(--on-ink); font-size: 13px; font-weight: 700;
+}
+.toast button:hover { background: color-mix(in srgb, var(--on-ink) 22%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .toast:not([hidden]) { animation: toastIn 200ms ease-out; }
+  @keyframes toastIn { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+}
 .modes {
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px;
   background: var(--sunk); border: 1px solid var(--line);
@@ -585,7 +596,7 @@ button { cursor: pointer; }
     <button class="btn primary" id="sheetGo" type="button">이 결과로 진행</button>
   </div>
 </div>
-<div class="toast" id="toast" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="data.js"></script>
 <script>
@@ -1140,9 +1151,12 @@ window.NyankoUI = (function () {
     if (go) go();
   }
   function close() { $('scrim').hidden = true; $('sheet').hidden = true; onGo = null; }
-  function toast(msg, actionLabel, action) {
+  function toast(msg, actionLabel, action, sub) {
     const t = $('toast'); t.textContent = '';
-    const span = document.createElement('span'); span.textContent = msg; t.appendChild(span);
+    const box = document.createElement('div'); box.className = 'msg';
+    const title = document.createElement('b'); title.textContent = msg; box.appendChild(title);
+    if (sub) { const s = document.createElement('small'); s.textContent = sub; box.appendChild(s); }
+    t.appendChild(box);
     if (actionLabel && action) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = actionLabel;
       b.addEventListener('click', () => { t.hidden = true; action(); });
@@ -1541,7 +1555,7 @@ window.NyankoUI = (function () {
     rows = STEP;
     persist();
     renderAll();
-    UI.toast(done.cat + ' 뽑음 · 다음 냥코부터 1A', '되돌리기', undo);
+    UI.toast(done.cat + ' 뽑음', '되돌리기', undo, '다음 냥코부터 1A로 다시 시작');
     const tw = document.querySelector('#rareMode .trackwrap');
     if (tw && tw.getBoundingClientRect().top < 0) tw.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
@@ -1994,7 +2008,7 @@ window.NyankoUI = (function () {
         if (st.history.length > 60) st.history.shift();
         st.seed = newSeed; st.last = item; demo = false; rows = STEP;
         persist(); render();
-        UI.toast(nm(item) + ' 뽑음 · 다음 결과부터 1A', '되돌리기', () => $('nundo').click());
+        UI.toast(nm(item) + ' 뽑음', '되돌리기', () => $('nundo').click(), '다음 결과부터 1A로 다시 시작');
         const tw = document.querySelector('#normalMode .trackwrap');
         if (tw && tw.getBoundingClientRect().top < 0) tw.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
       });
