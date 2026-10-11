@@ -304,7 +304,7 @@ button { cursor: pointer; }
   @keyframes toastIn { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
 }
 .modes {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 16px;
   background: var(--sunk); border: 1px solid var(--line);
 }
 .modes button {
@@ -316,6 +316,23 @@ button { cursor: pointer; }
 .mode { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
 .wrap > *, .mode > * { min-width: 0; }
 .hint { font-weight: 400; color: var(--muted); margin-left: 6px; }
+@media (max-width: 520px) {
+  .modes button { padding: 10px 6px; text-align: center; font-size: 14px; }
+  .modes button span { display: none; }
+}
+.gifts { display: grid; gap: 16px; }
+.giftgrp { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: clip; }
+.giftgrp h3 { margin: 0; padding: 12px 14px; font-size: 15px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.giftgrp h3 small { font-size: 12px; color: var(--muted); font-weight: 500; font-family: var(--font-mono); }
+.gift { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); }
+.gift .gname { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.gift .gname b { font-size: 15px; font-weight: 700; }
+.gift .gname code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.gift a.get { flex: none; text-decoration: none; background: var(--ink); color: var(--on-ink); border-radius: 10px; padding: 0 16px; min-height: 40px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; }
+.gift.done a.get { background: var(--sunk); color: var(--muted); }
+.gift.done .gname b::after { content: ' · 누름'; font-size: 12px; font-weight: 600; color: var(--supa); }
+.giftnote { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--r-md); padding: 12px 14px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+.giftnote b { color: var(--ink); }
 .nbanners { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .nb {
   text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-md);
@@ -411,6 +428,7 @@ button { cursor: pointer; }
   <div class="modes" role="tablist" aria-label="뽑기 종류">
     <button type="button" role="tab" id="tabRare" data-mode="rare" aria-selected="true">레어 뽑기<span>레어 티켓 · 이벤트 가챠</span></button>
     <button type="button" role="tab" id="tabNormal" data-mode="normal" aria-selected="false">냥코 티켓<span>냥코 뽑기 · 럭키 뽑기</span></button>
+    <button type="button" role="tab" id="tabGift" data-mode="gift" aria-selected="false">보상 받기<span>한국판 앱 바로 열기</span></button>
   </div>
 
   <div id="rareMode" class="mode">
@@ -583,6 +601,33 @@ button { cursor: pointer; }
         <li>이름은 PONOS 한국판 뽑기 안내 기준이에요. 다크 캣츠아이, 슈퍼페린은 한국판 이름을 못 찾아서 임시 이름이에요.</li>
       </ul>
     </section>
+  </div>
+
+  <div id="giftMode" class="mode" hidden>
+    <section class="giftnote" aria-label="안내">
+      <span><b>폰에서</b> 냥코대전쟁 한국판이 깔려 있을 때 <b>받기</b>를 누르면 앱이 열리면서 보상을 받아요.</span>
+      <span>예전 연동 이벤트·설문 보상 링크라서 이미 받았거나 막힌 건 안 받아질 수 있어요. 포노스가 지금 공식으로 나눠주는 건 아니라서 받는 건 본인 판단이에요.</span>
+    </section>
+    <div class="gifts" id="gifts">
+      <section class="giftgrp"><h3>고양이 홉핑 보상<small>nekohopper · 5개</small></h3>
+        <div class="gift" data-k="nekohopper_kr1"><div class="gname"><b>통조림 30개</b><code>nekohopper_kr1</code></div><a class="get" href="ponos-battlecatskr://ponos/nekohopper_kr1">받기</a></div>
+        <div class="gift" data-k="nekohopper_kr2"><div class="gname"><b>고양이 박사 3개</b><code>nekohopper_kr2</code></div><a class="get" href="ponos-battlecatskr://ponos/nekohopper_kr2">받기</a></div>
+        <div class="gift" data-k="nekohopper_kr3"><div class="gname"><b>고양이 도령 3개</b><code>nekohopper_kr3</code></div><a class="get" href="ponos-battlecatskr://ponos/nekohopper_kr3">받기</a></div>
+        <div class="gift" data-k="nekohopper_kr4"><div class="gname"><b>트레저 레이더 3개</b><code>nekohopper_kr4</code></div><a class="get" href="ponos-battlecatskr://ponos/nekohopper_kr4">받기</a></div>
+        <div class="gift" data-k="nekohopper_kr5"><div class="gname"><b>레어 티켓 3장</b><code>nekohopper_kr5</code></div><a class="get" href="ponos-battlecatskr://ponos/nekohopper_kr5">받기</a></div>
+      </section>
+      <section class="giftgrp"><h3>배틀캣 보상<small>nyanko9 · 5개</small></h3>
+        <div class="gift" data-k="nyanko9_kr1"><div class="gname"><b>통조림 50개</b><code>nyanko9_kr1</code></div><a class="get" href="ponos-battlecatskr://ponos/nyanko9_kr1">받기</a></div>
+        <div class="gift" data-k="nyanko9_kr2"><div class="gname"><b>고양이 도령 3개</b><code>nyanko9_kr2</code></div><a class="get" href="ponos-battlecatskr://ponos/nyanko9_kr2">받기</a></div>
+        <div class="gift" data-k="nyanko9_kr3"><div class="gname"><b>통조림 100개</b><code>nyanko9_kr3</code></div><a class="get" href="ponos-battlecatskr://ponos/nyanko9_kr3">받기</a></div>
+        <div class="gift" data-k="nyanko9_kr4"><div class="gname"><b>트레저 레이더 3개</b><code>nyanko9_kr4</code></div><a class="get" href="ponos-battlecatskr://ponos/nyanko9_kr4">받기</a></div>
+        <div class="gift" data-k="nyanko9_kr5"><div class="gname"><b>레어 티켓 3장</b><code>nyanko9_kr5</code></div><a class="get" href="ponos-battlecatskr://ponos/nyanko9_kr5">받기</a></div>
+      </section>
+      <section class="giftgrp"><h3>설문 보상<small>enquete · 2개</small></h3>
+        <div class="gift" data-k="enquete/3/kr/t73zvwyf"><div class="gname"><b>통조림 50개</b><code>enquete/3/kr/t73zvwyf</code></div><a class="get" href="ponos-battlecatskr://ponos/enquete/3/kr/t73zvwyf">받기</a></div>
+        <div class="gift" data-k="enquete/4/kr/g8pm7whi"><div class="gname"><b>통조림 50개</b><code>enquete/4/kr/g8pm7whi</code></div><a class="get" href="ponos-battlecatskr://ponos/enquete/4/kr/g8pm7whi">받기</a></div>
+      </section>
+    </div>
   </div>
 </div>
 
@@ -1173,10 +1218,9 @@ window.NyankoUI = (function () {
   // 레어 / 냥코 티켓 전환
   const MODE_KEY = 'nyanko-mode';
   function setMode(m, save) {
-    const normal = m === 'normal';
-    $('rareMode').hidden = normal; $('normalMode').hidden = !normal;
-    $('tabRare').setAttribute('aria-selected', String(!normal));
-    $('tabNormal').setAttribute('aria-selected', String(normal));
+    const ids = { rare: ['rareMode', 'tabRare'], normal: ['normalMode', 'tabNormal'], gift: ['giftMode', 'tabGift'] };
+    if (!ids[m]) m = 'rare';
+    for (const k in ids) { const on = k === m; $(ids[k][0]).hidden = !on; $(ids[k][1]).setAttribute('aria-selected', String(on)); }
     if (save) { try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* ignore */ } }
   }
   document.querySelector('.modes').addEventListener('click', (e) => {
@@ -1185,7 +1229,21 @@ window.NyankoUI = (function () {
   });
   let saved = null;
   try { saved = localStorage.getItem(MODE_KEY); } catch (e) { /* ignore */ }
-  setMode(saved === 'normal' ? 'normal' : 'rare', false);
+  setMode(saved || 'rare', false);
+  // 보상 받기: 누른 건 이 기기에 표시
+  const GIFT_KEY = 'nyanko-gifts';
+  let giftDone = {};
+  try { giftDone = JSON.parse(localStorage.getItem(GIFT_KEY) || '{}') || {}; } catch (e) { giftDone = {}; }
+  function paintGifts() {
+    document.querySelectorAll('#gifts .gift').forEach((g) => { const d = !!giftDone[g.dataset.k]; g.classList.toggle('done', d); g.querySelector('a.get').textContent = d ? '다시 받기' : '받기'; });
+  }
+  $('gifts').addEventListener('click', (e) => {
+    const a = e.target.closest('a.get'); if (!a) return;
+    giftDone[a.closest('.gift').dataset.k] = Date.now();
+    try { localStorage.setItem(GIFT_KEY, JSON.stringify(giftDone)); } catch (err) { /* ignore */ }
+    setTimeout(paintGifts, 300);
+  });
+  paintGifts();
   return { open, close, toast };
 })();
 </script>
