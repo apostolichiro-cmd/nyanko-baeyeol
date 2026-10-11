@@ -1,0 +1,2185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F3F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1014" media="(prefers-color-scheme: dark)">
+<meta name="description" content="시드로 미리 보는 냥코대전쟁 뽑기 배열">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html, body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>냥코 배열 뷰어</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column (max 960px) — seed bar, schedule strip, path summary, then the A/B track grid.
+   Chrome stays monochrome; color is reserved for rarity. */
+:root {
+  --bg: #F2F3F6;
+  --surface: #FFFFFF;
+  --sunk: #E9EBF0;
+  --ink: #15171C;
+  --ink-soft: #2B2F38;
+  --muted: #646B7A;
+  --line: #DCE0E7;
+  --on-ink: #FFFFFF;
+  --focus: #3B62F0;
+
+  --rare: #6E7789;   --rare-bg: #ECEEF2;
+  --supa: #0B7F82;   --supa-bg: #DDF2F0;
+  --uber: #A9640A;   --uber-bg: #FCEFD6;
+  --legend: #B02F86; --legend-2: #6347D3; --legend-bg: #F5E6F3;
+  --hit: #F5D90A;
+  --path: #15171C;
+  --warn: #B4471E;
+
+  --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-mark: "Black Han Sans", "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1014; --surface: #171A20; --sunk: #1F232B; --ink: #ECEEF2; --ink-soft: #CDD1DA;
+    --muted: #979EAD; --line: #2A2F39; --on-ink: #121418; --focus: #7D9BFF;
+    --rare: #A6AEBF; --rare-bg: #22262E;
+    --supa: #45CBC4; --supa-bg: #12302F;
+    --uber: #F2B54E; --uber-bg: #35290F;
+    --legend: #F26BC4; --legend-2: #A08BFF; --legend-bg: #2F1832;
+    --hit: #E8CB10; --path: #ECEEF2; --warn: #FF8A5C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1014; --surface: #171A20; --sunk: #1F232B; --ink: #ECEEF2; --ink-soft: #CDD1DA;
+  --muted: #979EAD; --line: #2A2F39; --on-ink: #121418; --focus: #7D9BFF;
+  --rare: #A6AEBF; --rare-bg: #22262E;
+  --supa: #45CBC4; --supa-bg: #12302F;
+  --uber: #F2B54E; --uber-bg: #35290F;
+  --legend: #F26BC4; --legend-2: #A08BFF; --legend-bg: #2F1832;
+  --hit: #E8CB10; --path: #ECEEF2; --warn: #FF8A5C;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 20px 64px;
+  display: grid;
+  gap: 20px;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: grid; gap: 2px; }
+.brand h1 {
+  margin: 0; font-family: var(--font-mark); font-weight: 400; font-size: 34px; line-height: 1;
+  letter-spacing: -0.01em; text-wrap: balance;
+}
+.brand h1 .dot { color: var(--uber); }
+.brand p { margin: 0; color: var(--muted); font-size: 13px; }
+.sync { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.sync .led { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.sync[data-state="live"] .led { background: var(--supa); }
+
+/* ---------- seed bar ---------- */
+.seedbar {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: 14px; display: grid; gap: 12px;
+}
+.seedrow { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.field { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; }
+.field label { font-size: 12px; color: var(--muted); font-weight: 500; }
+.seedinput {
+  width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: var(--r-md);
+  padding: 10px 12px; font-family: var(--font-mono); font-size: 20px; font-weight: 500;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
+}
+.seedinput[aria-invalid="true"] { border-color: var(--warn); }
+.btns { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-md);
+  padding: 10px 14px; font-weight: 600; font-size: 14px; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+}
+.btn:hover { background: var(--sunk); }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+.btn.primary { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.btn.primary:hover { background: var(--ink-soft); }
+.metaline { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: var(--muted); align-items: center; }
+.metaline a { color: var(--ink); text-underline-offset: 3px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 4px 3px 10px;
+  background: var(--sunk); color: var(--ink); font-size: 13px; font-weight: 500;
+}
+.chip button { border: 0; background: transparent; width: 22px; height: 22px; border-radius: 50%; color: var(--muted); line-height: 1; }
+.chip button:hover { background: var(--line); color: var(--ink); }
+.note { font-size: 13px; color: var(--warn); }
+
+/* ---------- schedule ---------- */
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.sec-head h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.sec-head span { font-size: 12px; color: var(--muted); }
+.strip {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 260px); gap: 10px;
+  overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.banner {
+  scroll-snap-align: start; text-align: left; border: 1px solid var(--line); background: var(--surface);
+  border-radius: var(--r-lg); padding: 12px 12px 12px; display: grid; gap: 6px; align-content: start;
+  min-height: 118px; position: relative;
+}
+.banner:hover { border-color: var(--muted); }
+.banner[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.banner .row1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.status { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: 0.02em; }
+.status.live { background: var(--ink); color: var(--on-ink); }
+.status.soon { background: var(--sunk); color: var(--ink); }
+.status.past { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.status.demo { background: var(--uber-bg); color: var(--uber); }
+.dates { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.banner .t { font-size: 14px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
+.tag.g { color: var(--uber); border-color: color-mix(in srgb, var(--uber) 40%, transparent); }
+.empty {
+  border: 1px dashed var(--line); border-radius: var(--r-lg); padding: 18px; color: var(--muted);
+  font-size: 14px; background: var(--surface);
+}
+.empty strong { color: var(--ink); display: block; margin-bottom: 4px; font-size: 15px; }
+
+/* ---------- summary ---------- */
+.summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tile {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px;
+  display: grid; gap: 4px; align-content: start; min-width: 0;
+}
+.tile .v { font-weight: 700; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.tile .m { font-size: 12px; color: var(--muted); }
+.tile.uber .v { color: var(--uber); }
+.tile.legend .v { color: var(--legend); }
+@media (max-width: 560px) {
+  .summary { grid-template-columns: 1fr; }
+  .tile { grid-template-columns: 92px minmax(0, 1fr); align-items: baseline; column-gap: 10px; }
+  .tile .m { grid-column: 2; }
+}
+
+/* ---------- tools ---------- */
+.tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.search { position: relative; flex: 1 1 240px; min-width: 0; }
+.search input {
+  width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+  padding: 10px 14px 10px 38px; font-size: 15px; min-height: 44px;
+}
+.search svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.hitinfo { font-size: 13px; color: var(--muted); }
+.legendkey { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legendkey i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+
+/* ---------- track grid ---------- */
+.trackwrap { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: clip; }
+.thead {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2;
+  display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.thead div { padding: 10px 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); }
+.thead div + div { border-left: 1px solid var(--line); }
+.rows { display: grid; }
+.r { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
+.r:last-child { border-bottom: 0; }
+.col { display: grid; gap: 4px; padding: 6px; min-width: 0; align-content: start; }
+.col + .col { border-left: 1px solid var(--line); }
+.cell {
+  text-align: left; border: 0; border-radius: var(--r-sm); padding: 7px 8px; min-height: 44px; width: 100%;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
+  background: var(--rare-bg); position: relative;
+}
+.cell .pos { font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 2.6em; }
+.cell .nm { font-weight: 600; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.cell .step {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600; min-width: 22px; height: 22px; padding: 0 5px;
+  border-radius: 999px; display: inline-grid; place-items: center; background: var(--path); color: var(--on-ink);
+}
+.cell.r-rare { background: var(--rare-bg); }
+.cell.r-rare .nm { color: var(--ink); }
+.cell.r-supa { background: var(--supa-bg); }
+.cell.r-supa .nm { color: var(--supa); }
+.cell.r-uber { background: var(--uber-bg); }
+.cell.r-uber .nm { color: var(--uber); font-weight: 700; }
+.cell.r-legend { background: var(--legend-bg); }
+.cell.r-legend .nm {
+  font-weight: 700; color: var(--legend);
+  background: linear-gradient(90deg, var(--legend), var(--legend-2)); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.cell:hover { filter: brightness(0.97); }
+.cell.on-path { box-shadow: inset 0 0 0 2px var(--path); }
+.cell.hit { box-shadow: inset 0 0 0 3px var(--hit); }
+.cell.on-path.hit { box-shadow: inset 0 0 0 2px var(--path), inset 0 0 0 5px var(--hit); }
+.sub {
+  text-align: left; border: 0; background: transparent; border-radius: var(--r-sm); padding: 4px 8px; width: 100%;
+  font-size: 12px; color: var(--muted); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; align-items: baseline;
+}
+.sub:hover { background: var(--sunk); }
+.sub .k { font-weight: 600; white-space: nowrap; }
+.sub .nm { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.sub .to { font-family: var(--font-mono); white-space: nowrap; }
+.sub.rr .k { color: var(--warn); }
+.sub.g .k { color: var(--uber); }
+.sub.g .nm.r-uber { color: var(--uber); }
+.sub.on-path { box-shadow: inset 0 0 0 2px var(--path); }
+.sub.hit { box-shadow: inset 0 0 0 2px var(--hit); }
+.more { padding: 12px; display: flex; justify-content: center; border-top: 1px solid var(--line); }
+
+/* ---------- help ---------- */
+.help { display: grid; gap: 10px; font-size: 14px; color: var(--muted); max-width: 68ch; }
+.help h2 { margin: 0; font-size: 15px; color: var(--ink); }
+.help ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.help b { color: var(--ink); font-weight: 600; }
+
+/* ---------- sheet ---------- */
+.scrim { position: fixed; inset: 0; background: color-mix(in srgb, #000 40%, transparent); z-index: 20; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; margin: 0 auto; max-width: 520px;
+  background: var(--surface); border-radius: 22px 22px 0 0; border: 1px solid var(--line);
+  padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px;
+  box-shadow: 0 -10px 40px color-mix(in srgb, #000 18%, transparent);
+}
+.sheet .grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: -6px auto 0; }
+.sheet h3 { margin: 0; font-size: 20px; line-height: 1.25; text-wrap: balance; }
+.sheet .facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+.sheet .facts dt { color: var(--muted); }
+.sheet .facts dd { margin: 0; font-weight: 500; }
+.sheet .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sheet .acts .btn { justify-content: center; }
+.rbadge { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-right: 6px; vertical-align: 3px; }
+.rbadge.r-rare { background: var(--rare-bg); color: var(--rare); }
+.rbadge.r-supa { background: var(--supa-bg); color: var(--supa); }
+.rbadge.r-uber { background: var(--uber-bg); color: var(--uber); }
+.rbadge.r-legend { background: var(--legend-bg); color: var(--legend); }
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  background: var(--ink); color: var(--on-ink); padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 30;
+  max-width: calc(100% - 32px);
+}
+.modes {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px;
+  background: var(--sunk); border: 1px solid var(--line);
+}
+.modes button {
+  border: 0; background: transparent; border-radius: 12px; padding: 10px 12px; min-height: 52px;
+  display: grid; gap: 1px; text-align: left; font-weight: 700; font-size: 15px; color: var(--muted);
+}
+.modes button span { font-size: 12px; font-weight: 500; }
+.modes button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px color-mix(in srgb, #000 12%, transparent); }
+.mode { display: grid; gap: 20px; }
+.hint { font-weight: 400; color: var(--muted); margin-left: 6px; }
+.nbanners { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.nb {
+  text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-md);
+  padding: 10px 12px; display: grid; gap: 2px; min-height: 56px;
+}
+.nb:hover { border-color: var(--muted); }
+.nb[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.nb b { font-size: 14px; line-height: 1.3; }
+.nb span { font-size: 12px; color: var(--muted); }
+.cell.r-common { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.cell.r-common .nm { color: var(--ink-soft); font-weight: 500; }
+.cell.r-common.on-path { box-shadow: inset 0 0 0 2px var(--path); }
+.cell.r-common.hit { box-shadow: inset 0 0 0 3px var(--hit); }
+.rbadge.r-common { background: var(--sunk); color: var(--muted); }
+.linkbtn { border: 0; background: transparent; padding: 0; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; font-weight: 600; }
+.finder {
+  background: var(--surface); border: 1px solid var(--ink); border-radius: var(--r-lg); padding: 14px;
+  display: grid; gap: 14px;
+}
+.finder h2 { margin: 0; font-size: 17px; }
+.finder p { margin: 0; font-size: 14px; color: var(--muted); max-width: 62ch; }
+.finder p b { color: var(--ink); }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.fgrid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.fgrid select {
+  border: 1px solid var(--line); background: var(--bg); border-radius: var(--r-md); padding: 10px 12px;
+  font-size: 15px; min-height: 44px; width: 100%;
+}
+.fpal { display: grid; gap: 8px; }
+.fpal .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fpal .grp > span { font-size: 11px; font-weight: 700; color: var(--muted); width: 100%; letter-spacing: 0.04em; }
+.fchip {
+  border: 0; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; min-height: 36px;
+  background: var(--rare-bg); color: var(--ink);
+}
+.fchip.r-common { background: var(--sunk); color: var(--ink-soft); }
+.fchip.r-supa { background: var(--supa-bg); color: var(--supa); }
+.fchip.r-uber { background: var(--uber-bg); color: var(--uber); }
+.fchip.r-legend { background: var(--legend-bg); color: var(--legend); }
+.fchip:active { transform: scale(0.97); }
+.flist {
+  display: flex; flex-wrap: wrap; gap: 6px; min-height: 44px; padding: 8px; border-radius: var(--r-md);
+  background: var(--bg); border: 1px dashed var(--line); align-items: center;
+}
+.flist .ph { color: var(--muted); font-size: 13px; padding: 0 4px; }
+.flist .it { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 10px; font-size: 13px; }
+.flist .it i { font-style: normal; font-family: var(--font-mono); color: var(--muted); font-size: 11px; }
+.flist .it button { border: 0; background: transparent; width: 22px; height: 22px; border-radius: 50%; color: var(--muted); }
+.meter { display: grid; gap: 4px; }
+.meter .bar { height: 6px; border-radius: 6px; background: var(--sunk); overflow: hidden; }
+.meter .bar i { display: block; height: 100%; width: 0; background: var(--warn); border-radius: 6px; }
+.meter .bar i.ok { background: var(--supa); }
+.meter span { font-size: 12px; color: var(--muted); }
+.frow { display: flex; gap: 8px; flex-wrap: wrap; }
+.fresult { border-radius: var(--r-md); padding: 12px; background: var(--bg); display: grid; gap: 8px; font-size: 14px; }
+.fresult strong { font-size: 16px; }
+.fresult .cands { display: grid; gap: 4px; }
+.fresult .seedv { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600; }
+.fpalbox { max-height: 340px; overflow-y: auto; padding-right: 4px; display: grid; gap: 8px; }
+.ftools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ftools input {
+  flex: 1 1 200px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 999px;
+  padding: 9px 14px; font-size: 15px; min-height: 40px;
+}
+.ftoggle {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700;
+  min-height: 40px; color: var(--uber);
+}
+.ftoggle[aria-pressed="true"] { background: var(--uber); color: var(--on-ink); border-color: var(--uber); }
+.ftoggle[disabled] { opacity: 0.4; cursor: default; }
+.fchip[disabled] { opacity: 0.35; cursor: default; }
+.flist .it.g { border-color: var(--uber); }
+.flist .it.g em { font-style: normal; font-size: 11px; font-weight: 700; color: var(--uber); }
+.flist .it em.bn { font-style: normal; font-size: 11px; font-weight: 600; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: up 180ms ease-out; }
+  @keyframes up { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>냥코 배열<span class="dot">.</span></h1>
+      <p>시드로 미리 보는 냥코대전쟁 뽑기 결과</p>
+    </div>
+    <div class="sync" id="sync" data-state="idle"><span class="led"></span><span id="syncText">일정 불러오는 중</span></div>
+  </header>
+
+  <div class="modes" role="tablist" aria-label="뽑기 종류">
+    <button type="button" role="tab" id="tabRare" data-mode="rare" aria-selected="true">레어 뽑기<span>레어 티켓 · 이벤트 가챠</span></button>
+    <button type="button" role="tab" id="tabNormal" data-mode="normal" aria-selected="false">냥코 티켓<span>냥코 뽑기 · 럭키 뽑기</span></button>
+  </div>
+
+  <div id="rareMode" class="mode">
+  <section class="seedbar" aria-label="시드">
+    <div class="seedrow">
+      <div class="field">
+        <label for="seed">내 시드</label>
+        <input id="seed" class="seedinput" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="예: 139026851">
+      </div>
+      <div class="btns">
+        <button class="btn" id="copySeed" type="button">복사</button>
+        <button class="btn" id="undo" type="button" disabled>되돌리기</button>
+      </div>
+    </div>
+    <div class="metaline">
+      <span id="lastWrap" hidden class="chip">직전: <b id="lastName"></b><button type="button" id="clearLast" aria-label="직전 캐릭 지우기">×</button></span>
+      <span id="seedNote"></span>
+      <button type="button" class="linkbtn" id="rfind">내 시드 찾기</button>
+    </div>
+  </section>
+
+  <section class="finder" id="rfinder" hidden aria-labelledby="rfTitle">
+    <div class="sec-head" style="margin:0"><h2 id="rfTitle">내 레어 뽑기 시드 찾기</h2><button type="button" class="btn" id="rfClose">닫기</button></div>
+    <p>나온 캐릭을 <b>나온 순서대로</b> 눌러줘. 레어 가챠, 플래티넘, 레전드 뽑기는 시드 하나를 같이 써서 섞어서 넣어도 돼. 가챠를 바꿔 뽑았으면 위에서 가챠만 바꾸고 이어서 누르면 돼. 보통 6~10마리면 하나로 좁혀져.</p>
+    <div class="fgrid">
+      <label for="rfBanner">지금 넣는 캐릭은 어느 가챠에서?<select id="rfBanner"></select></label>
+      <label for="rfLast" id="rfLastWrap">기록한 첫 뽑기 바로 전에 얻은 레어<select id="rfLast"></select></label>
+    </div>
+    <div class="ftools">
+      <input id="rfQ" type="search" placeholder="캐릭 이름으로 좁히기" aria-label="캐릭 이름으로 좁히기" autocomplete="off">
+      <button type="button" class="ftoggle" id="rfG" aria-pressed="false">다음은 확정 울트라</button>
+    </div>
+    <div class="fpalbox"><div class="fpal" id="rfPal"></div></div>
+    <div class="flist" id="rfList" aria-live="polite"></div>
+    <div class="meter"><div class="bar"><i id="rfBar"></i></div><span id="rfBitsText"></span></div>
+    <div class="frow">
+      <button type="button" class="btn primary" id="rfGo">시드 찾기</button>
+      <button type="button" class="btn" id="rfBack">하나 지우기</button>
+      <button type="button" class="btn" id="rfReset">전부 지우기</button>
+    </div>
+    <div id="rfOut" aria-live="polite"></div>
+  </section>
+
+  <section aria-labelledby="schedTitle">
+    <div class="sec-head"><h2 id="schedTitle">뽑기 일정</h2><span id="schedCount"></span></div>
+    <div id="strip" class="strip" role="group" aria-label="가챠 선택">
+      <div class="empty"><strong>일정을 불러오는 중이에요</strong>한국판 뽑기 일정이 여기에 카드로 나와요.</div>
+    </div>
+  </section>
+
+  <section class="summary" id="summary" aria-label="요약">
+    <div class="tile uber"><span class="eyebrow">다음 울트라</span><span class="v">—</span><span class="m">가챠를 고르면 계산돼요</span></div>
+    <div class="tile legend"><span class="eyebrow">다음 레전드</span><span class="v">—</span><span class="m">&nbsp;</span></div>
+    <div class="tile"><span class="eyebrow">11연차</span><span class="v">—</span><span class="m">&nbsp;</span></div>
+  </section>
+
+  <section aria-label="배열">
+    <div class="tools" style="margin-bottom:10px">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input id="q" type="search" placeholder="캐릭 이름으로 찾기" aria-label="캐릭 이름으로 찾기" autocomplete="off">
+      </div>
+      <span class="hitinfo" id="hitinfo"></span>
+    </div>
+    <div class="legendkey" style="margin-bottom:10px">
+      <span><i style="background:var(--rare-bg);box-shadow:inset 0 0 0 1px var(--rare)"></i>레어</span>
+      <span><i style="background:var(--supa)"></i>슈퍼레어</span>
+      <span><i style="background:var(--uber)"></i>울트라</span>
+      <span><i style="background:linear-gradient(90deg,var(--legend),var(--legend-2))"></i>레전드</span>
+      <span><i style="background:transparent;box-shadow:inset 0 0 0 2px var(--path)"></i>단챠 경로</span>
+    </div>
+    <div class="trackwrap">
+      <div class="thead"><div>A 트랙</div><div>B 트랙</div></div>
+      <div class="rows" id="rows">
+        <div class="empty" style="border:0;border-radius:0">가챠를 고르고 시드를 넣으면 A/B 트랙 배열이 여기에 나와요.</div>
+      </div>
+      <div class="more" id="moreWrap" hidden><button class="btn" id="more" type="button">100줄 더 보기</button></div>
+    </div>
+  </section>
+
+  <section class="help">
+    <h2>보는 법</h2>
+    <ul>
+      <li>칸을 누르면 <b>그 칸까지 뽑았을 때</b>로 시드가 넘어가요. 잘못 눌렀으면 되돌리기.</li>
+      <li>검은 테두리와 숫자는 지금부터 <b>단챠만 돌렸을 때</b> 실제로 나오는 순서예요.</li>
+      <li><b>중복</b> 줄은 직전 레어와 같은 레어가 나올 때 다시 뽑히는 캐릭이에요. 시드를 하나 더 써서 반대 트랙으로 넘어가요.</li>
+      <li><b>확정</b> 줄은 그 칸에서 확정 11연을 돌렸을 때 11번째 울트라와 다음 위치예요.</li>
+      <li><b>내 시드 찾기</b>는 고른 가챠에서 연속으로 나온 캐릭을 순서대로 넣으면 시드 42억 개를 이 기기 안에서 전부 확인해요. 확정 11연의 11번째는 "다음은 확정 울트라"를 켜고 넣어줘.</li>
+      <li>계산 규칙은 시드 트래커 사이트(고드팻)의 표와 대조해 모두 일치했어요. 플래티넘·레전드 뽑기도 같은 시드를 써요.</li>
+      <li>이 사이트는 Claude 없이 도는 복사본이라, 가챠 일정은 위에 적힌 데이터 기준 날짜까지만 들어 있어요. 시드와 진행 기록은 이 기기 브라우저에만 저장돼요.</li>
+    </ul>
+  </section>
+  </div>
+
+  <div id="normalMode" class="mode" hidden>
+    <section class="seedbar" aria-label="일반 뽑기 시드">
+      <div class="seedrow">
+        <div class="field">
+          <label for="nseed">일반 뽑기 시드<span class="hint">레어 뽑기 시드랑 따로예요</span></label>
+          <input id="nseed" class="seedinput" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="예: 3141592653">
+        </div>
+        <div class="btns">
+          <button class="btn" id="ncopy" type="button">복사</button>
+          <button class="btn" id="nundo" type="button" disabled>되돌리기</button>
+        </div>
+      </div>
+      <div class="metaline">
+        <span id="nlastWrap" hidden class="chip">직전: <b id="nlastName"></b><button type="button" id="nclearLast" aria-label="직전 아이템 지우기">×</button></span>
+        <span id="nseedNote"></span>
+        <button type="button" class="linkbtn" id="nfind">내 시드 찾기</button>
+      </div>
+    </section>
+
+    <section class="finder" id="finder" hidden aria-labelledby="fTitle">
+      <div class="sec-head" style="margin:0"><h2 id="fTitle">내 일반 뽑기 시드 찾기</h2><button type="button" class="btn" id="fClose">닫기</button></div>
+      <p>나온 결과를 <b>나온 순서대로</b> 눌러줘. 여섯 뽑기는 시드 하나를 같이 써서 섞어서 넣어도 돼. 뽑기를 바꿔 돌렸으면 위에서 뽑기만 바꾸고 이어서 누르면 돼. 보통 12~16개면 하나로 좁혀져.</p>
+      <div class="fgrid">
+        <label for="fBanner">지금 넣는 결과는 어느 뽑기에서?<select id="fBanner"></select></label>
+        <label for="fLast">기록한 첫 뽑기 바로 전에 얻은 것<select id="fLast"></select></label>
+      </div>
+      <div class="fpal" id="fPal"></div>
+      <div class="flist" id="fList" aria-live="polite"></div>
+      <div class="meter"><div class="bar"><i id="fBar"></i></div><span id="fBitsText"></span></div>
+      <div class="frow">
+        <button type="button" class="btn primary" id="fGo">시드 찾기</button>
+        <button type="button" class="btn" id="fBack">하나 지우기</button>
+        <button type="button" class="btn" id="fReset">전부 지우기</button>
+      </div>
+      <div id="fOut" aria-live="polite"></div>
+    </section>
+
+    <section aria-labelledby="nbTitle">
+      <div class="sec-head"><h2 id="nbTitle">뽑기 고르기</h2><span>여섯 뽑기가 시드 하나를 같이 써요</span></div>
+      <div id="nbanners" class="nbanners" role="group" aria-label="일반 뽑기 선택"></div>
+    </section>
+
+    <section class="summary" id="nsummary" aria-label="요약"></section>
+
+    <section aria-label="일반 뽑기 배열">
+      <div class="tools" style="margin-bottom:10px">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="nq" type="search" placeholder="아이템 이름으로 찾기" aria-label="아이템 이름으로 찾기" autocomplete="off">
+        </div>
+        <span class="hitinfo" id="nhitinfo"></span>
+      </div>
+      <div class="legendkey" style="margin-bottom:10px">
+        <span><i style="background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)"></i>노멀</span>
+        <span><i style="background:var(--rare-bg);box-shadow:inset 0 0 0 1px var(--rare)"></i>레어</span>
+        <span><i style="background:var(--supa)"></i>슈퍼레어</span>
+        <span><i style="background:var(--uber)"></i>울트라</span>
+        <span><i style="background:linear-gradient(90deg,var(--legend),var(--legend-2))"></i>레전드</span>
+        <span><i style="background:transparent;box-shadow:inset 0 0 0 2px var(--path)"></i>한 장씩 뽑을 때 경로</span>
+      </div>
+      <div class="trackwrap">
+        <div class="thead"><div>A 트랙</div><div>B 트랙</div></div>
+        <div class="rows" id="nrows"></div>
+        <div class="more" id="nmoreWrap" hidden><button class="btn" id="nmore" type="button">100줄 더 보기</button></div>
+      </div>
+    </section>
+
+    <section class="help">
+      <h2>보는 법</h2>
+      <ul>
+        <li>냥코 티켓·럭키 티켓 뽑기는 레어 뽑기와 <b>다른 시드</b>를 써요. 여섯 뽑기가 이 시드 하나를 같이 써서, 어느 뽑기를 돌려도 같은 표에서 위치가 넘어가요.</li>
+        <li>칸을 누르면 <b>그 칸까지 뽑았을 때</b>로 시드가 넘어가요. 뽑기를 바꿔 가며 돌려도 그때그때 누르면 돼요.</li>
+        <li><b>중복</b> 줄은 직전에 얻은 아이템과 같은 게 나올 때 다시 뽑히는 결과예요. 다른 뽑기에서 얻은 아이템도 직전으로 쳐요. 다시 뽑은 횟수가 홀수면 반대 트랙으로 넘어가요.</li>
+        <li>아이템 칸 순서와 확률은 영문판 기준이고, 영문판 트래커(ampuri) 표 960칸과 대조해 모두 일치했어요. 한국판 구성이 다르면 어긋날 수 있으니 처음 몇 장은 실제 결과와 맞춰봐.</li>
+        <li><b>내 시드 찾기</b>는 결과를 순서대로 넣으면 가능한 시드 42억 개를 이 기기 안에서 전부 확인해요. 희귀한 아이템이 앞에 있으면 더 빨라요.</li>
+        <li>이름은 PONOS 한국판 뽑기 안내 기준이에요. 다크 캣츠아이, 슈퍼페린은 한국판 이름을 못 찾아서 임시 이름이에요.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="grab"></div>
+  <h3 id="sheetTitle"></h3>
+  <dl class="facts" id="sheetFacts"></dl>
+  <div class="acts">
+    <button class="btn" id="sheetCancel" type="button">닫기</button>
+    <button class="btn primary" id="sheetGo" type="button">이 결과로 진행</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+window.NYANKO_DATA = {"banners":[{"title":"플래티넘 뽑기 · 울트라 100%","region":"kr","start":"2026-07-24","end":"2026-10-16","gacha":1063,"kind":"platinum","ticket":"플래티넘 티켓","rates":[0,0,10000,0],"guaranteed":false,"pools":{"legend":[],"rare":[],"supa":[],"uber":[[862,"폭룡기 볼네이도"],[860,"고월의 기사 루노스"],[851,"타니와"],[838,"꼬마기사 루노"],[831,"라클레스"],[818,"나무의 정령 모리"],[812,"위타천 스칸다"],[800,"곡사포대 런처즈"],[788,"비호의 선녀 루나샤"],[782,"마모루가"],[780,"꼬마선녀 루나"],[775,"특수기동대 엑셀"],[770,"냥꽃 할배"],[764,"고양이 다이너사우루스"],[761,"포룡 건듀로스"],[755,"알리칸토"],[734,"페가사"],[724,"광익신 이시스"],[720,"철의 정령 메탈릭"],[716,"건설병단 스핑크스"],[713,"카오루가"],[706,"비명의 왕 포노아"],[699,"썬더 잭"],[693,"엄지 동자"],[691,"운명의 아이 포노"],[687,"빛의 여신 시리우스"],[675,"유랑극단 캐러셀즈"],[669,"고양이 텐구"],[661,"해룡 다라이어던"],[658,"비탄의 무희 이즈"],[656,"얼음의 정령 블리즈"],[650,"흑표"],[648,"테룬"],[643,"타락 천신 루시퍼"],[642,"무희 이즈"],[635,"백기사 키클롭스"],[634,"혀 잘린 참새"],[633,"초용전기 데스 트로이"],[632,"어둠의 정령 야미"],[626,"오코루가"],[621,"사룡 헤비저크"],[620,"리린"],[619,"아레스"],[618,"소환소년 사토루"],[613,"고양이 왕녀"],[610,"흑수 가르디언"],[595,"공중상사 콜럼버스"],[586,"요수 가루"],[570,"돌의 정령 롤링스톤"],[560,"지옥 경찰 엠마"],[547,"오이루가"],[544,"화근의 마녀 캐슬리"],[535,"명계신 하데스"],[534,"매드슈터 사키"],[530,"재앙의 캐슬리"],[526,"긴타로"],[520,"라스트 보스"],[506,"각룡 그라디오스"],[503,"멜슈"],[497,"미네르바"],[442,"호걸 달타냥"],[440,"시간의 신 크로노스"],[437,"노비루가"],[432,"망자탐정 비그라"],[428,"고양이 퀘스트"],[418,"온천천국 테르마이"],[402,"번개의 정령 볼트"],[398,"사쿠라"],[397,"고룡 강글리온"],[381,"쾌걸 달타냥"],[379,"칠흑의 미타마"],[362,"바람의 정령 에어리"],[361,"물의 정령 마리"],[360,"불의 정령 메라라"],[356,"관측병기 갈릴레오"],[352,"시시루와 코마리"],[339,"누아다"],[334,"흑수 가오우"],[323,"떠돌이 악사"],[319,"무녀공주 미타마"],[317,"해왕신 포세이돈"],[307,"비행습격 바머스"],[306,"고대군함 가레스"],[305,"강철육군 카타바르스"],[287,"광전기병 레이"],[284,"묘반권 파이파이"],[270,"요수 가오"],[35,"고양이 루가"],[169,"아시루가"],[170,"쿠비루가"],[171,"테코루가"],[172,"바라라가"],[241,"가시루가"],[43,"고양이 아이스"],[44,"고양이 머신"],[45,"도깨비 야옹마"],[58,"고양이 슈발리에"],[60,"고양이 베이비"],[144,"고양이 간호사"],[72,"그리폰"],[73,"백호"],[74,"하데스"],[125,"오딘"],[126,"아수라"],[159,"사라만다"],[76,"바람의 신・윈디"],[77,"번개의 신・산디아"],[106,"쿠우"],[107,"카이"],[108,"갓파 마인"],[160,"명계의 칼리파"],[84,"지룡 소돔"],[85,"성룡 메기도라"],[86,"용기사 바르스"],[87,"신룡 카무쿠라"],[88,"용병기 라이덴"],[178,"패룡 디오라무스"],[135,"냥꼬북"],[136,"크레인 냥코"],[137,"복숭아 동자"],[138,"석공 냥돌이"],[139,"대나무 공주"],[204,"너굴냥즈"],[195,"아키라"],[196,"메카소녀 진"],[197,"캣맨대디"],[213,"화이트 래빗"],[227,"주술사 데스삐에로"],[262,"천주 송골매"],[258,"천공신 제우스"],[259,"수호신 아누비스"],[260,"미의 여신 아프로디테"],[272,"태양신 아마테라스"],[273,"번영신 가네샤"]]},"id":"kr-2026-07-24_1063"},{"title":"레전드 뽑기 · 울트라 이상 확정","region":"kr","start":"2026-07-24","end":"2026-10-16","gacha":1064,"kind":"legend","ticket":"레전드 티켓","rates":[0,0,9500,500],"guaranteed":false,"pools":{"legend":[[739,"해질녘의 이자나미"],[732,"새벽의 이자나기"],[587,"고양이 왕자"],[494,"창조신 가이야"],[482,"천재 과학자 헤븐 박사"],[479,"환상의 정령 루미나"],[464,"종말 병기 무우"],[462,"레제루가"],[456,"원더 모모코"],[452,"리코더 고양이"],[451,"천성용 바벨"],[450,"잔다르크"],[449,"무사시"]],"rare":[],"supa":[],"uber":[[862,"폭룡기 볼네이도"],[860,"고월의 기사 루노스"],[851,"타니와"],[838,"꼬마기사 루노"],[831,"라클레스"],[818,"나무의 정령 모리"],[812,"위타천 스칸다"],[800,"곡사포대 런처즈"],[788,"비호의 선녀 루나샤"],[782,"마모루가"],[780,"꼬마선녀 루나"],[775,"특수기동대 엑셀"],[770,"냥꽃 할배"],[764,"고양이 다이너사우루스"],[761,"포룡 건듀로스"],[755,"알리칸토"],[734,"페가사"],[724,"광익신 이시스"],[720,"철의 정령 메탈릭"],[716,"건설병단 스핑크스"],[713,"카오루가"],[706,"비명의 왕 포노아"],[699,"썬더 잭"],[693,"엄지 동자"],[691,"운명의 아이 포노"],[687,"빛의 여신 시리우스"],[675,"유랑극단 캐러셀즈"],[669,"고양이 텐구"],[661,"해룡 다라이어던"],[658,"비탄의 무희 이즈"],[656,"얼음의 정령 블리즈"],[650,"흑표"],[648,"테룬"],[643,"타락 천신 루시퍼"],[642,"무희 이즈"],[635,"백기사 키클롭스"],[634,"혀 잘린 참새"],[633,"초용전기 데스 트로이"],[632,"어둠의 정령 야미"],[626,"오코루가"],[621,"사룡 헤비저크"],[620,"리린"],[619,"아레스"],[618,"소환소년 사토루"],[613,"고양이 왕녀"],[610,"흑수 가르디언"],[595,"공중상사 콜럼버스"],[586,"요수 가루"],[570,"돌의 정령 롤링스톤"],[560,"지옥 경찰 엠마"],[547,"오이루가"],[544,"화근의 마녀 캐슬리"],[535,"명계신 하데스"],[534,"매드슈터 사키"],[530,"재앙의 캐슬리"],[526,"긴타로"],[520,"라스트 보스"],[506,"각룡 그라디오스"],[503,"멜슈"],[497,"미네르바"],[442,"호걸 달타냥"],[440,"시간의 신 크로노스"],[437,"노비루가"],[432,"망자탐정 비그라"],[428,"고양이 퀘스트"],[418,"온천천국 테르마이"],[402,"번개의 정령 볼트"],[398,"사쿠라"],[397,"고룡 강글리온"],[381,"쾌걸 달타냥"],[379,"칠흑의 미타마"],[362,"바람의 정령 에어리"],[361,"물의 정령 마리"],[360,"불의 정령 메라라"],[356,"관측병기 갈릴레오"],[352,"시시루와 코마리"],[339,"누아다"],[334,"흑수 가오우"],[323,"떠돌이 악사"],[319,"무녀공주 미타마"],[317,"해왕신 포세이돈"],[307,"비행습격 바머스"],[306,"고대군함 가레스"],[305,"강철육군 카타바르스"],[287,"광전기병 레이"],[284,"묘반권 파이파이"],[270,"요수 가오"],[35,"고양이 루가"],[169,"아시루가"],[170,"쿠비루가"],[171,"테코루가"],[172,"바라라가"],[241,"가시루가"],[43,"고양이 아이스"],[44,"고양이 머신"],[45,"도깨비 야옹마"],[58,"고양이 슈발리에"],[60,"고양이 베이비"],[144,"고양이 간호사"],[72,"그리폰"],[73,"백호"],[74,"하데스"],[125,"오딘"],[126,"아수라"],[159,"사라만다"],[76,"바람의 신・윈디"],[77,"번개의 신・산디아"],[106,"쿠우"],[107,"카이"],[108,"갓파 마인"],[160,"명계의 칼리파"],[84,"지룡 소돔"],[85,"성룡 메기도라"],[86,"용기사 바르스"],[87,"신룡 카무쿠라"],[88,"용병기 라이덴"],[178,"패룡 디오라무스"],[135,"냥꼬북"],[136,"크레인 냥코"],[137,"복숭아 동자"],[138,"석공 냥돌이"],[139,"대나무 공주"],[204,"너굴냥즈"],[195,"아키라"],[196,"메카소녀 진"],[197,"캣맨대디"],[213,"화이트 래빗"],[227,"주술사 데스삐에로"],[262,"천주 송골매"],[258,"천공신 제우스"],[259,"수호신 아누비스"],[260,"미의 여신 아프로디테"],[272,"태양신 아마테라스"],[273,"번영신 가네샤"]]},"id":"kr-2026-07-24_1064"},{"title":"'타니와' 참전! 검은 적에 엄청 강한 바사라즈!","region":"kr","start":"2026-10-09","end":"2026-10-11","gacha":1043,"rates":[6970,2500,500,30],"guaranteed":false,"pools":{"legend":[[449,"무사시"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[851,"타니와"],[755,"알리칸토"],[650,"흑표"],[619,"아레스"],[497,"미네르바"],[339,"누아다"],[159,"사라만다"],[126,"아수라"],[125,"오딘"],[74,"하데스"],[73,"백호"],[72,"그리폰"]]},"id":"kr-2026-10-09_1043"},{"title":"한정 울트라 슈퍼 레어 캐릭터 '록 꼬미'도 캐릭터하는 1.2억 다운로드 기념 특별 울기!","region":"kr","start":"2026-10-09","end":"2026-10-16","gacha":1077,"rates":[6930,2500,500,70],"guaranteed":false,"pools":{"legend":[[449,"무사시"],[450,"잔다르크"],[451,"천성용 바벨"],[452,"리코더 고양이"],[456,"원더 모모코"],[462,"레제루가"],[464,"종말 병기 무우"],[479,"환상의 정령 루미나"],[482,"천재 과학자 헤븐 박사"],[494,"창조신 가이야"],[545,"나나호"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[874,"록 꼬꼬미"],[74,"하데스"],[35,"고양이 루가"],[734,"페가사"],[77,"번개의 신・산디아"],[361,"물의 정령 마리"],[60,"고양이 베이비"],[144,"고양이 간호사"],[88,"용병기 라이덴"],[136,"크레인 냥코"],[197,"캣맨대디"],[812,"위타천 스칸다"],[608,"모험가 칸나"],[418,"온천천국 테르마이"],[675,"유랑극단 캐러셀즈"]]},"id":"kr-2026-10-09_1077"},{"title":"계절 한정 캐릭터 총집합! 울슈레 율 UP! 소수 국왕 축제!","region":"kr","start":"2026-10-09","end":"2026-10-13","gacha":1078,"rates":[6770,2500,700,30],"guaranteed":false,"pools":{"legend":[[587,"고양이 왕자"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[774,"스모 더 미라"],[590,"발렌타인 귀요미"],[567,"라이프가드 고양이"],[566,"선탠 고양이"],[333,"이스타 귀요미"],[315,"대청소 귀요미"],[277,"여름빛 귀요미"],[229,"할로윈 귀요미"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[873,"정글 헌터 토모에"],[863,"혼례 흑표"],[821,"시사이드 페가사"],[787,"매지션 캣맨"],[778,"동장군 미네르바"],[773,"펌킨 소돔"],[760,"섬머 페스티벌 산디아"],[757,"고양이 웨딩 케이크 머신"],[738,"스프링 칼리파"],[737,"고양이 아이스 화이트스타"],[715,"비치 다이빙 모험가 칸나"],[712,"바라라가의 서약"],[700,"결투소년 래빗 사토루"],[694,"백집사 탐정 비그라"],[688,"사슴뿔 테룬"],[684,"백작 그리폰"],[667,"여름밤 해변의 리린"],[662,"축복의 신 크로노스"],[649,"사랑대장 도깨비 야옹마"],[645,"하얀 연인 메카소녀 진"],[615,"바닷가의 대나무 공주"],[596,"춘룡 카무쿠라"],[589,"첫사랑 멜슈"],[588,"사랑의 여신 쇼콜라디테"],[585,"산타 백호"],[571,"용기사 스컬 바르스"],[565,"고양이 루가의 여름"],[564,"아쿠아슈터 사키"],[527,"겨울 천사 시시루와 코마리"],[495,"바닷바람의 세일러 갓파"],[439,"불타는 해변의 쿠우"],[355,"여름의 카이"],[332,"클라운 에그덕"],[331,"봄의 사라만다"],[311,"고양이 간호사 캔들"],[303,"고양이 아이스 고스트"],[276,"한여름의 화이트 래빗"],[275,"트로피칼 칼리파"],[244,"성야의 시스터 갓파"],[243,"산타의 메리 쿠우"],[242,"스노우맨의 스노우 카이"],[231,"데빌 산디아"],[230,"윈디 스위트"]]},"id":"kr-2026-10-09_1078"},{"title":"'냥꽃 할배' 참전! 초강력한 고대의 전사들!","region":"kr","start":"2026-10-11","end":"2026-10-13","gacha":946,"rates":[6970,2500,500,30],"guaranteed":false,"pools":{"legend":[[452,"리코더 고양이"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[770,"냥꽃 할배"],[693,"엄지 동자"],[634,"혀 잘린 참새"],[526,"긴타로"],[323,"떠돌이 악사"],[204,"너굴냥즈"],[139,"대나무 공주"],[138,"석공 냥돌이"],[137,"복숭아 동자"],[136,"크레인 냥코"],[135,"냥꼬북"]]},"id":"kr-2026-10-11_946"},{"title":"'폭룡기 볼네이도' 참전! 악마존재감의 드래곤들!","region":"kr","start":"2026-10-13","end":"2026-10-16","gacha":1059,"rates":[6970,2500,500,30],"guaranteed":false,"pools":{"legend":[[451,"천성용 바벨"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[862,"폭룡기 볼네이도"],[761,"포룡 건듀로스"],[661,"해룡 다라이어던"],[621,"사룡 헤비저크"],[506,"각룡 그라디오스"],[397,"고룡 강글리온"],[178,"패룡 디오라무스"],[88,"용병기 라이덴"],[87,"신룡 카무쿠라"],[86,"용기사 바르스"],[85,"성룡 메기도라"],[84,"지룡 소돔"]]},"id":"kr-2026-10-13_1059"},{"title":"'냥꽃 할배' 참전! 초강력한 고대의 전사들!","region":"kr","start":"2026-10-13","end":"2026-10-16","gacha":991,"rates":[6970,2500,500,30],"guaranteed":false,"pools":{"legend":[[494,"창조신 가이야"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[812,"위타천 스칸다"],[724,"광익신 이시스"],[643,"타락 천신 루시퍼"],[535,"명계신 하데스"],[440,"시간의 신 크로노스"],[317,"해왕신 포세이돈"],[273,"번영신 가네샤"],[272,"태양신 아마테라스"],[260,"미의 여신 아프로디테"],[259,"수호신 아누비스"],[258,"천공신 제우스"]]},"id":"kr-2026-10-13_991"},{"title":"'변신소녀 단' 참전! 다이너마이트한 냥코들!","region":"kr","start":"2026-10-16","end":"2026-10-20","gacha":1068,"rates":[6970,2500,500,30],"guaranteed":true,"pools":{"legend":[[456,"원더 모모코"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[870,"변신소녀 단"],[764,"고양이 다이너사우루스"],[669,"고양이 텐구"],[618,"소환소년 사토루"],[520,"라스트 보스"],[428,"고양이 퀘스트"],[144,"고양이 간호사"],[60,"고양이 베이비"],[58,"고양이 슈발리에"],[45,"도깨비 야옹마"],[44,"고양이 머신"],[43,"고양이 아이스"]]},"id":"kr-2026-10-16_1068"},{"title":"플래티넘 뽑기 · 울트라 100%","region":"kr","start":"2026-10-16","end":"2030-01-01","gacha":1071,"kind":"platinum","ticket":"플래티넘 티켓","rates":[0,0,10000,0],"guaranteed":false,"pools":{"legend":[],"rare":[],"supa":[],"uber":[[870,"변신소녀 단"],[862,"폭룡기 볼네이도"],[860,"고월의 기사 루노스"],[851,"타니와"],[838,"꼬마기사 루노"],[831,"라클레스"],[818,"나무의 정령 모리"],[812,"위타천 스칸다"],[800,"곡사포대 런처즈"],[788,"비호의 선녀 루나샤"],[782,"마모루가"],[780,"꼬마선녀 루나"],[775,"특수기동대 엑셀"],[770,"냥꽃 할배"],[764,"고양이 다이너사우루스"],[761,"포룡 건듀로스"],[755,"알리칸토"],[734,"페가사"],[724,"광익신 이시스"],[720,"철의 정령 메탈릭"],[716,"건설병단 스핑크스"],[713,"카오루가"],[706,"비명의 왕 포노아"],[699,"썬더 잭"],[693,"엄지 동자"],[691,"운명의 아이 포노"],[687,"빛의 여신 시리우스"],[675,"유랑극단 캐러셀즈"],[669,"고양이 텐구"],[661,"해룡 다라이어던"],[658,"비탄의 무희 이즈"],[656,"얼음의 정령 블리즈"],[650,"흑표"],[648,"테룬"],[643,"타락 천신 루시퍼"],[642,"무희 이즈"],[635,"백기사 키클롭스"],[634,"혀 잘린 참새"],[633,"초용전기 데스 트로이"],[632,"어둠의 정령 야미"],[626,"오코루가"],[621,"사룡 헤비저크"],[620,"리린"],[619,"아레스"],[618,"소환소년 사토루"],[613,"고양이 왕녀"],[610,"흑수 가르디언"],[595,"공중상사 콜럼버스"],[586,"요수 가루"],[570,"돌의 정령 롤링스톤"],[560,"지옥 경찰 엠마"],[547,"오이루가"],[544,"화근의 마녀 캐슬리"],[535,"명계신 하데스"],[534,"매드슈터 사키"],[530,"재앙의 캐슬리"],[526,"긴타로"],[520,"라스트 보스"],[506,"각룡 그라디오스"],[503,"멜슈"],[497,"미네르바"],[442,"호걸 달타냥"],[440,"시간의 신 크로노스"],[437,"노비루가"],[432,"망자탐정 비그라"],[428,"고양이 퀘스트"],[418,"온천천국 테르마이"],[402,"번개의 정령 볼트"],[398,"사쿠라"],[397,"고룡 강글리온"],[381,"쾌걸 달타냥"],[379,"칠흑의 미타마"],[362,"바람의 정령 에어리"],[361,"물의 정령 마리"],[360,"불의 정령 메라라"],[356,"관측병기 갈릴레오"],[352,"시시루와 코마리"],[339,"누아다"],[334,"흑수 가오우"],[323,"떠돌이 악사"],[319,"무녀공주 미타마"],[317,"해왕신 포세이돈"],[307,"비행습격 바머스"],[306,"고대군함 가레스"],[305,"강철육군 카타바르스"],[287,"광전기병 레이"],[284,"묘반권 파이파이"],[270,"요수 가오"],[35,"고양이 루가"],[169,"아시루가"],[170,"쿠비루가"],[171,"테코루가"],[172,"바라라가"],[241,"가시루가"],[43,"고양이 아이스"],[44,"고양이 머신"],[45,"도깨비 야옹마"],[58,"고양이 슈발리에"],[60,"고양이 베이비"],[144,"고양이 간호사"],[72,"그리폰"],[73,"백호"],[74,"하데스"],[125,"오딘"],[126,"아수라"],[159,"사라만다"],[76,"바람의 신・윈디"],[77,"번개의 신・산디아"],[106,"쿠우"],[107,"카이"],[108,"갓파 마인"],[160,"명계의 칼리파"],[84,"지룡 소돔"],[85,"성룡 메기도라"],[86,"용기사 바르스"],[87,"신룡 카무쿠라"],[88,"용병기 라이덴"],[178,"패룡 디오라무스"],[135,"냥꼬북"],[136,"크레인 냥코"],[137,"복숭아 동자"],[138,"석공 냥돌이"],[139,"대나무 공주"],[204,"너굴냥즈"],[195,"아키라"],[196,"메카소녀 진"],[197,"캣맨대디"],[213,"화이트 래빗"],[227,"주술사 데스삐에로"],[262,"천주 송골매"],[258,"천공신 제우스"],[259,"수호신 아누비스"],[260,"미의 여신 아프로디테"],[272,"태양신 아마테라스"],[273,"번영신 가네샤"]]},"id":"kr-2026-10-16_1071"},{"title":"레전드 뽑기 · 울트라 이상 확정","region":"kr","start":"2026-10-16","end":"2030-01-01","gacha":1072,"kind":"legend","ticket":"레전드 티켓","rates":[0,0,9500,500],"guaranteed":false,"pools":{"legend":[[739,"해질녘의 이자나미"],[732,"새벽의 이자나기"],[587,"고양이 왕자"],[494,"창조신 가이야"],[482,"천재 과학자 헤븐 박사"],[479,"환상의 정령 루미나"],[464,"종말 병기 무우"],[462,"레제루가"],[456,"원더 모모코"],[452,"리코더 고양이"],[451,"천성용 바벨"],[450,"잔다르크"],[449,"무사시"]],"rare":[],"supa":[],"uber":[[870,"변신소녀 단"],[862,"폭룡기 볼네이도"],[860,"고월의 기사 루노스"],[851,"타니와"],[838,"꼬마기사 루노"],[831,"라클레스"],[818,"나무의 정령 모리"],[812,"위타천 스칸다"],[800,"곡사포대 런처즈"],[788,"비호의 선녀 루나샤"],[782,"마모루가"],[780,"꼬마선녀 루나"],[775,"특수기동대 엑셀"],[770,"냥꽃 할배"],[764,"고양이 다이너사우루스"],[761,"포룡 건듀로스"],[755,"알리칸토"],[734,"페가사"],[724,"광익신 이시스"],[720,"철의 정령 메탈릭"],[716,"건설병단 스핑크스"],[713,"카오루가"],[706,"비명의 왕 포노아"],[699,"썬더 잭"],[693,"엄지 동자"],[691,"운명의 아이 포노"],[687,"빛의 여신 시리우스"],[675,"유랑극단 캐러셀즈"],[669,"고양이 텐구"],[661,"해룡 다라이어던"],[658,"비탄의 무희 이즈"],[656,"얼음의 정령 블리즈"],[650,"흑표"],[648,"테룬"],[643,"타락 천신 루시퍼"],[642,"무희 이즈"],[635,"백기사 키클롭스"],[634,"혀 잘린 참새"],[633,"초용전기 데스 트로이"],[632,"어둠의 정령 야미"],[626,"오코루가"],[621,"사룡 헤비저크"],[620,"리린"],[619,"아레스"],[618,"소환소년 사토루"],[613,"고양이 왕녀"],[610,"흑수 가르디언"],[595,"공중상사 콜럼버스"],[586,"요수 가루"],[570,"돌의 정령 롤링스톤"],[560,"지옥 경찰 엠마"],[547,"오이루가"],[544,"화근의 마녀 캐슬리"],[535,"명계신 하데스"],[534,"매드슈터 사키"],[530,"재앙의 캐슬리"],[526,"긴타로"],[520,"라스트 보스"],[506,"각룡 그라디오스"],[503,"멜슈"],[497,"미네르바"],[442,"호걸 달타냥"],[440,"시간의 신 크로노스"],[437,"노비루가"],[432,"망자탐정 비그라"],[428,"고양이 퀘스트"],[418,"온천천국 테르마이"],[402,"번개의 정령 볼트"],[398,"사쿠라"],[397,"고룡 강글리온"],[381,"쾌걸 달타냥"],[379,"칠흑의 미타마"],[362,"바람의 정령 에어리"],[361,"물의 정령 마리"],[360,"불의 정령 메라라"],[356,"관측병기 갈릴레오"],[352,"시시루와 코마리"],[339,"누아다"],[334,"흑수 가오우"],[323,"떠돌이 악사"],[319,"무녀공주 미타마"],[317,"해왕신 포세이돈"],[307,"비행습격 바머스"],[306,"고대군함 가레스"],[305,"강철육군 카타바르스"],[287,"광전기병 레이"],[284,"묘반권 파이파이"],[270,"요수 가오"],[35,"고양이 루가"],[169,"아시루가"],[170,"쿠비루가"],[171,"테코루가"],[172,"바라라가"],[241,"가시루가"],[43,"고양이 아이스"],[44,"고양이 머신"],[45,"도깨비 야옹마"],[58,"고양이 슈발리에"],[60,"고양이 베이비"],[144,"고양이 간호사"],[72,"그리폰"],[73,"백호"],[74,"하데스"],[125,"오딘"],[126,"아수라"],[159,"사라만다"],[76,"바람의 신・윈디"],[77,"번개의 신・산디아"],[106,"쿠우"],[107,"카이"],[108,"갓파 마인"],[160,"명계의 칼리파"],[84,"지룡 소돔"],[85,"성룡 메기도라"],[86,"용기사 바르스"],[87,"신룡 카무쿠라"],[88,"용병기 라이덴"],[178,"패룡 디오라무스"],[135,"냥꼬북"],[136,"크레인 냥코"],[137,"복숭아 동자"],[138,"석공 냥돌이"],[139,"대나무 공주"],[204,"너굴냥즈"],[195,"아키라"],[196,"메카소녀 진"],[197,"캣맨대디"],[213,"화이트 래빗"],[227,"주술사 데스삐에로"],[262,"천주 송골매"],[258,"천공신 제우스"],[259,"수호신 아누비스"],[260,"미의 여신 아프로디테"],[272,"태양신 아마테라스"],[273,"번영신 가네샤"]]},"id":"kr-2026-10-16_1072"},{"title":"'곡사포대 런처즈' 참전! 좀비에 힘쓰는 초병기들!","region":"kr","start":"2026-10-16","end":"2026-10-18","gacha":979,"rates":[6970,2500,500,30],"guaranteed":true,"pools":{"legend":[[464,"종말 병기 무우"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[523,"고양이 금도끼은도끼"],[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[800,"곡사포대 런처즈"],[716,"건설병단 스핑크스"],[675,"유랑극단 캐러셀즈"],[633,"초용전기 데스 트로이"],[595,"공중상사 콜럼버스"],[418,"온천천국 테르마이"],[356,"관측병기 갈릴레오"],[307,"비행습격 바머스"],[306,"고대군함 가레스"],[305,"강철육군 카타바르스"]]},"id":"kr-2026-10-16_979"},{"title":"'마모루가' 참전! 수수께끼에 맞서 싸우세요!","region":"kr","start":"2026-10-16","end":"2026-10-18","gacha":986,"rates":[6970,2500,500,30],"guaranteed":true,"pools":{"legend":[[462,"레제루가"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[782,"마모루가"],[713,"카오루가"],[626,"오코루가"],[547,"오이루가"],[437,"노비루가"],[241,"가시루가"],[172,"바라라가"],[171,"테코루가"],[170,"쿠비루가"],[169,"아시루가"],[35,"고양이 루가"]]},"id":"kr-2026-10-16_986"},{"title":"'라클레스' 참전! 파워풀&큐트한 걸즈!","region":"kr","start":"2026-10-18","end":"2026-10-20","gacha":1021,"rates":[6970,2500,500,30],"guaranteed":true,"pools":{"legend":[[450,"잔다르크"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[831,"라클레스"],[734,"페가사"],[648,"테룬"],[620,"리린"],[503,"멜슈"],[352,"시시루와 코마리"],[160,"명계의 칼리파"],[108,"갓파 마인"],[107,"카이"],[106,"쿠우"],[77,"번개의 신・산디아"],[76,"바람의 신・윈디"]]},"id":"kr-2026-10-18_1021"},{"title":"'타니와' 참전! 검은 적에 엄청 강한 바사라즈!","region":"kr","start":"2026-10-18","end":"2026-10-20","gacha":1043,"rates":[6970,2500,500,30],"guaranteed":true,"pools":{"legend":[[449,"무사시"]],"rare":[[524,"고양이 무도가"],[496,"고양이 마타도르"],[377,"고양이 탐사기"],[326,"고양이 복서"],[309,"고양이 가위"],[199,"고양이 음양사"],[198,"사이킥 냥코"],[150,"인어 고양이"],[149,"고양이 로커"],[148,"양철 고양이"],[147,"죽마 고양이"],[146,"건맨 고양이"],[59,"고양이 마검사"],[57,"고양이 아처"],[56,"고양이 마녀"],[53,"고양이 샤먼"],[52,"고양이 점쟁이"],[51,"고양이 승려"],[50,"고양이 도둑"],[49,"고양이 해적"],[48,"고양이 파이터"],[47,"고양이 쥬라"],[42,"고양이 에스테"],[39,"고양이 차륜"],[38,"고양이 홉핑"]],"supa":[[448,"전대 직쏘고양이"],[447,"전대 포클레인 고양이"],[446,"전대 커터 고양이"],[445,"전대 드라이버"],[444,"전대 드릴러"],[201,"메탈 고양이"],[145,"냥코 성 mini"],[132,"귀요미"],[130,"골드 고양이"],[238,"고양이 박사 냥코"],[239,"고양이 도련님"],[240,"견습생 스냥이퍼"],[523,"고양이 금도끼은도끼"],[378,"고양이 펜싱"],[308,"고양이 점퍼"],[200,"고양이 서퍼"],[154,"고양이 토스터"],[153,"고양이 스케이트"],[152,"고양이 바벨"],[151,"창가의 소녀 고양이"],[62,"고양이 스시"],[41,"고양이 욕조"],[40,"고양이 사과"],[37,"고양이 스위머"],[36,"오덕 고양이"],[34,"고타츠양이"],[33,"고양이 댄스"],[32,"고양이 일진"],[31,"고양이 보살"]],"uber":[[851,"타니와"],[755,"알리칸토"],[650,"흑표"],[619,"아레스"],[497,"미네르바"],[339,"누아다"],[159,"사라만다"],[126,"아수라"],[125,"오딘"],[74,"하데스"],[73,"백호"],[72,"그리폰"]]},"id":"kr-2026-10-18_1043"}],"meta":{"updatedAt":"2026-10-11T11:35:34+09:00","note":"한국판 15개"}};
+</script>
+<script>
+/* 냥코 배열 엔진 — godfat(bc.godfat.org) 표와 대조해 검증한 계산 규칙
+ *
+ * 시드:      xorshift32 (부호 없는 32비트, <<13 >>>17 <<15)
+ * 일반 뽑기:  다음 시드 % 10000 → 등급, 그다음 시드 % (그 등급 캐릭 수) → 캐릭 (시드 2개)
+ * 레어 중복:  레어가 직전에 얻은 캐릭과 같으면 그 슬롯을 빼고 다음 시드 % (n-1) 로 다시 뽑음
+ *            (시드 1개 더 사용 → 반대 트랙으로 이동)
+ * 확정 11연:  일반 10회 뒤 다음 시드 % 울트라 수 → 확정 울트라 (시드 1개)
+ * 위치 표기:  지금까지 쓴 시드 수 c 가 짝수면 (c/2+1)A, 홀수면 ((c+1)/2)B
+ */
+(function (root) {
+  'use strict';
+
+  function next(x) {
+    x = (x ^ (x << 13)) >>> 0;
+    x = (x ^ (x >>> 17)) >>> 0;
+    x = (x ^ (x << 15)) >>> 0;
+    return x;
+  }
+
+  function seeds(seed, count) {
+    const s = new Array(count + 1);
+    s[0] = seed >>> 0;
+    for (let i = 1; i <= count; i++) s[i] = next(s[i - 1]);
+    return s;
+  }
+
+  const RARITY = ['rare', 'supa', 'uber', 'legend'];
+
+  function rarityOf(score, rates) {
+    let acc = 0;
+    for (let r = 0; r < 3; r++) {
+      acc += rates[r] || 0;
+      if (score < acc) return r;
+    }
+    return 3;
+  }
+
+  function label(c) {
+    return c % 2 === 0 ? (c / 2 + 1) + 'A' : ((c + 1) / 2) + 'B';
+  }
+
+  function catKey(cat) {
+    if (!cat) return null;
+    return cat.id != null ? 'i' + cat.id : 'n' + cat.name;
+  }
+
+  // 풀 항목은 [id, 이름] 또는 이름 문자열
+  function entry(pool, i) {
+    const e = pool[i];
+    if (Array.isArray(e)) return { id: e[0], name: e[1] };
+    if (e && typeof e === 'object') return { id: e.id, name: e.name };
+    return { id: null, name: String(e) };
+  }
+
+  function poolsOf(banner) {
+    const p = banner.pools || {};
+    return [p.rare || [], p.supa || [], p.uber || [], p.legend || []];
+  }
+
+  // 시드 배열 s 에서, c 개를 쓴 상태로 일반 1회 뽑기
+  function rollAt(s, c, banner, last) {
+    const pools = poolsOf(banner);
+    const rarity = rarityOf(s[c + 1] % 10000, banner.rates);
+    const pool = pools[rarity];
+    if (!pool.length) return { c, rarity, cat: null, empty: true, end: c + 2 };
+    const slot = s[c + 2] % pool.length;
+    const cat = entry(pool, slot);
+    const out = { c, rarity, slot, cat, score: s[c + 1] % 10000, end: c + 2, rerolled: null };
+    if (rarity === 0 && last && catKey(cat) === catKey(last) && pool.length > 1) {
+      const rest = pool.slice(0, slot).concat(pool.slice(slot + 1));
+      const cat2 = entry(rest, s[c + 3] % rest.length);
+      out.rerolled = { cat: cat2, end: c + 3 };
+    }
+    return out;
+  }
+
+  // 실제로 뽑을 때의 결과 (중복이면 리롤된 쪽)
+  function pull(s, c, banner, last) {
+    const r = rollAt(s, c, banner, last);
+    if (r.rerolled) return { c, rarity: r.rarity, cat: r.rerolled.cat, end: r.rerolled.end, from: r.cat, rerolled: true };
+    return { c, rarity: r.rarity, cat: r.cat, end: r.end, rerolled: false };
+  }
+
+  // 확정 11연 (일반 10회 + 확정 울트라)
+  function guaranteedAt(s, c, banner, last) {
+    const steps = [];
+    let cur = c, lastCat = last;
+    for (let i = 0; i < 10; i++) {
+      const p = pull(s, cur, banner, lastCat);
+      steps.push(p);
+      cur = p.end;
+      lastCat = p.cat;
+    }
+    const ubers = poolsOf(banner)[2];
+    if (!ubers.length) return null;
+    const cat = entry(ubers, s[cur + 1] % ubers.length);
+    return { steps, uber: cat, end: cur + 1, seedIndex: cur + 1 };
+  }
+
+  // 표 만들기: rows 줄, A/B 트랙. last = 직전에 얻은 캐릭
+  function table(seed, banner, rows, last) {
+    const need = rows * 2 + 64;
+    const s = seeds(seed, need);
+    const A = [], B = [];
+    let prevA = last || null, prevB = last || null;
+    for (let k = 1; k <= rows; k++) {
+      const ca = 2 * k - 2, cb = 2 * k - 1;
+      const a = rollAt(s, ca, banner, prevA);
+      const b = rollAt(s, cb, banner, prevB);
+      if (banner.guaranteed) {
+        // 기본 칸은 첫 뽑기가 중복이 아닌 경우, 리롤 칸은 중복으로 리롤된 경우의 확정 11연
+        a.g = guaranteedAt(s, ca, banner, null);
+        b.g = guaranteedAt(s, cb, banner, null);
+        if (a.rerolled) a.rerolled.g = guaranteedAt(s, ca, banner, prevA);
+        if (b.rerolled) b.rerolled.g = guaranteedAt(s, cb, banner, prevB);
+      }
+      A.push(a); B.push(b);
+      prevA = a.cat; prevB = b.cat;
+    }
+    return { s, A, B, rows };
+  }
+
+  // 지금 위치(1A)부터 단챠를 n번 했을 때의 실제 경로
+  function path(seed, banner, n, last) {
+    const s = seeds(seed, n * 3 + 8);
+    const out = [];
+    let c = 0, lastCat = last || null;
+    for (let i = 0; i < n; i++) {
+      const p = pull(s, c, banner, lastCat);
+      out.push(p);
+      c = p.end; lastCat = p.cat;
+    }
+    return out;
+  }
+
+  const api = { next, seeds, rarityOf, label, rollAt, pull, guaranteedAt, table, path, catKey, RARITY };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  root.NyankoEngine = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script>
+/* 냥코 티켓·럭키 티켓 뽑기(일반 뽑기) 데이터와 계산
+ *
+ * 일반 뽑기는 레어 뽑기와 다른 "일반 뽑기 시드"를 쓰고, 아래 여섯 뽑기가 그 시드 하나를 같이 씀.
+ * 뽑기 1회: 다음 시드 % 10000 → 등급, 그다음 시드 % (그 등급 아이템 수) → 아이템 (같은 아이템이 여러 칸이면 확률이 그만큼 높음)
+ * 중복: 리롤 등급에서 직전에 얻은 아이템과 같으면 그 칸을 빼고 다음 시드로 다시 고름. 또 같으면 반복.
+ *       다시 고른 횟수만큼 시드를 더 써서, 홀수 번이면 반대 트랙으로 넘어감.
+ * 아이템 칸 순서와 확률은 영문판 기준(ampuri 트래커, 2023-11). 이름은 PONOS 한국판 뽑기 안내 페이지 표기.
+ */
+(function (root) {
+  'use strict';
+
+  const KO = {
+    'cat': '고양이', 'tank-cat': '탱크 고양이', 'axe-cat': '배틀 고양이', 'gross-cat': '징글 고양이',
+    'cow-cat': '황소 고양이', 'bird-cat': '고양이 새', 'fish-cat': '고양이 피쉬', 'lizard-cat': '고양이 도마뱀',
+    'titan-cat': '거신 고양이', 'superfeline': '슈퍼페린',
+    'cat-cannon-attack': '냥코 대포 공격력', 'cat-cannon-charge': '냥코 대포 충전', 'worker-cat-rate': '일고양이 효율',
+    'worker-cat-wallet': '일고양이 지갑', 'base-defense': '성의 체력', 'research': '연구력', 'accounting': '회계력',
+    'study': '공부력', 'cat-energy': '통솔력',
+    'lil-cat': '꼬맹이 고양이', 'lil-tank-cat': '꼬맹이 탱크 고양이', 'lil-axe-cat': '꼬맹이 배틀 고양이',
+    'lil-gross-cat': '꼬맹이 징글 고양이', 'lil-cow-cat': '꼬맹이 황소 고양이', 'lil-bird-cat': '꼬맹이 고양이 새',
+    'lil-fish-cat': '꼬맹이 고양이 피쉬', 'lil-lizard-cat': '꼬맹이 고양이 도마뱀', 'lil-titan-cat': '꼬맹이 거신 고양이',
+    'speed-up': '스피드 업', 'treasure-radar': '트레저 레이더', 'rich-cat': '고양이 도령', 'cat-cpu': '야옹컴',
+    'cat-jobs': '고양이 박사', 'sniper-the-cat': '스냥이퍼',
+    '5k-xp': 'XP5000', '10k-xp': 'XP10000', '30k-xp': 'XP30000', '50k-xp': 'XP50000', '100k-xp': 'XP100000',
+    '200k-xp': 'XP200000', '500k-xp': 'XP500000', '1m-xp': 'XP1000000', '100k-xp-beta': 'XP100000 (럭키 G)',
+    'purple-catfruit-seed': '보라 개다래나무의 씨앗', 'red-catfruit-seed': '빨강 개다래나무의 씨앗',
+    'blue-catfruit-seed': '파랑 개다래나무의 씨앗', 'green-catfruit-seed': '초록 개다래나무의 씨앗',
+    'yellow-catfruit-seed': '노랑 개다래나무의 씨앗',
+    'purple-catfruit': '보라 개다래 열매', 'red-catfruit': '빨강 개다래 열매', 'blue-catfruit': '파랑 개다래 열매',
+    'green-catfruit': '초록 개다래 열매', 'yellow-catfruit': '노랑 개다래 열매', 'epic-catfruit': '무지개 개다래 열매',
+    'special-catseye': '캣츠아이【EX】', 'rare-catseye': '캣츠아이【레어】', 'super-rare-catseye': '캣츠아이【슈퍼레어】',
+    'uber-rare-catseye': '캣츠아이【울트라 슈퍼 레어】', 'dark-catseye': '다크 캣츠아이',
+    'catamin-a': '고양이 드링크A', 'catamin-b': '고양이 드링크B', 'catamin-c': '고양이 드링크C',
+  };
+
+  const BASIC = ['cat', 'tank-cat', 'axe-cat', 'gross-cat', 'cow-cat', 'bird-cat', 'fish-cat', 'lizard-cat', 'titan-cat'];
+  const LIL = ['lil-titan-cat', 'lil-lizard-cat', 'lil-fish-cat', 'lil-bird-cat', 'lil-cow-cat', 'lil-gross-cat', 'lil-axe-cat', 'lil-tank-cat', 'lil-cat'];
+  const UPG = ['cat-cannon-attack', 'cat-cannon-charge', 'worker-cat-rate', 'worker-cat-wallet', 'base-defense', 'research', 'accounting', 'study', 'cat-energy'];
+
+  // rarity: 0 노멀 · 1 레어 · 2 슈퍼레어 · 3 울트라 · 4 레전드
+  const BANNERS = [
+    { id: 'n', name: '냥코 뽑기', ticket: '냥코 티켓',
+      tiers: [{ rarity: 0, rate: 10000, reroll: true, items: BASIC.concat(UPG) }] },
+    { id: 'np', name: '냥코 뽑기+', ticket: '냥코 티켓',
+      tiers: [{ rarity: 0, rate: 10000, reroll: true, items: BASIC.concat(['superfeline'], UPG) }] },
+    { id: 'cf', name: '개다래 출현 아이템 뽑기', ticket: '냥코 티켓',
+      tiers: [
+        { rarity: 0, rate: 400, reroll: false, items: ['5k-xp'] },
+        { rarity: 1, rate: 2000, reroll: true, items: ['speed-up', 'cat-cpu', '10k-xp', '30k-xp', '50k-xp', 'purple-catfruit-seed', 'red-catfruit-seed', 'blue-catfruit-seed', 'green-catfruit-seed', 'yellow-catfruit-seed'] },
+        { rarity: 2, rate: 7000, reroll: false, items: ['rich-cat', 'cat-jobs', 'sniper-the-cat', '100k-xp', '200k-xp', 'purple-catfruit', 'red-catfruit', 'blue-catfruit', 'green-catfruit', 'yellow-catfruit'] },
+        { rarity: 3, rate: 600, reroll: false, items: ['treasure-radar', '500k-xp', 'epic-catfruit'] },
+      ] },
+    { id: 'ce', name: '캣츠아이 출현 아이템 뽑기', ticket: '냥코 티켓',
+      tiers: [
+        { rarity: 0, rate: 500, reroll: false, items: ['5k-xp'] },
+        { rarity: 1, rate: 6900, reroll: true, items: ['10k-xp', '30k-xp', 'special-catseye', 'rare-catseye'] },
+        { rarity: 2, rate: 2000, reroll: false, items: ['100k-xp', 'super-rare-catseye'] },
+        { rarity: 3, rate: 500, reroll: false, items: ['uber-rare-catseye'] },
+        { rarity: 4, rate: 100, reroll: false, items: ['dark-catseye'] },
+      ] },
+    { id: 'lt', name: '냥코 럭키 뽑기', ticket: '럭키 티켓',
+      tiers: [
+        { rarity: 1, rate: 7400, reroll: true, items: LIL.concat(['speed-up', 'speed-up', 'speed-up', 'cat-cpu', 'cat-cpu', '10k-xp', '10k-xp', '10k-xp', '30k-xp', '30k-xp', '30k-xp']) },
+        { rarity: 2, rate: 2100, reroll: false, items: ['rich-cat', 'cat-jobs', 'sniper-the-cat'] },
+        { rarity: 3, rate: 500, reroll: false, items: ['treasure-radar'] },
+      ] },
+    { id: 'ltg', name: '냥코 럭키 뽑기 G', ticket: '럭키 티켓 G',
+      tiers: [
+        { rarity: 1, rate: 5100, reroll: true, items: ['catamin-a', 'catamin-a', 'catamin-a', '100k-xp-beta', '100k-xp-beta', '100k-xp-beta'] },
+        { rarity: 2, rate: 3500, reroll: false, items: ['catamin-b', 'catamin-b', 'catamin-b', '500k-xp'] },
+        { rarity: 3, rate: 1400, reroll: false, items: ['catamin-c', 'catamin-c', 'catamin-c', '1m-xp'] },
+      ] },
+  ];
+  for (const b of BANNERS) {
+    let acc = 0;
+    b.cum = b.tiers.map((t) => (acc += t.rate));
+    if (acc !== 10000) throw new Error(b.id + ' rates sum ' + acc);
+    b.top = Math.max.apply(null, b.tiers.map((t) => t.rarity));
+  }
+
+  function next(x) {
+    x = (x ^ (x << 13)) >>> 0;
+    x = (x ^ (x >>> 17)) >>> 0;
+    x = (x ^ (x << 15)) >>> 0;
+    return x;
+  }
+  function seeds(seed, count) {
+    const s = new Array(count + 1);
+    s[0] = seed >>> 0;
+    for (let i = 1; i <= count; i++) s[i] = next(s[i - 1]);
+    return s;
+  }
+
+  // c 개 쓴 상태에서 1회. 반환: 기본 결과 + (리롤 등급이면) 직전과 같을 때의 결과
+  function rollAt(s, c, banner) {
+    const score = s[c + 1] % 10000;
+    let t = 0;
+    while (score >= banner.cum[t]) t++;
+    const tier = banner.tiers[t];
+    const slot = s[c + 2] % tier.items.length;
+    const item = tier.items[slot];
+    const out = { c, rarity: tier.rarity, item, end: c + 2, reroll: null };
+    if (tier.reroll) {
+      const pool = tier.items.map((_, i) => i);
+      let pick = slot, picked = slot, extra = 0;
+      while (tier.items[picked] === item && pool.length > 1) {
+        pool.splice(pick, 1);
+        extra++;
+        pick = s[c + 2 + extra] % pool.length;
+        picked = pool[pick];
+      }
+      if (tier.items[picked] !== item) out.reroll = { item: tier.items[picked], end: c + 2 + extra, extra };
+    }
+    return out;
+  }
+
+  // 직전 아이템이 last 일 때 실제로 받는 결과
+  function pull(s, c, banner, last) {
+    const r = rollAt(s, c, banner);
+    if (r.reroll && last && last === r.item) return { c, rarity: r.rarity, item: r.reroll.item, end: r.reroll.end, rerolled: true, from: r.item };
+    return { c, rarity: r.rarity, item: r.item, end: r.end, rerolled: false };
+  }
+
+  function table(seed, banner, rows) {
+    const s = seeds(seed, rows * 2 + 64);
+    const A = [], B = [];
+    for (let k = 1; k <= rows; k++) {
+      A.push(rollAt(s, 2 * k - 2, banner));
+      B.push(rollAt(s, 2 * k - 1, banner));
+    }
+    return { s, A, B, rows };
+  }
+
+  function path(s, banner, last, maxC, maxPulls) {
+    const out = [];
+    let c = 0, l = last || null;
+    while (c <= maxC && out.length < maxPulls) {
+      const p = pull(s, c, banner, l);
+      p.lastBefore = l;
+      out.push(p);
+      c = p.end; l = p.item;
+    }
+    return out;
+  }
+
+  const name = (id) => KO[id] || id;
+  const api = { BANNERS, KO, name, seeds, rollAt, pull, table, path };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  root.NyankoNormal = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script>
+/* 시드 찾기 (레어 뽑기·일반 뽑기 공용)
+ * 연속으로 얻은 결과를 순서대로 받아, 가능한 시드 2^32 개를 브라우저 안에서 전부 확인함.
+ * 결과마다 어느 뽑기에서 나왔는지 따로 가질 수 있어서, 같은 시드를 쓰는 뽑기끼리는 섞어서 넣어도 됨.
+ * 첫 결과의 칸 시드(또는 등급 시드)가 맞는 값만 돌고, 찾은 값은 거꾸로 한 칸 돌려 "첫 뽑기 직전 시드"로 바꿈.
+ */
+(function (root) {
+  'use strict';
+
+  // ---- 워커와 Node 테스트가 같이 쓰는 탐색 함수 ----
+  // task: { banners:[{tiers:[{reroll,items}], cum}], bix:[결과별 뽑기 번호], obs:[아이템 키], g:[1=확정 울트라], gTier,
+  //         last, mode:'slot'|'tier', slots, tier, lo, hi, from, to }
+  function searchRange(task, report) {
+    const ids = new Map();
+    const idOf = (name) => { if (!ids.has(name)) ids.set(name, ids.size + 1); return ids.get(name); };
+    const BS = task.banners.map((b) => ({
+      tiers: b.tiers.map((t) => ({ reroll: !!t.reroll, items: Int32Array.from(t.items.map(idOf)) })),
+      cum: Int32Array.from(b.cum),
+    }));
+    const bix = Int32Array.from(task.bix);
+    const obs = Int32Array.from(task.obs.map(idOf));
+    const lastId = task.last ? idOf(task.last) : 0;
+    const G = task.g ? Uint8Array.from(task.g) : new Uint8Array(obs.length);
+    const gTier = task.gTier == null ? 2 : task.gTier;
+    const B0 = BS[bix[0]], tier0 = B0.tiers[task.tier], L0 = tier0.items.length, multi0 = B0.tiers.length > 1;
+    const lo = task.lo, hi = task.hi;
+    const o0 = obs[0], o1 = obs.length > 1 && !G[1] ? obs[1] : -1, B1 = obs.length > 1 ? BS[bix[1]] : null;
+    const found = [];
+    let done = 0, nextReport = 1 << 22;
+
+    function nx(x) { x = (x ^ (x << 13)) >>> 0; x = (x ^ (x >>> 17)) >>> 0; return (x ^ (x << 15)) >>> 0; }
+    function pv(x) {
+      x = (x ^ (x << 15) ^ (x << 30)) >>> 0;
+      x = (x ^ (x >>> 17)) >>> 0;
+      return (x ^ (x << 13) ^ (x << 26)) >>> 0;
+    }
+    function tierOf(cum, score) { let t = 0; while (score >= cum[t]) t++; return t; }
+    function countIn(items, v) { let n = 0; for (let i = 0; i < items.length; i++) if (items[i] === v) n++; return n; }
+    const dup0 = lastId ? countIn(tier0.items, lastId) : 0;
+
+    function full(s1) {
+      const arr = [0, s1];
+      const get = (i) => { while (arr.length <= i) arr.push(nx(arr[arr.length - 1])); return arr[i]; };
+      let c = 0, last = lastId;
+      for (let k = 0; k < obs.length; k++) {
+        const B = BS[bix[k]];
+        if (G[k]) {
+          const gi = B.tiers[gTier].items;
+          if (!gi.length || gi[get(c + 1) % gi.length] !== obs[k]) return false;
+          c += 1; last = obs[k];
+          continue;
+        }
+        const tier = B.tiers[tierOf(B.cum, get(c + 1) % 10000)], items = tier.items;
+        if (!items.length) return false;
+        const slot = get(c + 2) % items.length;
+        let item = items[slot], end = c + 2;
+        if (tier.reroll && last && item === last && items.length > 1) {
+          const pool = []; for (let i = 0; i < items.length; i++) pool.push(i);
+          let pick = slot, picked = slot, extra = 0;
+          while (items[picked] === item && pool.length > 1) {
+            pool.splice(pick, 1); extra++;
+            pick = get(c + 2 + extra) % pool.length; picked = pool[pick];
+          }
+          if (items[picked] !== item) { item = items[picked]; end = c + 2 + extra; }
+        }
+        if (item !== obs[k]) return false;
+        c = end; last = item;
+      }
+      return true;
+    }
+    // s2(첫 뽑기 칸 시드)와 칸 번호 j 로 싸게 걸러낸 뒤 통과한 것만 끝까지 확인
+    function check(s2, j, s1) {
+      const item1 = tier0.items[j];
+      if (lastId && tier0.reroll && item1 === lastId) {
+        if (dup0 === 1) {
+          const k = nx(s2) % (L0 - 1);
+          if (tier0.items[k < j ? k : k + 1] !== o0) return false;
+        }
+        return full(s1 || pv(s2));
+      }
+      if (item1 !== o0) return false;
+      if (o1 >= 0) {
+        const s3 = nx(s2), tier = B1.tiers[tierOf(B1.cum, s3 % 10000)], items = tier.items;
+        if (!items.length) return false;
+        const it = items[nx(s3) % items.length];
+        if (it !== o1 && !(tier.reroll && it === item1)) return false;
+      }
+      return full(s1 || pv(s2));
+    }
+
+    if (task.mode === 'slot') {
+      const slots = task.slots;
+      for (let m = task.from; m < task.to; m++) {
+        const base = m * L0;
+        for (let i = 0; i < slots.length; i++) {
+          const s2 = base + slots[i];
+          if (s2 > 4294967295) continue;
+          let s1 = 0;
+          if (multi0) { s1 = pv(s2); const sc = s1 % 10000; if (sc < lo || sc >= hi) continue; }
+          if (check(s2, slots[i], s1)) { found.push(s1 || pv(s2)); if (found.length > 40) return { found, done, capped: true }; }
+        }
+        done += slots.length;
+        if (report && done >= nextReport) { report(done); nextReport = done + (1 << 22); }
+      }
+    } else {
+      const ok = new Uint8Array(L0);
+      for (const j of task.slots) ok[j] = 1;
+      for (let q = task.from; q < task.to; q++) {
+        const base = q * 10000;
+        for (let r = lo; r < hi; r++) {
+          const s1 = base + r;
+          if (s1 > 4294967295) break;
+          const s2 = nx(s1), j = s2 % L0;
+          if (ok[j] && check(s2, j, s1)) { found.push(s1); if (found.length > 40) return { found, done, capped: true }; }
+        }
+        done += hi - lo;
+        if (report && done >= nextReport) { report(done); nextReport = done + (1 << 22); }
+      }
+    }
+    return { found, done, capped: false };
+  }
+
+  const WORKER_SRC = searchRange.toString() + '\n'
+    + 'onmessage = function (e) {\n'
+    + '  var res = searchRange(e.data, function (d) { postMessage({ type: "progress", done: d }); });\n'
+    + '  postMessage({ type: "done", found: res.found, done: res.done, capped: res.capped });\n'
+    + '};\n';
+
+  function invShl(y, k) { let x = y; for (let i = 0; i < 32; i += k) x = (y ^ (x << k)) >>> 0; return x; }
+  function prev(s) {
+    const b = invShl(s >>> 0, 15);
+    return invShl((b ^ (b >>> 17)) >>> 0, 13);
+  }
+
+  // 정보량(비트) — 결과가 몇 개면 하나로 좁혀지는지 가늠
+  function bits(banners, bix, obs, g, gTier) {
+    let total = 0;
+    obs.forEach((id, k) => {
+      const banner = banners[bix[k]];
+      if (g && g[k]) {
+        const it = banner.tiers[gTier == null ? 2 : gTier].items, n = it.filter((x) => x === id).length;
+        if (n) total += -Math.log2(n / it.length);
+        return;
+      }
+      let p = 0, acc = 0;
+      banner.tiers.forEach((t, i) => {
+        const rate = (banner.cum[i] - acc) / 10000; acc = banner.cum[i];
+        const n = t.items.filter((x) => x === id).length;
+        if (n && t.items.length) p += rate * n / t.items.length;
+      });
+      if (p > 0) total += -Math.log2(p);
+    });
+    return total;
+  }
+
+  function plan(banner, first, last) {
+    const t = banner.tiers.findIndex((tr) => tr.items.includes(first));
+    if (t < 0) return null;
+    const tier = banner.tiers[t], L = tier.items.length;
+    const slots = [];
+    tier.items.forEach((it, j) => { if (it === first || (last && tier.reroll && it === last)) slots.push(j); });
+    const lo = t ? banner.cum[t - 1] : 0, hi = banner.cum[t];
+    const M = Math.ceil(4294967296 / L);
+    const slotCost = M * slots.length * (banner.tiers.length > 1 ? 1.6 : 1);
+    const tierCost = 429497 * (hi - lo);
+    return slotCost <= tierCost
+      ? { mode: 'slot', tier: t, lo, hi, slots, range: M, total: M * slots.length }
+      : { mode: 'tier', tier: t, lo, hi, slots, range: 429497, total: tierCost };
+  }
+
+  let running = [];
+  let inlineToken = 0;
+  function cancel() { running.forEach((w) => w.terminate()); running = []; inlineToken++; }
+
+  // banners: 뽑기 목록, bix: 결과별 뽑기 번호, obs: 결과 키
+  function run(banners, bix, obs, last, onProgress, opts) {
+    opts = opts || {};
+    cancel();
+    if (opts.g && opts.g[0]) return Promise.reject(new Error('첫 결과는 확정 울트라일 수 없어요'));
+    const p = plan(banners[bix[0]], obs[0], last);
+    if (!p) return Promise.reject(new Error('첫 결과가 고른 뽑기에 없는 아이템이에요'));
+    const slim = banners.map((b) => ({ tiers: b.tiers.map((t) => ({ reroll: !!t.reroll, items: t.items.slice() })), cum: b.cum.slice() }));
+    const base = { banners: slim, bix: bix.slice(), obs: obs.slice(), last: last || null, mode: p.mode, slots: p.slots, tier: p.tier, lo: p.lo, hi: p.hi,
+      g: opts.g || null, gTier: opts.gTier == null ? 2 : opts.gTier };
+    let canWorker = typeof Worker !== 'undefined' && typeof Blob !== 'undefined';
+    let url = null;
+    if (canWorker) { try { url = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })); } catch (e) { canWorker = false; } }
+    if (!canWorker) return runInline(base, p, onProgress);
+    const n = Math.max(1, Math.min(8, (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4));
+    const Q = p.range, per = Math.ceil(Q / n);
+    const doneBy = new Array(n).fill(0);
+    return new Promise((resolve) => {
+      let finished = 0, capped = false, failed = false; const found = [];
+      for (let i = 0; i < n; i++) {
+        let w;
+        try { w = new Worker(url); } catch (e) {
+          cancel(); URL.revokeObjectURL(url);
+          resolve(runInline(base, p, onProgress)); return;
+        }
+        running.push(w);
+        w.onmessage = (e) => {
+          const m = e.data;
+          if (m.type === 'progress') { doneBy[i] = m.done; if (onProgress) onProgress(doneBy.reduce((a, b) => a + b, 0) / p.total); return; }
+          doneBy[i] = m.done; found.push.apply(found, m.found); capped = capped || m.capped;
+          w.terminate();
+          if (++finished === n) {
+            running = []; URL.revokeObjectURL(url);
+            if (onProgress) onProgress(1);
+            resolve({ seeds: found.map(prev), capped });
+          }
+        };
+        w.onerror = (err) => {
+          if (failed) return; failed = true;
+          cancel(); URL.revokeObjectURL(url);
+          // 워커가 막힌 환경이면 화면 스레드에서 나눠서 돌림
+          resolve(runInline(base, p, onProgress));
+          if (err && err.preventDefault) err.preventDefault();
+        };
+        w.postMessage(Object.assign({}, base, { from: i * per, to: Math.min(Q, (i + 1) * per) }));
+      }
+    });
+  }
+
+  function runInline(base, p, onProgress) {
+    const token = ++inlineToken;
+    const chunk = Math.max(1, Math.floor(p.range / 400));
+    return new Promise((resolve, reject) => {
+      let from = 0, done = 0; const found = [];
+      function step() {
+        if (token !== inlineToken) { reject(new Error('취소됨')); return; }
+        const to = Math.min(p.range, from + chunk);
+        const r = searchRange(Object.assign({}, base, { from, to }));
+        found.push.apply(found, r.found); done += r.done; from = to;
+        if (onProgress) onProgress(done / p.total);
+        if (r.capped || from >= p.range) { resolve({ seeds: found.map(prev), capped: r.capped }); return; }
+        setTimeout(step, 0);
+      }
+      setTimeout(step, 0);
+    });
+  }
+
+  const api = { run, cancel, bits, plan, prev, searchRange };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  root.NyankoFinder = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script>
+window.NyankoUI = (function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  let onGo = null, toastTimer = null;
+  function open(titleHTML, factsHTML, go) {
+    $('sheetTitle').innerHTML = titleHTML;
+    $('sheetFacts').innerHTML = factsHTML;
+    onGo = go;
+    $('scrim').hidden = false; $('sheet').hidden = false;
+    $('sheetGo').focus();
+  }
+  function close() { $('scrim').hidden = true; $('sheet').hidden = true; onGo = null; }
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+  }
+  $('sheetCancel').addEventListener('click', close);
+  $('scrim').addEventListener('click', close);
+  $('sheetGo').addEventListener('click', () => { const f = onGo; close(); if (f) f(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('sheet').hidden) close(); });
+
+  // 레어 / 냥코 티켓 전환
+  const MODE_KEY = 'nyanko-mode';
+  function setMode(m, save) {
+    const normal = m === 'normal';
+    $('rareMode').hidden = normal; $('normalMode').hidden = !normal;
+    $('tabRare').setAttribute('aria-selected', String(!normal));
+    $('tabNormal').setAttribute('aria-selected', String(normal));
+    if (save) { try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* ignore */ } }
+  }
+  document.querySelector('.modes').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-mode]');
+    if (b) setMode(b.dataset.mode, true);
+  });
+  let saved = null;
+  try { saved = localStorage.getItem(MODE_KEY); } catch (e) { /* ignore */ }
+  setMode(saved === 'normal' ? 'normal' : 'rare', false);
+  return { open, close, toast };
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  const E = window.NyankoEngine;
+  const UI = window.NyankoUI;
+  const RNAME = ['레어', '슈퍼레어', '울트라', '레전드'];
+  const RCLS = ['r-rare', 'r-supa', 'r-uber', 'r-legend'];
+  const DEMO_SEED = 139026851;
+  const STEP = 100;
+  const LS_KEY = 'nyanko-tracker-v1';
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // ---------- state ----------
+  const state = { seed: null, last: null, bannerId: null, history: [], updatedAt: 0 };
+  let rows = STEP;
+  let banners = [];
+  let meta = null;
+  let dbReady = false;
+  let current = null; // computed table for the visible banner
+  let pending = null; // action waiting for confirmation
+
+  function readLocal() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) Object.assign(state, JSON.parse(raw));
+    } catch (e) { /* storage unavailable */ }
+  }
+  function writeLocal() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+
+  // ---------- db (per-user state + shared schedule) ----------
+  let userRef = null;
+  let writeTimer = null, writing = false, dirty = false;
+  function persist() {
+    state.updatedAt = Date.now();
+    writeLocal();
+    if (!userRef) return;
+    dirty = true;
+    clearTimeout(writeTimer);
+    writeTimer = setTimeout(flush, 500);
+  }
+  async function flush() {
+    if (writing || !dirty || !userRef) return;
+    writing = true; dirty = false;
+    try {
+      await userRef.set({ seed: state.seed, last: state.last, bannerId: state.bannerId, history: state.history.slice(-40), updatedAt: state.updatedAt });
+    } catch (e) {
+      if (e && e.code === 'invalid_argument') userRef = null; // this viewer cannot save; keep local only
+    } finally {
+      writing = false;
+      if (dirty) flush();
+    }
+  }
+
+  async function connect() {
+    const D = window.NYANKO_DATA || { banners: [], meta: null };
+    dbReady = true;
+    banners = D.banners.slice();
+    meta = D.meta;
+    setSync('live');
+    renderAll();
+  }
+
+  function setSync(kind) {
+    const el = $('sync');
+    el.dataset.state = kind === 'live' ? 'live' : 'idle';
+    let text = '일정 불러오는 중';
+    if (kind === 'live') {
+      const at = meta && meta.updatedAt ? new Date(meta.updatedAt) : null;
+      text = at && !isNaN(at) ? '일정 데이터 기준 ' + fmtDateTime(at) : '일정 데이터';
+    } else if (kind === 'local') text = '이 기기에서만 저장돼요';
+    else if (kind === 'error') text = '일정을 못 불러왔어요';
+    $('syncText').textContent = text;
+  }
+  function fmtDateTime(d) {
+    const p = (n) => String(n).padStart(2, '0');
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  // ---------- schedule ----------
+  function today() {
+    const d = new Date(); const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function statusOf(b, t) {
+    if (b.sample) return { k: 'demo', label: '예시', order: 2 };
+    if (b.end && b.end < t) return { k: 'past', label: '종료', order: 3 };
+    if (b.start && b.start > t) {
+      const days = Math.round((Date.parse(b.start) - Date.parse(t)) / 86400000);
+      return { k: 'soon', label: days === 1 ? '내일 시작' : days + '일 뒤', order: 1 };
+    }
+    return { k: 'live', label: '진행 중', order: 0 };
+  }
+  function usable(b) {
+    return b && b.pools && Array.isArray(b.rates) && b.rates.length === 4 && !b.hidden;
+  }
+  function sortedBanners() {
+    const t = today();
+    const list = banners.filter(usable).map((b) => ({ b, s: statusOf(b, t) }));
+    list.sort((x, y) => x.s.order - y.s.order
+      || (x.s.k === 'past' ? (y.b.end || '').localeCompare(x.b.end || '') : (x.b.start || '').localeCompare(y.b.start || ''))
+      || (x.b.title || '').localeCompare(y.b.title || ''));
+    // 종료된 건 최근 6개만
+    let past = 0;
+    return list.filter((x) => x.s.k !== 'past' || ++past <= 6);
+  }
+  function md(d) { if (!d) return '?'; const [, m, dd] = d.split('-'); return +m + '.' + +dd; }
+
+  function renderBanners() {
+    const list = sortedBanners();
+    const strip = $('strip');
+    if (!list.length) {
+      strip.innerHTML = dbReady
+        ? '<div class="empty"><strong>아직 들어온 일정이 없어요</strong>한국판 뽑기 일정은 매일 자동으로 채워져요.</div>'
+        : '<div class="empty"><strong>일정을 불러오는 중이에요</strong>한국판 뽑기 일정이 여기에 카드로 나와요.</div>';
+      $('schedCount').textContent = '';
+      return;
+    }
+    if (!state.bannerId || !list.some((x) => x.b.id === state.bannerId)) {
+      state.bannerId = list[0].b.id;
+    }
+    const live = list.filter((x) => x.s.k === 'live').length;
+    const soon = list.filter((x) => x.s.k === 'soon').length;
+    $('schedCount').textContent = '진행 중 ' + live + ' · 예정 ' + soon;
+    strip.innerHTML = list.map(({ b, s }) => {
+      const tags = [];
+      if (b.kind === 'platinum' || b.kind === 'legend') tags.push('<span class="tag g">' + esc(b.ticket || (b.kind === 'platinum' ? '플래티넘 티켓' : '레전드 티켓')) + '</span>');
+      if (b.guaranteed) tags.push('<span class="tag g">확정 11연</span>');
+      const REGION = { en: '영문판', jp: '일본판', tw: '대만판' };
+      if (b.region && b.region !== 'kr') tags.push('<span class="tag">' + esc(REGION[b.region] || '해외판') + ' 데이터</span>');
+      const ub = b.pools && b.pools.uber ? b.pools.uber.length : 0;
+      if (ub) tags.push('<span class="tag">울트라 ' + ub + '</span>');
+      return '<button type="button" class="banner" data-id="' + esc(b.id) + '" aria-pressed="' + (b.id === state.bannerId) + '">'
+        + '<div class="row1"><span class="status ' + s.k + '">' + s.label + '</span><span class="dates">' + md(b.start) + ' – ' + md(b.end) + '</span></div>'
+        + '<div class="t">' + esc(b.title || ('가챠 ' + (b.gacha || ''))) + '</div>'
+        + '<div class="tags">' + tags.join('') + '</div></button>';
+    }).join('');
+  }
+
+  function currentBanner() {
+    return banners.find((b) => b.id === state.bannerId && usable(b)) || null;
+  }
+
+  // ---------- seed ----------
+  function parseSeed(v) {
+    const t = String(v).replace(/[^0-9]/g, '');
+    if (!t) return null;
+    const n = Number(t);
+    if (!Number.isSafeInteger(n) || n < 1 || n > 4294967295) return NaN;
+    return n;
+  }
+  function renderSeed() {
+    const inp = $('seed');
+    if (document.activeElement !== inp) inp.value = state.seed != null ? String(state.seed) : '';
+    inp.setAttribute('aria-invalid', 'false');
+    $('undo').disabled = !state.history.length;
+    $('undo').textContent = state.history.length ? '되돌리기 (' + state.history.length + ')' : '되돌리기';
+    if (state.last && state.last.name) { $('lastWrap').hidden = false; $('lastName').textContent = state.last.name; }
+    else $('lastWrap').hidden = true;
+    const b = currentBanner();
+    $('seedNote').textContent = state.seed === DEMO_SEED && b && b.sample ? '예시 시드예요. 내 시드로 바꿔 넣어줘.' : '';
+  }
+
+  // ---------- table ----------
+  function compute() {
+    const b = currentBanner();
+    if (!b || state.seed == null || isNaN(state.seed)) { current = null; return; }
+    const T = E.table(state.seed, b, rows, state.last);
+    // 단챠 경로
+    const onPath = new Map(); // key -> step number
+    const pathPulls = [];
+    let c = 0, last = state.last, i = 0;
+    while (c <= rows * 2 - 1 && i < rows * 2) {
+      const p = E.pull(T.s, c, b, last);
+      if (!p.cat) break;
+      p.lastBefore = last;
+      i++;
+      pathPulls.push(p);
+      onPath.set(c + (p.rerolled ? 'R' : ''), { n: i, p });
+      c = p.end; last = p.cat;
+    }
+    current = { b, T, onPath, pathPulls };
+  }
+
+  function nextLabel(end) { return E.label(end); }
+
+  // 이 칸의 중복 리롤 결과: 같은 트랙 직전 칸과 중복, 단챠 경로에서 중복,
+  // 또는 반대 트랙의 리롤 결과가 같은 캐릭으로 이 칸에 도착하는 경우
+  function cellAt(c) { const T = current.T; return c < 0 ? null : ((c % 2 === 0 ? T.A[c / 2] : T.B[(c - 1) / 2]) || null); }
+  function rerollInfo(c) {
+    const cell = cellAt(c);
+    if (!cell || !cell.cat) return null;
+    if (cell.rerolled) return cell.rerolled;
+    const rs = current.onPath.get(c + 'R');
+    if (rs) return { cat: rs.p.cat, end: rs.p.end, g: current.b.guaranteed ? E.guaranteedAt(current.T.s, c, current.b, rs.p.lastBefore) : null };
+    const src = cellAt(c - 3);
+    if (cell.rarity === 0 && src && src.rerolled && E.catKey(src.rerolled.cat) === E.catKey(cell.cat)) {
+      const f = E.rollAt(current.T.s, c, current.b, cell.cat);
+      if (f.rerolled) return { cat: f.rerolled.cat, end: f.rerolled.end, g: current.b.guaranteed ? E.guaranteedAt(current.T.s, c, current.b, cell.cat) : null };
+    }
+    return null;
+  }
+
+  function cellHTML(cell, k, tr) {
+    const key = cell.c;
+    const step = current.onPath.get(String(key));
+    const q = query();
+    const name = cell.cat ? cell.cat.name : '(풀 없음)';
+    const cls = ['cell', RCLS[cell.rarity]];
+    if (step) cls.push('on-path');
+    if (q && matches(name, q)) cls.push('hit');
+    let h = '<button type="button" class="' + cls.join(' ') + '" data-c="' + key + '" data-v="n">'
+      + '<span class="pos">' + k + tr + '</span><span class="nm">' + esc(name) + '</span>'
+      + (step ? '<span class="step">' + step.n + '</span>' : '<span></span>') + '</button>';
+
+    // 중복 리롤: 표 기준(같은 트랙 직전 칸과 중복) 또는 실제 경로에서 리롤된 경우
+    const rstep = current.onPath.get(key + 'R');
+    const rr = rerollInfo(key);
+    if (rr) {
+      const c2 = ['sub', 'rr'];
+      if (rstep) c2.push('on-path');
+      if (q && matches(rr.cat.name, q)) c2.push('hit');
+      h += '<button type="button" class="' + c2.join(' ') + '" data-c="' + key + '" data-v="r">'
+        + '<span class="k">중복 시' + (rstep ? ' · ' + rstep.n : '') + '</span><span class="nm">' + esc(rr.cat.name) + '</span><span class="to">→' + nextLabel(rr.end) + '</span></button>';
+    }
+    if (current.b.guaranteed && cell.g) {
+      const c3 = ['sub', 'g'];
+      if (q && matches(cell.g.uber.name, q)) c3.push('hit');
+      h += '<button type="button" class="' + c3.join(' ') + '" data-c="' + key + '" data-v="g">'
+        + '<span class="k">확정</span><span class="nm r-uber">' + esc(cell.g.uber.name) + '</span><span class="to">→' + nextLabel(cell.g.end) + '</span></button>';
+      if (rr && rr.g) {
+        const c4 = ['sub', 'g'];
+        if (q && matches(rr.g.uber.name, q)) c4.push('hit');
+        h += '<button type="button" class="' + c4.join(' ') + '" data-c="' + key + '" data-v="rg">'
+          + '<span class="k">중복 후 확정</span><span class="nm r-uber">' + esc(rr.g.uber.name) + '</span><span class="to">→' + nextLabel(rr.g.end) + '</span></button>';
+      }
+    }
+    return h;
+  }
+
+  function renderTable() {
+    const box = $('rows');
+    if (!current) {
+      const b = currentBanner();
+      box.innerHTML = '<div class="empty" style="border:0;border-radius:0">'
+        + (!b ? '가챠를 고르면 A/B 트랙 배열이 여기에 나와요.' : '시드를 넣으면 이 가챠의 배열이 여기에 나와요.') + '</div>';
+      $('moreWrap').hidden = true;
+      return;
+    }
+    const { T } = current;
+    let html = '';
+    for (let k = 1; k <= T.rows; k++) {
+      html += '<div class="r"><div class="col">' + cellHTML(T.A[k - 1], k, 'A') + '</div><div class="col">' + cellHTML(T.B[k - 1], k, 'B') + '</div></div>';
+    }
+    box.innerHTML = html;
+    $('moreWrap').hidden = rows >= 1000;
+    renderHits();
+  }
+
+  // ---------- summary ----------
+  function renderSummary() {
+    const box = $('summary');
+    if (!current) {
+      box.innerHTML = tile('uber', '다음 울트라', '—', '가챠와 시드를 넣으면 계산돼요')
+        + tile('legend', '다음 레전드', '—', '&nbsp;') + tile('', '11연차', '—', '&nbsp;');
+      return;
+    }
+    const { pathPulls, b, T } = current;
+    if (b.kind === 'platinum' || b.kind === 'legend') {
+      const tiles = [];
+      if (b.kind === 'legend') {
+        const li = pathPulls.findIndex((p) => p.cat && p.rarity === 3);
+        tiles.push(li < 0 ? tile('legend', '다음 레전드', '없음', '표 범위 안에서는 안 나와요')
+          : tile('legend', '다음 레전드', esc(pathPulls[li].cat.name), '티켓 ' + (li + 1) + '장째 · ' + E.label(pathPulls[li].c)));
+      }
+      for (let i = 0; tiles.length < 3 && i < pathPulls.length; i++) {
+        const p = pathPulls[i];
+        tiles.push(tile(p.rarity === 3 ? 'legend' : 'uber', '티켓 ' + (i + 1) + '장째', esc(p.cat ? p.cat.name : '-'), E.label(p.c)));
+      }
+      box.innerHTML = tiles.join('');
+      return;
+    }
+    const findR = (r) => { const i = pathPulls.findIndex((p) => p.cat && p.rarity === r); return i < 0 ? null : { i, p: pathPulls[i] }; };
+    const u = findR(2), l = findR(3);
+    let html = u
+      ? tile('uber', '다음 울트라', esc(u.p.cat.name), '단챠 ' + (u.i + 1) + '번째 · ' + E.label(u.p.c))
+      : tile('uber', '다음 울트라', '없음', '표 범위 안에서는 안 나와요');
+    html += l
+      ? tile('legend', '다음 레전드', esc(l.p.cat.name), '단챠 ' + (l.i + 1) + '번째 · ' + E.label(l.p.c))
+      : tile('legend', '다음 레전드', '없음', b.rates[3] ? '표 범위 안에서는 안 나와요' : '이 가챠엔 레전드가 없어요');
+    if (b.guaranteed) {
+      const g = E.guaranteedAt(T.s, 0, b, state.last);
+      html += g ? tile('uber', '확정 11연', esc(g.uber.name), '다음 시작 ' + E.label(g.end)) : tile('', '확정 11연', '—', '');
+    } else {
+      const eleven = pathPulls.slice(0, 11);
+      const cnt = [0, 0, 0, 0]; eleven.forEach((p) => cnt[p.rarity]++);
+      const best = eleven.filter((p) => p.cat && p.rarity >= 2).map((p) => p.cat.name);
+      const end = eleven.length === 11 ? E.label(eleven[10].end) : '?';
+      html += tile('', '11연차', best.length ? esc(best.join(', ')) : '울트라 없음', '슈퍼 ' + cnt[1] + ' · 레어 ' + cnt[0] + ' · 다음 ' + end);
+    }
+    box.innerHTML = html;
+  }
+  function tile(cls, k, v, m) {
+    return '<div class="tile ' + cls + '"><span class="eyebrow">' + k + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span></div>';
+  }
+
+  // ---------- search ----------
+  function norm(s) { return String(s || '').toLowerCase().replace(/\s+/g, ''); }
+  function query() { return norm($('q').value); }
+  function matches(name, q) { return q && norm(name).includes(q); }
+  function renderHits() {
+    const q = query();
+    const info = $('hitinfo');
+    if (!q || !current) { info.textContent = ''; return; }
+    const hits = document.querySelectorAll('#rows .hit');
+    if (!hits.length) { info.textContent = '이 범위엔 없어요'; return; }
+    const first = hits[0].closest('.col').querySelector('.cell .pos').textContent;
+    const onPath = current.pathPulls.findIndex((p) => p.cat && matches(p.cat.name, q));
+    info.textContent = hits.length + '칸 · 처음 ' + first + (onPath >= 0 ? ' · 단챠로 ' + (onPath + 1) + '번째' : '');
+  }
+
+  // ---------- actions ----------
+  function openSheet(c, v) {
+    if (!current) return;
+    const { T, b } = current;
+    const k = c % 2 === 0 ? c / 2 + 1 : (c + 1) / 2;
+    const cell = (c % 2 === 0 ? T.A : T.B)[k - 1];
+    let cat, rarity, end, what;
+    if (v === 'n') { cat = cell.cat; rarity = cell.rarity; end = cell.end; what = '단챠로 이 칸까지 뽑음'; }
+    else if (v === 'r') {
+      const rr = rerollInfo(c);
+      if (!rr) return;
+      cat = rr.cat; rarity = 0; end = rr.end; what = '중복 리롤로 이 캐릭을 받음';
+    } else if (v === 'g' || v === 'rg') {
+      let g = cell.g;
+      if (v === 'rg') {
+        const rr = rerollInfo(c);
+        g = rr ? rr.g : null;
+      }
+      if (!g) return;
+      cat = g.uber; rarity = 2; end = g.end; what = '이 칸에서 확정 11연을 돌림';
+    }
+    if (!cat) return;
+    const newSeed = T.s[end];
+    pending = { seed: newSeed, last: { id: cat.id ?? null, name: cat.name }, label: E.label(c) + (v === 'n' ? '' : v === 'r' ? ' 중복' : ' 확정'), cat: cat.name };
+    UI.open('<span class="rbadge ' + RCLS[rarity] + '">' + RNAME[rarity] + '</span>' + esc(cat.name),
+      '<dt>위치</dt><dd class="mono">' + E.label(c) + '</dd>'
+      + '<dt>뽑은 방법</dt><dd>' + what + '</dd>'
+      + '<dt>다음 시작</dt><dd class="mono">' + E.label(end) + ' → 새 표의 1A</dd>'
+      + '<dt>새 시드</dt><dd class="mono">' + newSeed + '</dd>', applyPending);
+  }
+  function applyPending() {
+    if (!pending) return;
+    state.history.push({ seed: state.seed, last: state.last, label: pending.label, cat: pending.cat });
+    if (state.history.length > 60) state.history.shift();
+    state.seed = pending.seed;
+    state.last = pending.last;
+    const done = pending;
+    pending = null;
+    rows = STEP;
+    persist();
+    renderAll();
+    toast(done.cat + ' 까지 진행했어요');
+    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+  function undo() {
+    const h = state.history.pop();
+    if (!h) return;
+    state.seed = h.seed; state.last = h.last || null;
+    persist(); renderAll();
+    toast((h.cat || '이전 상태') + ' 뽑기 전으로 돌아갔어요');
+  }
+  const toast = (msg) => UI.toast(msg);
+
+  function renderAll() {
+    renderBanners();
+    if (state.seed == null) { const b = currentBanner(); if (b && b.sample) state.seed = DEMO_SEED; }
+    renderSeed();
+    compute();
+    renderSummary();
+    renderTable();
+  }
+
+  // ---------- events ----------
+  $('strip').addEventListener('click', (e) => {
+    const btn = e.target.closest('.banner');
+    if (!btn) return;
+    state.bannerId = btn.dataset.id;
+    const b = currentBanner();
+    if (b && b.sample && state.seed == null) state.seed = DEMO_SEED;
+    rows = STEP;
+    persist(); renderAll();
+  });
+  let seedTimer = null;
+  $('seed').addEventListener('input', (e) => {
+    const v = parseSeed(e.target.value);
+    e.target.setAttribute('aria-invalid', v === null || !isNaN(v) ? 'false' : 'true');
+    clearTimeout(seedTimer);
+    seedTimer = setTimeout(() => {
+      if (v === null || isNaN(v) || v === state.seed) return;
+      if (state.seed != null) state.history.push({ seed: state.seed, last: state.last, label: '시드 입력', cat: '시드 변경' });
+      state.seed = v; state.last = null; rows = STEP;
+      persist(); renderAll();
+    }, 350);
+  });
+  $('copySeed').addEventListener('click', async () => {
+    if (state.seed == null) return;
+    const text = String(state.seed);
+    try { await navigator.clipboard.writeText(text); toast('시드를 복사했어요'); }
+    catch (e) { const inp = $('seed'); inp.focus(); inp.select(); toast('선택했어요. 길게 눌러 복사해줘'); }
+  });
+  $('undo').addEventListener('click', undo);
+  $('clearLast').addEventListener('click', () => { state.last = null; persist(); renderAll(); });
+  $('rows').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-c]');
+    if (!btn) return;
+    openSheet(Number(btn.dataset.c), btn.dataset.v);
+  });
+  $('more').addEventListener('click', () => { rows += STEP; compute(); renderTable(); });
+  let qTimer = null;
+  $('q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(renderTable, 120); });
+
+  // ---------- 레어 뽑기 시드 찾기 ----------
+  // 결과마다 어느 가챠에서 나왔는지 따로 기억해서, 레어 시드를 같이 쓰는 가챠끼리 섞어 넣을 수 있음
+  const F = window.NyankoFinder;
+  const KEYS = ['rare', 'supa', 'uber', 'legend'];
+  const rf = { bannerId: null, obs: [], g: [], bx: [], last: '', gNext: false, busy: false, result: null };
+  const keyOf = (e) => Array.isArray(e) ? (e[0] != null ? 'i' + e[0] : 'n' + e[1]) : (e && typeof e === 'object' ? (e.id != null ? 'i' + e.id : 'n' + e.name) : 'n' + e);
+  const catOf = (e) => Array.isArray(e) ? { id: e[0], name: e[1] } : (e && typeof e === 'object' ? { id: e.id ?? null, name: e.name } : { id: null, name: String(e) });
+  const bannerById = (id) => banners.find((b) => b.id === id && usable(b)) || null;
+  function rfBanner() {
+    const list = sortedBanners().map((x) => x.b);
+    return list.find((b) => b.id === rf.bannerId) || currentBanner() || list[0] || null;
+  }
+  function shortName(b) {
+    if (!b) return '?';
+    if (b.kind === 'platinum') return '플티';
+    if (b.kind === 'legend') return '레전드';
+    const m = /'([^']+)'/.exec(b.title || '');
+    return m ? m[1] : (b.title || '').slice(0, 8);
+  }
+  function finderBanner(b) {
+    let acc = 0;
+    return { tiers: KEYS.map((k, i) => ({ reroll: i === 0, items: (b.pools[k] || []).map(keyOf) })), cum: b.rates.map((r) => (acc += r)) };
+  }
+  function catByKey(b) {
+    const m = new Map();
+    if (!b) return m;
+    KEYS.forEach((k, r) => (b.pools[k] || []).forEach((e) => { const key = keyOf(e); if (!m.has(key)) m.set(key, Object.assign(catOf(e), { rarity: r })); }));
+    return m;
+  }
+  function gAllowed() {
+    const b = rfBanner();
+    if (!b || !b.guaranteed) return false;
+    let since = 0;
+    for (let i = rf.obs.length - 1; i >= 0 && !rf.g[i] && rf.bx[i] === b.id; i--) since++;
+    return since >= 10;
+  }
+  function entryBanners() {
+    const ids = [...new Set(rf.bx)];
+    return { ids, list: ids.map(bannerById), bix: rf.bx.map((id) => ids.indexOf(id)) };
+  }
+  function rfOpen() {
+    const b = rfBanner();
+    if (!b) { toast('가챠 일정이 아직 없어요'); return; }
+    rf.bannerId = b.id;
+    $('rfinder').hidden = false;
+    rfRender();
+    $('rfinder').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+  function rfRender() {
+    const b = rfBanner();
+    if (!b) return;
+    const list = sortedBanners();
+    $('rfBanner').innerHTML = list.map(({ b: x, s }) => '<option value="' + esc(x.id) + '"' + (x.id === b.id ? ' selected' : '') + '>' + esc(x.title || x.id) + ' · ' + s.label + '</option>').join('');
+    const first = rf.bx.length ? (bannerById(rf.bx[0]) || b) : b;
+    const rares = first.pools.rare || [];
+    $('rfLastWrap').hidden = !rares.length;
+    if (!rares.length) rf.last = '';
+    $('rfLast').innerHTML = '<option value="">모름 · 레어 아니었음</option>' + rares.map((e) => {
+      const k = keyOf(e); return '<option value="' + esc(k) + '"' + (k === rf.last ? ' selected' : '') + '>' + esc(catOf(e).name) + '</option>';
+    }).join('');
+    const cats = catByKey(b), q = norm($('rfQ').value);
+    const canG = gAllowed();
+    if (!canG) rf.gNext = false;
+    $('rfG').disabled = rf.busy || !canG;
+    $('rfG').setAttribute('aria-pressed', String(rf.gNext));
+    $('rfG').hidden = !b.guaranteed;
+    const groups = [3, 2, 1, 0].map((r) => {
+      const items = [...cats.entries()].filter(([, c]) => c.rarity === r && (!q || norm(c.name).includes(q)));
+      if (!items.length) return '';
+      return '<div class="grp"><span>' + RNAME[r] + ' ' + items.length + '</span>' + items.map(([k, c]) =>
+        '<button type="button" class="fchip ' + RCLS[r] + '" data-k="' + esc(k) + '"' + (rf.gNext && r !== 2 ? ' disabled' : '') + '>' + esc(c.name) + '</button>').join('') + '</div>';
+    }).join('');
+    $('rfPal').innerHTML = groups || '<span class="ph" style="color:var(--muted);font-size:13px">맞는 캐릭이 없어요</span>';
+    const mixed = new Set(rf.bx).size > 1;
+    $('rfList').innerHTML = rf.obs.length
+      ? rf.obs.map((k, i) => {
+        const eb = bannerById(rf.bx[i]);
+        const nmx = (catByKey(eb).get(k) || { name: k }).name;
+        return '<span class="it' + (rf.g[i] ? ' g' : '') + '"><i>' + (i + 1) + '</i>' + (rf.g[i] ? '<em>확정</em>' : '') + esc(nmx)
+          + (mixed ? '<em class="bn">' + esc(shortName(eb)) + '</em>' : '')
+          + '<button type="button" data-i="' + i + '" aria-label="' + (i + 1) + '번째 지우기">×</button></span>';
+      }).join('')
+      : '<span class="ph">위 캐릭을 뽑은 순서대로 눌러줘</span>';
+    let bits = 0;
+    if (rf.obs.length) {
+      const eb = entryBanners();
+      if (eb.list.every(Boolean)) bits = F.bits(eb.list.map(finderBanner), eb.bix, rf.obs, rf.g, 2);
+    }
+    $('rfBar').style.width = Math.min(100, (bits / 40) * 100) + '%';
+    $('rfBar').className = bits >= 40 ? 'ok' : '';
+    $('rfBitsText').textContent = !rf.obs.length ? '캐릭을 넣으면 얼마나 더 필요한지 보여줘'
+      : bits >= 40 ? rf.obs.length + '마리 · 충분해, 찾아봐'
+      : bits >= 32 ? rf.obs.length + '마리 · 거의 됐어, 1~2마리 더 넣으면 확실해'
+      : rf.obs.length + '마리 · 더 넣어줘 (대략 ' + Math.max(1, Math.ceil((40 - bits) / Math.max(1, bits / rf.obs.length))) + '마리 더)';
+    $('rfGo').disabled = rf.busy || rf.obs.length < 2;
+    $('rfBack').disabled = rf.busy || !rf.obs.length;
+    $('rfReset').disabled = rf.busy || !rf.obs.length;
+    $('rfBanner').disabled = rf.busy; $('rfLast').disabled = rf.busy;
+  }
+  function rfClearResult() { rf.result = null; $('rfOut').innerHTML = ''; }
+  async function rfGo() {
+    if (rf.busy || rf.obs.length < 2) return;
+    const eb = entryBanners();
+    if (!eb.list.every(Boolean)) { toast('기간이 끝나 사라진 가챠가 섞여 있어요. 다시 넣어줘'); return; }
+    const obs = rf.obs.slice(), g = rf.g.slice(), lastKey = rf.last || null;
+    if (g[0]) { toast('첫 칸은 확정 울트라일 수 없어요'); return; }
+    rf.busy = true; rf.result = null; rfRender();
+    $('rfOut').innerHTML = '<div class="fresult"><strong>찾는 중… 0%</strong><div class="meter"><div class="bar"><i class="ok" style="width:0%"></i></div>'
+      + '<span>시드 42억 개를 이 기기에서 확인하고 있어. 보통 몇 초~수십 초 걸려.</span></div>'
+      + '<div class="frow"><button type="button" class="btn" id="rfCancel">그만두기</button></div></div>';
+    let paint = 0;
+    try {
+      const res = await F.run(eb.list.map(finderBanner), eb.bix, obs, lastKey, (pct) => {
+        const now = Date.now(); if (now - paint < 250 && pct < 1) return; paint = now;
+        const el = $('rfOut').querySelector('.fresult strong');
+        if (el) { el.textContent = '찾는 중… ' + Math.floor(pct * 100) + '%'; $('rfOut').querySelector('.bar i').style.width = (pct * 100).toFixed(1) + '%'; }
+      }, { g, gTier: 2 });
+      const lastCat = lastKey ? catByKey(eb.list[eb.bix[0]]).get(lastKey) : null;
+      const cands = [];
+      for (const s0 of res.seeds) {
+        const s = E.seeds(s0, obs.length * 4 + 16);
+        let c = 0, l = lastCat ? { id: lastCat.id, name: lastCat.name } : null, ok = true;
+        for (let k = 0; k < obs.length; k++) {
+          const B = eb.list[eb.bix[k]];
+          if (g[k]) {
+            const ubers = B.pools.uber || [];
+            const e = ubers[s[c + 1] % ubers.length];
+            if (!e || keyOf(e) !== obs[k]) { ok = false; break; }
+            l = catOf(e); c += 1;
+          } else {
+            const p = E.pull(s, c, B, l);
+            if (!p.cat || keyOf([p.cat.id, p.cat.name]) !== obs[k]) { ok = false; break; }
+            l = p.cat; c = p.end;
+          }
+        }
+        if (ok) cands.push({ start: s0, now: s[c], last: l });
+      }
+      rf.result = { cands, capped: res.capped, bannerId: rf.bx[rf.bx.length - 1] };
+      rfShow();
+    } catch (e) {
+      $('rfOut').innerHTML = e && e.message === '취소됨' ? '' : '<div class="fresult"><strong>찾다가 멈췄어</strong>' + esc(e && e.message ? e.message : '다시 시도해줘') + '</div>';
+    } finally {
+      rf.busy = false; rfRender();
+    }
+  }
+  function rfShow() {
+    const r = rf.result, out = $('rfOut');
+    if (!r) { out.innerHTML = ''; return; }
+    if (!r.cands.length) {
+      out.innerHTML = '<div class="fresult"><strong>맞는 시드가 없어</strong><span>순서, 캐릭마다 고른 가챠, 11연의 확정 칸 표시를 확인해줘. 첫 캐릭 직전에 레어를 뽑았으면 위에서 그 레어를 골라줘.</span></div>';
+      return;
+    }
+    if (r.cands.length > 1) {
+      out.innerHTML = '<div class="fresult"><strong>후보가 ' + r.cands.length + (r.capped ? '개 넘게' : '개') + ' 나왔어</strong><span>이어서 나온 캐릭을 몇 마리 더 넣고 다시 찾으면 하나로 좁혀져.</span>'
+        + '<div class="cands">' + r.cands.slice(0, 5).map((c) => '<span class="mono">' + c.now + '</span>').join('') + '</div></div>';
+      return;
+    }
+    const c = r.cands[0];
+    out.innerHTML = '<div class="fresult"><strong>찾았어</strong>'
+      + '<dl style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0">'
+      + '<dt>지금 시드</dt><dd class="seedv" style="margin:0">' + c.now + '</dd>'
+      + '<dt>직전 캐릭</dt><dd style="margin:0">' + esc(c.last ? c.last.name : '-') + '</dd>'
+      + '<dt>기록 시작 전</dt><dd class="mono" style="margin:0">' + c.start + '</dd></dl>'
+      + '<div class="frow"><button type="button" class="btn primary" id="rfApply">이 시드로 설정</button></div></div>';
+  }
+  function rfApply() {
+    const r = rf.result; if (!r || r.cands.length !== 1) return;
+    const c = r.cands[0];
+    if (state.seed != null) state.history.push({ seed: state.seed, last: state.last, label: '시드 찾기', cat: '시드 찾기' });
+    state.seed = c.now; state.last = c.last ? { id: c.last.id ?? null, name: c.last.name } : null;
+    if (bannerById(r.bannerId)) state.bannerId = r.bannerId;
+    rows = STEP;
+    persist(); renderAll();
+    rf.obs = []; rf.g = []; rf.bx = []; rfClearResult(); $('rfinder').hidden = true;
+    toast('시드를 찾아서 넣었어요');
+    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+  $('rfind').addEventListener('click', rfOpen);
+  $('rfClose').addEventListener('click', () => { if (rf.busy) F.cancel(); rf.busy = false; $('rfinder').hidden = true; });
+  $('rfBanner').addEventListener('change', (e) => { rf.bannerId = e.target.value; rf.gNext = false; $('rfQ').value = ''; rfClearResult(); rfRender(); });
+  $('rfLast').addEventListener('change', (e) => { rf.last = e.target.value; rfClearResult(); });
+  let rfqTimer = null;
+  $('rfQ').addEventListener('input', () => { clearTimeout(rfqTimer); rfqTimer = setTimeout(rfRender, 120); });
+  $('rfG').addEventListener('click', () => { if (!gAllowed()) return; rf.gNext = !rf.gNext; rfRender(); });
+  $('rfPal').addEventListener('click', (e) => {
+    const btn = e.target.closest('.fchip'); if (!btn || btn.disabled || rf.busy) return;
+    const b = rfBanner(); if (!b) return;
+    rf.obs.push(btn.dataset.k); rf.g.push(rf.gNext ? 1 : 0); rf.bx.push(b.id); rf.gNext = false;
+    rfClearResult(); rfRender();
+  });
+  $('rfList').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-i]'); if (!btn || rf.busy) return;
+    const i = Number(btn.dataset.i); rf.obs.splice(i, 1); rf.g.splice(i, 1); rf.bx.splice(i, 1); rfClearResult(); rfRender();
+  });
+  $('rfBack').addEventListener('click', () => { rf.obs.pop(); rf.g.pop(); rf.bx.pop(); rfClearResult(); rfRender(); });
+  $('rfReset').addEventListener('click', () => { rf.obs = []; rf.g = []; rf.bx = []; rfClearResult(); rfRender(); });
+  $('rfGo').addEventListener('click', rfGo);
+  $('rfOut').addEventListener('click', (e) => {
+    if (e.target.id === 'rfCancel') { F.cancel(); rf.busy = false; rfClearResult(); rfRender(); }
+    if (e.target.id === 'rfApply') rfApply();
+  });
+
+  // ---------- boot ----------
+  readLocal();
+  renderAll();
+  connect();
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  const N = window.NyankoNormal;
+  const UI = window.NyankoUI;
+  const RNAME = ['노멀', '레어', '슈퍼레어', '울트라', '레전드'];
+  const RCLS = ['r-common', 'r-rare', 'r-supa', 'r-uber', 'r-legend'];
+  const DEMO = 3141592653;
+  const STEP = 100;
+  const LS = 'nyanko-normal-v1';
+  // 요약 칸에 보여줄 노릴 만한 아이템
+  const TARGETS = {
+    n: [], np: ['superfeline'], cf: ['epic-catfruit', 'treasure-radar'],
+    ce: ['dark-catseye', 'uber-rare-catseye'], lt: ['treasure-radar', 'rich-cat'], ltg: ['catamin-c', '1m-xp'],
+  };
+  const CATS = new Set(['cat', 'tank-cat', 'axe-cat', 'gross-cat', 'cow-cat', 'bird-cat', 'fish-cat', 'lizard-cat', 'titan-cat', 'superfeline']);
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const label = (c) => ((c >> 1) + 1) + (c & 1 ? 'B' : 'A');
+  const nm = (id) => N.name(id);
+
+  const st = { seed: null, last: null, bannerId: 'n', history: [], updatedAt: 0 };
+  let rows = STEP, cur = null, demo = false;
+  let ref = null, writing = false, dirty = false, wTimer = null;
+
+  function readLocal() { try { const r = localStorage.getItem(LS); if (r) Object.assign(st, JSON.parse(r)); } catch (e) { /* ignore */ } }
+  function writeLocal() { try { localStorage.setItem(LS, JSON.stringify(st)); } catch (e) { /* ignore */ } }
+  function persist() {
+    st.updatedAt = Date.now(); writeLocal();
+    if (!ref) return;
+    dirty = true; clearTimeout(wTimer); wTimer = setTimeout(flush, 500);
+  }
+  async function flush() {
+    if (writing || !dirty || !ref) return;
+    writing = true; dirty = false;
+    try { await ref.set({ seed: st.seed, last: st.last, bannerId: st.bannerId, history: st.history.slice(-40), updatedAt: st.updatedAt }); }
+    catch (e) { if (e && e.code === 'invalid_argument') ref = null; }
+    finally { writing = false; if (dirty) flush(); }
+  }
+  async function connect() { /* 이 기기 브라우저에만 저장 */ }
+
+  const banner = () => N.BANNERS.find((b) => b.id === st.bannerId) || N.BANNERS[0];
+
+  function compute() {
+    const b = banner();
+    if (st.seed == null) { cur = null; return; }
+    const T = N.table(st.seed, b, rows);
+    const pulls = N.path(T.s, b, st.last, rows * 2 - 1, rows * 2);
+    const onPath = new Map();
+    pulls.forEach((p, i) => onPath.set(p.c + (p.rerolled ? 'R' : ''), { n: i + 1, p }));
+    cur = { b, T, pulls, onPath };
+  }
+
+  function renderBanners() {
+    $('nbanners').innerHTML = N.BANNERS.map((b) =>
+      '<button type="button" class="nb" data-id="' + b.id + '" aria-pressed="' + (b.id === banner().id) + '"><b>' + esc(b.name) + '</b><span>' + esc(b.ticket) + '</span></button>'
+    ).join('');
+  }
+
+  function renderSeed() {
+    const inp = $('nseed');
+    if (document.activeElement !== inp) inp.value = st.seed != null ? String(st.seed) : '';
+    inp.setAttribute('aria-invalid', 'false');
+    $('nundo').disabled = !st.history.length;
+    $('nundo').textContent = st.history.length ? '되돌리기 (' + st.history.length + ')' : '되돌리기';
+    if (st.last) { $('nlastWrap').hidden = false; $('nlastName').textContent = nm(st.last); } else $('nlastWrap').hidden = true;
+    $('nseedNote').textContent = demo ? '예시 시드예요. 내 일반 뽑기 시드로 바꿔 넣어줘.' : '';
+  }
+
+  function tile(cls, k, v, m) {
+    return '<div class="tile ' + cls + '"><span class="eyebrow">' + k + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span></div>';
+  }
+  function renderSummary() {
+    const box = $('nsummary');
+    if (!cur) { box.innerHTML = tile('', '요약', '—', '시드를 넣으면 계산돼요'); return; }
+    const { b, pulls } = cur;
+    let html = '';
+    for (const id of TARGETS[b.id] || []) {
+      const i = pulls.findIndex((p) => p.item === id);
+      const r = b.tiers.find((t) => t.items.includes(id));
+      const cls = r && r.rarity >= 4 ? 'legend' : r && r.rarity >= 3 ? 'uber' : '';
+      html += i < 0
+        ? tile(cls, '다음 ' + esc(nm(id)), '표 범위엔 없어요', '100줄 더 보기로 늘려봐')
+        : tile(cls, '다음 ' + esc(nm(id)), (i + 1) + '장째', '위치 ' + label(pulls[i].c) + (pulls[i].rerolled ? ' (중복 리롤)' : ''));
+    }
+    const ten = pulls.slice(0, 10);
+    const end = ten.length === 10 ? label(ten[9].end) : '?';
+    if (b.id === 'n' || b.id === 'np') {
+      const cats = ten.filter((p) => CATS.has(p.item)).length;
+      html += tile('', b.ticket + ' 10장 쓰면', '캐릭 ' + cats + ' · 파란 구슬 ' + (ten.length - cats), '다음 시작 ' + end);
+      const thirty = pulls.slice(0, 30);
+      const cats30 = thirty.filter((p) => CATS.has(p.item)).length;
+      html += tile('', b.ticket + ' 30장 쓰면', '캐릭 ' + cats30 + ' · 파란 구슬 ' + (thirty.length - cats30), '다음 시작 ' + (thirty.length === 30 ? label(thirty[29].end) : '?'));
+    } else {
+      const cnt = [0, 0, 0, 0, 0]; ten.forEach((p) => cnt[p.rarity]++);
+      const parts = [];
+      for (let r = 4; r >= 0; r--) if (cnt[r]) parts.push(RNAME[r] + ' ' + cnt[r]);
+      html += tile('', b.ticket + ' 10장 쓰면', esc(parts.join(' · ')), '다음 시작 ' + end);
+    }
+    box.innerHTML = html;
+  }
+
+  function norm(s) { return String(s || '').toLowerCase().replace(/\s+/g, ''); }
+  const query = () => norm($('nq').value);
+  const hit = (id, q) => q && norm(nm(id)).includes(q);
+
+  function cellHTML(T, k, tr) {
+    const list = tr === 'A' ? T.A : T.B;
+    const cell = list[k - 1];
+    const prev = k > 1 ? list[k - 2] : null;
+    const q = query();
+    const step = cur.onPath.get(String(cell.c));
+    const cls = ['cell', RCLS[cell.rarity]];
+    if (step) cls.push('on-path');
+    if (hit(cell.item, q)) cls.push('hit');
+    let h = '<button type="button" class="' + cls.join(' ') + '" data-c="' + cell.c + '" data-v="n">'
+      + '<span class="pos">' + k + tr + '</span><span class="nm">' + esc(nm(cell.item)) + '</span>'
+      + (step ? '<span class="step">' + step.n + '</span>' : '<span></span>') + '</button>';
+    const rstep = cur.onPath.get(cell.c + 'R');
+    let arrive = false;
+    for (let e = 1; e <= 3 && !arrive && cell.reroll; e++) {
+      const sc = cell.c - 2 - e;
+      if (sc < 0) break;
+      const src = (sc % 2 === 0 ? T.A[sc / 2] : T.B[(sc - 1) / 2]);
+      if (src && src.reroll && src.reroll.extra === e && src.reroll.item === cell.item) arrive = true;
+    }
+    const showR = cell.reroll && (rstep || arrive || (prev && prev.item === cell.item) || (k === 1 && st.last === cell.item));
+    if (showR) {
+      const c2 = ['sub', 'rr'];
+      if (rstep) c2.push('on-path');
+      if (hit(cell.reroll.item, q)) c2.push('hit');
+      h += '<button type="button" class="' + c2.join(' ') + '" data-c="' + cell.c + '" data-v="r">'
+        + '<span class="k">중복 시' + (rstep ? ' · ' + rstep.n : '') + '</span><span class="nm">' + esc(nm(cell.reroll.item)) + '</span><span class="to">→' + label(cell.reroll.end) + '</span></button>';
+    }
+    return h;
+  }
+
+  function renderTable() {
+    const box = $('nrows');
+    if (!cur) {
+      box.innerHTML = '<div class="empty" style="border:0;border-radius:0">일반 뽑기 시드를 넣으면 A/B 트랙 배열이 여기에 나와요.</div>';
+      $('nmoreWrap').hidden = true; $('nhitinfo').textContent = '';
+      return;
+    }
+    const { T } = cur;
+    let html = '';
+    for (let k = 1; k <= T.rows; k++) {
+      html += '<div class="r"><div class="col">' + cellHTML(T, k, 'A') + '</div><div class="col">' + cellHTML(T, k, 'B') + '</div></div>';
+    }
+    box.innerHTML = html;
+    $('nmoreWrap').hidden = rows >= 2000;
+    const q = query(), info = $('nhitinfo');
+    if (!q) { info.textContent = ''; return; }
+    const hits = box.querySelectorAll('.hit');
+    if (!hits.length) { info.textContent = '이 범위엔 없어요'; return; }
+    const first = hits[0].closest('.col').querySelector('.cell .pos').textContent;
+    const i = cur.pulls.findIndex((p) => hit(p.item, q));
+    info.textContent = hits.length + '칸 · 처음 ' + first + (i >= 0 ? ' · 한 장씩 ' + (i + 1) + '장째' : '');
+  }
+
+  function render() {
+    renderBanners(); renderSeed(); compute(); renderSummary(); renderTable();
+  }
+
+  function openSheet(c, v) {
+    if (!cur) return;
+    const { T, b } = cur;
+    const cell = N.rollAt(T.s, c, b);
+    let item, end, rarity = cell.rarity, how;
+    if (v === 'r' && cell.reroll) { item = cell.reroll.item; end = cell.reroll.end; how = '직전과 같아서 다시 뽑힌 결과를 받음'; }
+    else { item = cell.item; end = cell.end; how = b.ticket + ' 1장씩 이 칸까지 뽑음'; }
+    const newSeed = T.s[end];
+    UI.open('<span class="rbadge ' + RCLS[rarity] + '">' + RNAME[rarity] + '</span>' + esc(nm(item)),
+      '<dt>뽑기</dt><dd>' + esc(b.name) + '</dd>'
+      + '<dt>위치</dt><dd class="mono">' + label(c) + (v === 'r' ? ' 중복' : '') + '</dd>'
+      + '<dt>뽑은 방법</dt><dd>' + how + '</dd>'
+      + '<dt>다음 시작</dt><dd class="mono">' + label(end) + ' → 새 표의 1A</dd>'
+      + '<dt>새 시드</dt><dd class="mono">' + newSeed + '</dd>',
+      () => {
+        st.history.push({ seed: st.seed, last: st.last, item });
+        if (st.history.length > 60) st.history.shift();
+        st.seed = newSeed; st.last = item; demo = false; rows = STEP;
+        persist(); render();
+        UI.toast(nm(item) + ' 까지 진행했어요');
+      });
+  }
+
+  // ---------- events ----------
+  $('nbanners').addEventListener('click', (e) => {
+    const btn = e.target.closest('.nb');
+    if (!btn) return;
+    st.bannerId = btn.dataset.id; rows = STEP;
+    persist(); render();
+  });
+  let sTimer = null;
+  $('nseed').addEventListener('input', (e) => {
+    const t = e.target.value.replace(/[^0-9]/g, '');
+    const v = t ? Number(t) : null;
+    const bad = v !== null && (!Number.isSafeInteger(v) || v < 1 || v > 4294967295);
+    e.target.setAttribute('aria-invalid', String(bad));
+    clearTimeout(sTimer);
+    sTimer = setTimeout(() => {
+      if (v === null || bad || v === st.seed) return;
+      if (st.seed != null && !demo) st.history.push({ seed: st.seed, last: st.last, item: null });
+      st.seed = v; st.last = null; demo = false; rows = STEP;
+      persist(); render();
+    }, 350);
+  });
+  $('ncopy').addEventListener('click', async () => {
+    if (st.seed == null) return;
+    try { await navigator.clipboard.writeText(String(st.seed)); UI.toast('시드를 복사했어요'); }
+    catch (e) { const i = $('nseed'); i.focus(); i.select(); UI.toast('선택했어요. 길게 눌러 복사해줘'); }
+  });
+  $('nundo').addEventListener('click', () => {
+    const h = st.history.pop();
+    if (!h) return;
+    st.seed = h.seed; st.last = h.last || null; rows = STEP;
+    persist(); render();
+    UI.toast((h.item ? nm(h.item) + ' 뽑기 전으로' : '이전 시드로') + ' 돌아갔어요');
+  });
+  $('nclearLast').addEventListener('click', () => { st.last = null; persist(); render(); });
+  $('nrows').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-c]');
+    if (btn) openSheet(Number(btn.dataset.c), btn.dataset.v);
+  });
+  $('nmore').addEventListener('click', () => { rows += STEP; compute(); renderTable(); });
+  let qTimer = null;
+  $('nq').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(renderTable, 120); });
+
+  // ---------- 시드 찾기 ----------
+  const F = window.NyankoFinder;
+  const fs = { bannerId: null, obs: [], bx: [], last: '', busy: false, result: null };
+  const nbById = (id) => N.BANNERS.find((b) => b.id === id) || null;
+  const nShort = (b) => ({ n: '냥코', np: '냥코+', cf: '개다래', ce: '캣츠아이', lt: '럭키', ltg: '럭키 G' }[b.id] || b.name);
+  const nFinder = (b) => ({ tiers: b.tiers.map((t) => ({ reroll: t.reroll, items: t.items })), cum: b.cum });
+  function nEntries() { const ids = [...new Set(fs.bx)]; return { list: ids.map(nbById), bix: fs.bx.map((id) => ids.indexOf(id)) }; }
+  function fBanner() { return N.BANNERS.find((b) => b.id === fs.bannerId) || banner(); }
+  function rarityOfItem(b, id) { const t = b.tiers.find((tr) => tr.items.includes(id)); return t ? t.rarity : 0; }
+  function uniqueItems(b) {
+    const out = [];
+    [...b.tiers].sort((x, y) => y.rarity - x.rarity).forEach((t) => t.items.forEach((id) => { if (!out.some((o) => o.id === id)) out.push({ id, rarity: t.rarity }); }));
+    return out;
+  }
+  function allItems() {
+    const seen = new Map();
+    N.BANNERS.forEach((b) => b.tiers.forEach((t) => t.items.forEach((id) => { if (!seen.has(id)) seen.set(id, t.rarity); })));
+    return [...seen.keys()];
+  }
+  function fOpen() {
+    fs.bannerId = fs.bannerId || banner().id;
+    $('finder').hidden = false;
+    fRender();
+    $('finder').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+  function fRender() {
+    const b = fBanner();
+    $('fBanner').innerHTML = N.BANNERS.map((x) => '<option value="' + x.id + '"' + (x.id === b.id ? ' selected' : '') + '>' + esc(x.name) + ' (' + esc(x.ticket) + ')</option>').join('');
+    $('fLast').innerHTML = '<option value="">모름 · 처음 뽑음</option>' + allItems().map((id) => '<option value="' + id + '"' + (id === fs.last ? ' selected' : '') + '>' + esc(nm(id)) + '</option>').join('');
+    const groups = {};
+    uniqueItems(b).forEach((it) => { (groups[it.rarity] = groups[it.rarity] || []).push(it); });
+    $('fPal').innerHTML = Object.keys(groups).sort((x, y) => y - x).map((r) =>
+      '<div class="grp"><span>' + RNAME[r] + '</span>' + groups[r].map((it) =>
+        '<button type="button" class="fchip ' + RCLS[it.rarity] + '" data-id="' + it.id + '">' + esc(nm(it.id)) + '</button>').join('') + '</div>').join('');
+    const mixed = new Set(fs.bx).size > 1;
+    $('fList').innerHTML = fs.obs.length
+      ? fs.obs.map((id, i) => '<span class="it"><i>' + (i + 1) + '</i>' + esc(nm(id)) + (mixed ? '<em class="bn">' + esc(nShort(nbById(fs.bx[i]))) + '</em>' : '')
+        + '<button type="button" data-i="' + i + '" aria-label="' + (i + 1) + '번째 지우기">×</button></span>').join('')
+      : '<span class="ph">위 버튼을 뽑은 순서대로 눌러줘</span>';
+    const ne = nEntries();
+    const bits = fs.obs.length ? F.bits(ne.list.map(nFinder), ne.bix, fs.obs) : 0;
+    const pct = Math.min(100, (bits / 40) * 100);
+    $('fBar').style.width = pct + '%';
+    $('fBar').className = bits >= 40 ? 'ok' : '';
+    $('fBitsText').textContent = !fs.obs.length ? '결과를 넣으면 얼마나 더 필요한지 보여줘'
+      : bits >= 40 ? fs.obs.length + '개 · 충분해, 찾아봐'
+      : bits >= 32 ? fs.obs.length + '개 · 거의 됐어, 2~3개 더 넣으면 확실해'
+      : fs.obs.length + '개 · 더 넣어줘 (대략 ' + Math.max(1, Math.ceil((40 - bits) / Math.max(1, bits / fs.obs.length))) + '개 더)';
+    $('fGo').disabled = fs.busy || fs.obs.length < 2;
+    $('fBack').disabled = fs.busy || !fs.obs.length;
+    $('fReset').disabled = fs.busy || !fs.obs.length;
+    $('fBanner').disabled = fs.busy; $('fLast').disabled = fs.busy;
+  }
+  function progressHTML(pct) {
+    return '<div class="fresult"><strong>찾는 중… ' + Math.floor(pct * 100) + '%</strong>'
+      + '<div class="meter"><div class="bar"><i class="ok" style="width:' + (pct * 100).toFixed(1) + '%"></i></div>'
+      + '<span>시드 42억 개를 이 기기에서 하나씩 확인하고 있어. 폰에서는 1분 넘게 걸릴 수 있어.</span></div>'
+      + '<div class="frow"><button type="button" class="btn" id="fCancel">그만두기</button></div></div>';
+  }
+  async function fGo() {
+    if (fs.busy || fs.obs.length < 2) return;
+    const ne = nEntries(), obs = fs.obs.slice(), last = fs.last || null;
+    fs.busy = true; fs.result = null; fRender();
+    $('fOut').innerHTML = progressHTML(0);
+    let lastPaint = 0;
+    try {
+      const res = await F.run(ne.list.map(nFinder), ne.bix, obs, last, (pct) => {
+        const now = Date.now();
+        if (now - lastPaint < 250 && pct < 1) return;
+        lastPaint = now;
+        const el = $('fOut').querySelector('.fresult strong');
+        if (el) { el.textContent = '찾는 중… ' + Math.floor(pct * 100) + '%'; $('fOut').querySelector('.bar i').style.width = (pct * 100).toFixed(1) + '%'; }
+      });
+      // 찾은 시작 시드마다 기록한 결과를 다시 돌려서 지금 시드를 구함
+      const cands = [];
+      for (const s0 of res.seeds) {
+        const s = N.seeds(s0, obs.length * 8 + 8);
+        let c = 0, l = last, ok = true;
+        for (let k = 0; k < obs.length; k++) { const p = N.pull(s, c, ne.list[ne.bix[k]], l); if (p.item !== obs[k]) { ok = false; break; } c = p.end; l = p.item; }
+        if (ok) cands.push({ start: s0, now: s[c], last: l });
+      }
+      fs.result = { cands, capped: res.capped, bannerId: fs.bx[fs.bx.length - 1], obs };
+      fShowResult();
+    } catch (e) {
+      $('fOut').innerHTML = e && e.message === '취소됨' ? '' : '<div class="fresult"><strong>찾다가 멈췄어</strong>' + esc(e && e.message ? e.message : '다시 시도해줘') + '</div>';
+    } finally {
+      fs.busy = false; fRender();
+    }
+  }
+  function fShowResult() {
+    const r = fs.result, out = $('fOut');
+    if (!r) { out.innerHTML = ''; return; }
+    if (!r.cands.length) {
+      out.innerHTML = '<div class="fresult"><strong>맞는 시드가 없어</strong>'
+        + '<span>순서가 맞는지, 결과마다 고른 뽑기가 맞는지 확인해줘. 첫 결과 직전에 얻은 걸 알면 위에서 골라줘.</span></div>';
+      return;
+    }
+    if (r.cands.length > 1) {
+      out.innerHTML = '<div class="fresult"><strong>후보가 ' + r.cands.length + (r.capped ? '개 넘게' : '개') + ' 나왔어</strong>'
+        + '<span>이어서 뽑은 결과를 몇 개 더 넣고 다시 찾으면 하나로 좁혀져.</span>'
+        + '<div class="cands">' + r.cands.slice(0, 5).map((c) => '<span class="mono">' + c.now + '</span>').join('') + '</div></div>';
+      return;
+    }
+    const c = r.cands[0];
+    out.innerHTML = '<div class="fresult"><strong>찾았어</strong>'
+      + '<dl class="facts" style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0">'
+      + '<dt>지금 시드</dt><dd class="seedv" style="margin:0">' + c.now + '</dd>'
+      + '<dt>직전 아이템</dt><dd style="margin:0">' + esc(nm(c.last)) + '</dd>'
+      + '<dt>기록 시작 전</dt><dd class="mono" style="margin:0">' + c.start + '</dd></dl>'
+      + '<div class="frow"><button type="button" class="btn primary" id="fApply">이 시드로 설정</button></div></div>';
+  }
+  function fApply() {
+    const r = fs.result; if (!r || r.cands.length !== 1) return;
+    const c = r.cands[0];
+    if (st.seed != null && !demo) st.history.push({ seed: st.seed, last: st.last, item: null });
+    st.seed = c.now; st.last = c.last; st.bannerId = r.bannerId || st.bannerId; demo = false; rows = STEP;
+    persist(); render();
+    fs.obs = []; fs.bx = []; fs.result = null; $('fOut').innerHTML = ''; $('finder').hidden = true;
+    UI.toast('시드를 찾아서 넣었어요');
+    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+  $('nfind').addEventListener('click', fOpen);
+  $('fClose').addEventListener('click', () => { if (fs.busy) F.cancel(); fs.busy = false; $('finder').hidden = true; });
+  $('fBanner').addEventListener('change', (e) => { fs.bannerId = e.target.value; fs.result = null; $('fOut').innerHTML = ''; fRender(); });
+  $('fLast').addEventListener('change', (e) => { fs.last = e.target.value; fs.result = null; $('fOut').innerHTML = ''; });
+  $('fPal').addEventListener('click', (e) => {
+    const b = e.target.closest('.fchip'); if (!b || fs.busy) return;
+    fs.obs.push(b.dataset.id); fs.bx.push(fBanner().id); fs.result = null; $('fOut').innerHTML = ''; fRender();
+  });
+  $('fList').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-i]'); if (!b || fs.busy) return;
+    const i = Number(b.dataset.i); fs.obs.splice(i, 1); fs.bx.splice(i, 1); fs.result = null; $('fOut').innerHTML = ''; fRender();
+  });
+  $('fBack').addEventListener('click', () => { fs.obs.pop(); fs.bx.pop(); fs.result = null; $('fOut').innerHTML = ''; fRender(); });
+  $('fReset').addEventListener('click', () => { fs.obs = []; fs.bx = []; fs.result = null; $('fOut').innerHTML = ''; fRender(); });
+  $('fGo').addEventListener('click', fGo);
+  $('fOut').addEventListener('click', (e) => {
+    if (e.target.id === 'fCancel') { F.cancel(); fs.busy = false; $('fOut').innerHTML = ''; fRender(); }
+    if (e.target.id === 'fApply') fApply();
+  });
+
+  // ---------- boot ----------
+  readLocal();
+  if (st.seed == null) { st.seed = DEMO; demo = true; }
+  render();
+  connect();
+})();
+</script>
+
+</body>
+</html>
