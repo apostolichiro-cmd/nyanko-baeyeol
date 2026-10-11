@@ -114,6 +114,8 @@ button { cursor: pointer; }
 .sync { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .sync .led { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
 .sync[data-state="live"] .led { background: var(--supa); }
+.topr { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; justify-content: flex-end; }
+.seg.theme button { min-height: 32px; padding: 0 11px; font-size: 12px; }
 
 /* ---------- seed bar ---------- */
 .seedbar {
@@ -555,6 +557,7 @@ button.tile .eyebrow::after { content: ' ›'; }
   @keyframes up { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
 }
 </style>
+<script>try{var r=document.documentElement,t=localStorage.getItem('nyanko-theme');r.setAttribute('data-theme-host',r.getAttribute('data-theme')||'');if(t==='light'||t==='dark')r.setAttribute('data-theme',t);}catch(e){}</script>
 </head>
 <body>
 
@@ -565,7 +568,10 @@ button.tile .eyebrow::after { content: ' ›'; }
       <h1>냥코 배열<span class="dot">.</span></h1>
       <p>시드로 미리 보는 냥코대전쟁 뽑기 결과</p>
     </div>
-    <div class="sync" id="sync" data-state="idle"><span class="led"></span><span id="syncText">일정 불러오는 중</span></div>
+    <div class="topr">
+      <div class="sync" id="sync" data-state="idle"><span class="led"></span><span id="syncText">일정 불러오는 중</span></div>
+      <div class="seg theme" id="themeSeg" role="group" aria-label="화면 밝기"><button type="button" data-theme-set="auto" aria-pressed="true">자동</button><button type="button" data-theme-set="light" aria-pressed="false">밝게</button><button type="button" data-theme-set="dark" aria-pressed="false">어둡게</button></div>
+    </div>
   </header>
 
   <div class="modes" role="tablist" aria-label="뽑기 종류">
@@ -1433,6 +1439,27 @@ window.NyankoUI = (function () {
     setTimeout(paintGifts, 300);
   });
   paintGifts();
+  // 화면 밝기: 자동(기기 설정 따라감) · 밝게 · 어둡게 — 고른 건 이 기기에 저장
+  const THEME_KEY = 'nyanko-theme';
+  const THEME_BG = { light: '#F2F3F6', dark: '#0E1014' };
+  const rootEl = document.documentElement;
+  const hostTheme = rootEl.hasAttribute('data-theme-host') ? rootEl.getAttribute('data-theme-host') : (rootEl.getAttribute('data-theme') || '');
+  function applyTheme(t, save) {
+    if (t !== 'light' && t !== 'dark') t = 'auto';
+    if (t !== 'auto') rootEl.setAttribute('data-theme', t);
+    else if (hostTheme) rootEl.setAttribute('data-theme', hostTheme);
+    else rootEl.removeAttribute('data-theme');
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+      if (!m.hasAttribute('data-orig')) m.setAttribute('data-orig', m.getAttribute('content') || '');
+      m.setAttribute('content', t === 'auto' ? m.getAttribute('data-orig') : THEME_BG[t]);
+    });
+    document.querySelectorAll('#themeSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeSet === t)));
+    if (save) { try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* ignore */ } }
+  }
+  let savedTheme = null;
+  try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) { /* ignore */ }
+  applyTheme(savedTheme, false);
+  $('themeSeg').addEventListener('click', (e) => { const b = e.target.closest('button[data-theme-set]'); if (b) applyTheme(b.dataset.themeSet, true); });
   return { open, close, toast };
 })();
 </script>
