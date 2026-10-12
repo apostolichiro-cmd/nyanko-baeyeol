@@ -575,6 +575,11 @@ button.tile .eyebrow::after { content: ' ›'; }
 .bd.bu { background: var(--ut); color: var(--on-ut); }
 .legendkey .bd { margin: 0 4px 0 0; vertical-align: 0; }
 .cc .bd, .ec .bd { margin-left: 3px; vertical-align: 1px; font-size: 9px; padding: 2px 3px; }
+/* 냥코 티켓 나란히 비교: 노멀 칸 */
+.cc.r-common { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-soft); font-weight: 500; }
+.cc.r-common.on-path { box-shadow: inset 0 0 0 2px var(--path); }
+.cc.r-common.hit { box-shadow: inset 0 0 0 3px var(--hit); }
+.cc.r-common.on-path.hit { box-shadow: inset 0 0 0 2px var(--path), inset 0 0 0 5px var(--hit); }
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: up 180ms ease-out; }
   @keyframes up { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
@@ -794,6 +799,9 @@ button.tile .eyebrow::after { content: ' ›'; }
           <input id="nq" type="search" placeholder="아이템 이름으로 찾기" aria-label="아이템 이름으로 찾기" autocomplete="off">
         </div>
         <span class="hitinfo" id="nhitinfo"></span>
+        <div class="tbtns">
+          <div class="seg" id="nViewSeg" role="group" aria-label="보기"><button type="button" data-view="one" aria-pressed="true">한 뽑기</button><button type="button" data-view="cmp" aria-pressed="false">나란히 비교</button></div>
+        </div>
       </div>
       <div class="legendkey" style="margin-bottom:10px">
         <span><i style="background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)"></i>노멀</span>
@@ -808,6 +816,11 @@ button.tile .eyebrow::after { content: ' ›'; }
         <div class="rows" id="nrows"></div>
         <div class="more" id="nmoreWrap" hidden><button class="btn" id="nmore" type="button">100줄 더 보기</button></div>
       </div>
+      <div class="cmpwrap" id="ncmpwrap" hidden>
+        <div class="cmpbar" id="ncmpBar" role="group" aria-label="비교할 뽑기"></div>
+        <div class="cmpscroll" id="ncmpBox"></div>
+        <div class="more" id="ncmoreWrap" hidden><button class="btn" id="ncmore" type="button">100줄 더 보기</button></div>
+      </div>
     </section>
 
     <section class="help">
@@ -815,6 +828,7 @@ button.tile .eyebrow::after { content: ' ›'; }
       <ul>
         <li>냥코 티켓·럭키 티켓 뽑기는 레어 뽑기와 <b>다른 시드</b>를 써요. 여섯 뽑기가 이 시드 하나를 같이 써서, 어느 뽑기를 돌려도 같은 표에서 위치가 넘어가요.</li>
         <li>내가 뽑은 마지막 결과 칸을 누르면 바로 그 다음 결과가 <b>1A</b>가 되도록 배열이 새로 시작해요. 뽑기를 바꿔 가며 돌려도 그때그때 누르면 돼요.</li>
+        <li><b>나란히 비교</b>는 같은 칸에서 뽑기마다 뭐가 나오는지 옆으로 보여줘요. 칸을 누르면 그 뽑기에서 거기까지 뽑은 걸로 넘어가요.</li>
         <li><b>중복</b> 줄은 직전에 얻은 아이템과 같은 게 나올 때 다시 뽑히는 결과예요. 다른 뽑기에서 얻은 아이템도 직전으로 쳐요. 다시 뽑은 횟수가 홀수면 반대 트랙으로 넘어가요.</li>
         <li>아이템 칸 순서와 확률은 영문판 기준이고, 영문판 트래커(ampuri) 표 960칸과 대조해 모두 일치했어요. 한국판 구성이 다르면 어긋날 수 있으니 처음 몇 장은 실제 결과와 맞춰봐.</li>
         <li><b>내 시드 찾기</b>는 결과를 순서대로 넣으면 가능한 시드 42억 개를 이 기기 안에서 전부 확인해요. 희귀한 아이템이 앞에 있으면 더 빨라요.</li>
@@ -2701,7 +2715,7 @@ window.NyankoUI = (function () {
   const label = (c) => ((c >> 1) + 1) + (c & 1 ? 'B' : 'A');
   const nm = (id) => N.name(id);
 
-  const st = { seed: null, last: null, bannerId: 'n', history: [], updatedAt: 0 };
+  const st = { seed: null, last: null, bannerId: 'n', history: [], updatedAt: 0, view: 'one', cmpIds: null };
   let rows = STEP, cur = null, demo = false;
   let ref = null, writing = false, dirty = false, wTimer = null;
 
@@ -2818,6 +2832,11 @@ window.NyankoUI = (function () {
   }
 
   function renderTable() {
+    const cmpv = st.view === 'cmp';
+    $('ncmpwrap').hidden = !cmpv;
+    document.querySelector('#normalMode .trackwrap').hidden = cmpv;
+    paintNView();
+    if (cmpv) { renderNCompare(); return; }
     const box = $('nrows');
     if (!cur) {
       box.innerHTML = '<div class="empty" style="border:0;border-radius:0">일반 뽑기 시드를 넣으면 A/B 트랙 배열이 여기에 나와요.</div>';
@@ -3051,6 +3070,109 @@ window.NyankoUI = (function () {
     if (e.target.id === 'fCancel') { F.cancel(); fs.busy = false; $('fOut').innerHTML = ''; fRender(); }
     if (e.target.id === 'fApply') fApply();
   });
+
+  // ---------- 나란히 비교 (냥코 티켓) ----------
+  const NSHORT = { n: '냥코', np: '냥코+', cf: '개다래', ce: '캣츠아이', lt: '럭키', ltg: '럭키 G' };
+  function paintNView() {
+    const v = st.view === 'cmp' ? 'cmp' : 'one';
+    document.querySelectorAll('#nViewSeg button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.view === v)));
+  }
+  function nCmpIds() {
+    const all = N.BANNERS.map((b) => b.id);
+    const narrow = matchMedia('(max-width: 560px)').matches;
+    let ids = Array.isArray(st.cmpIds) ? st.cmpIds.filter((id) => all.includes(id)) : [];
+    // 폰에서는 처음에 지금 고른 뽑기 포함 3개만
+    if (!ids.length) ids = narrow ? [st.bannerId].concat(all).filter((id, i, a) => all.includes(id) && a.indexOf(id) === i).slice(0, 3) : all.slice();
+    if (narrow && ids.length > 3) ids = ids.slice(-3);
+    return ids;
+  }
+  function renderNCompare() {
+    const on = new Set(nCmpIds());
+    $('ncmpBar').innerHTML = N.BANNERS.map((b) => '<button type="button" class="cchip" data-id="' + b.id + '" aria-pressed="' + on.has(b.id) + '">' + esc(NSHORT[b.id] || b.name) + '</button>').join('');
+    const box = $('ncmpBox');
+    const cols = N.BANNERS.filter((b) => on.has(b.id));
+    if (st.seed == null) {
+      box.innerHTML = '<div class="empty" style="border:0;border-radius:0">일반 뽑기 시드를 넣으면 뽑기별 배열이 나란히 나와요.</div>';
+      $('ncmoreWrap').hidden = true; $('nhitinfo').textContent = '';
+      return;
+    }
+    const n = rows * 2;
+    const s = N.seeds(st.seed, n + 70);
+    const q = query();
+    const data = cols.map((b) => {
+      const cells = new Array(n);
+      for (let c = 0; c < n; c++) cells[c] = N.rollAt(s, c, b);
+      const path = new Map();
+      N.path(s, b, st.last, n - 1, n).forEach((p, i) => path.set(p.c + (p.rerolled ? 'R' : ''), i + 1));
+      return { b, cells, path };
+    });
+    // 중복 줄은 한 뽑기 보기와 같은 규칙: 단챠 경로에서 중복, 같은 트랙 바로 위 칸과 같음, 반대 트랙에서 넘어와 같음
+    const showR = (d, c) => {
+      const cell = d.cells[c];
+      if (!cell.reroll) return false;
+      if (d.path.has(c + 'R')) return true;
+      const prev = c >= 2 ? d.cells[c - 2] : null;
+      if (prev ? prev.item === cell.item : st.last === cell.item) return true;
+      for (let e = 1; e <= 3; e++) {
+        const sc = c - 2 - e;
+        if (sc < 0) break;
+        const src = d.cells[sc];
+        if (src && src.reroll && src.reroll.extra === e && src.reroll.item === cell.item) return true;
+      }
+      return false;
+    };
+    let hits = 0, firstHit = '';
+    let h = '<table class="cmp"><colgroup><col class="lab">' + data.map(() => '<col>').join('') + '</colgroup><thead><tr><th scope="col">칸</th>'
+      + data.map((d) => '<th scope="col"' + (d.b.id === st.bannerId ? ' class="sel"' : '') + '>' + esc(NSHORT[d.b.id] || d.b.name) + '</th>').join('') + '</tr></thead><tbody>';
+    for (let c = 0; c < n; c++) {
+      h += '<tr class="' + (c % 2 ? 'tb' : 'ta') + '"><th scope="row" class="mono">' + label(c) + '</th>';
+      for (const d of data) {
+        const cell = d.cells[c];
+        const stp = d.path.get(String(c)), rstp = d.path.get(c + 'R');
+        const cls = ['cc', RCLS[cell.rarity]];
+        if (stp) cls.push('on-path');
+        if (hit(cell.item, q)) { cls.push('hit'); hits++; if (!firstHit) firstHit = label(c); }
+        h += '<td><button type="button" class="' + cls.join(' ') + '" data-c="' + c + '" data-b="' + d.b.id + '" data-v="n"><span class="nm">' + esc(nm(cell.item)) + '</span>' + (stp ? '<span class="step">' + stp + '</span>' : '') + '</button>';
+        if (showR(d, c)) {
+          const c2 = ['cc', 'rr'];
+          if (rstp) c2.push('on-path');
+          if (hit(cell.reroll.item, q)) { c2.push('hit'); hits++; if (!firstHit) firstHit = label(c) + ' 중복'; }
+          h += '<button type="button" class="' + c2.join(' ') + '" data-c="' + c + '" data-b="' + d.b.id + '" data-v="r">중복 시 ' + esc(nm(cell.reroll.item)) + (rstp ? ' · ' + rstp : '') + '</button>';
+        }
+        h += '</td>';
+      }
+      h += '</tr>';
+    }
+    box.innerHTML = h + '</tbody></table>';
+    $('ncmoreWrap').hidden = rows >= 2000;
+    $('nhitinfo').textContent = !q ? '' : hits ? hits + '칸 · 처음 ' + firstHit : '이 범위엔 없어요';
+  }
+  $('nViewSeg').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-view]'); if (!t) return;
+    st.view = t.dataset.view === 'cmp' ? 'cmp' : 'one';
+    persist(); renderTable();
+  });
+  $('ncmpBar').addEventListener('click', (e) => {
+    const t = e.target.closest('.cchip'); if (!t) return;
+    let ids = nCmpIds();
+    const id = t.dataset.id;
+    if (ids.includes(id)) { if (ids.length > 1) ids = ids.filter((x) => x !== id); }
+    else {
+      ids.push(id);
+      if (matchMedia('(max-width: 560px)').matches && ids.length > 3) { ids.shift(); UI.toast('폰에서는 3개까지 나란히 보여줘요'); }
+    }
+    st.cmpIds = ids;
+    persist(); renderNCompare();
+  });
+  $('ncmpBox').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-c]'); if (!t) return;
+    if (!N.BANNERS.some((b) => b.id === t.dataset.b)) return;
+    if (st.bannerId !== t.dataset.b) { st.bannerId = t.dataset.b; compute(); }
+    const before = st.seed;
+    openSheet(Number(t.dataset.c), t.dataset.v);
+    if (st.seed === before) { persist(); render(); }
+  });
+  $('ncmore').addEventListener('click', () => { rows += STEP; compute(); renderTable(); });
 
   // ---------- 다음 10장 · 빠른 진행 · 계정 시드 연결 ----------
   function renderNext() {
