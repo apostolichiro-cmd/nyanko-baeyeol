@@ -231,7 +231,7 @@ button { cursor: pointer; }
   background: var(--rare-bg); position: relative;
 }
 .cell .pos { font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 2.6em; }
-.cell .nm { font-weight: 600; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.cell .nm { font-weight: 600; font-size: 14px; line-height: 1.3; word-break: keep-all; overflow-wrap: anywhere; }
 .cell .step {
   font-family: var(--font-mono); font-size: 11px; font-weight: 600; min-width: 22px; height: 22px; padding: 0 5px;
   border-radius: 999px; display: inline-grid; place-items: center; background: var(--path); color: var(--on-ink);
@@ -563,6 +563,18 @@ button.tile .eyebrow::after { content: ' ›'; }
   .tbtns { width: 100%; margin-left: 0; }
   .tbtns .btn { flex: 1 1 auto; justify-content: center; }
 }
+/* 4진 · 초본능 표시 */
+:root { --ut: #C8283F; --on-ut: #FFFFFF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ut: #FF7D90; --on-ut: #1B0B0F; } }
+:root[data-theme="dark"] { --ut: #FF7D90; --on-ut: #1B0B0F; }
+.bd {
+  display: inline-block; font-style: normal; font-size: 10px; font-weight: 700; line-height: 1; padding: 2px 4px 3px; border-radius: 4px;
+  margin-left: 4px; vertical-align: 2px; letter-spacing: -0.02em; white-space: nowrap; -webkit-text-fill-color: currentColor; flex: none;
+}
+.bd.b4 { background: var(--ink); color: var(--on-ink); }
+.bd.bu { background: var(--ut); color: var(--on-ut); }
+.legendkey .bd { margin: 0 4px 0 0; vertical-align: 0; }
+.cc .bd, .ec .bd { margin-left: 3px; vertical-align: 1px; font-size: 9px; padding: 2px 3px; }
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: up 180ms ease-out; }
   @keyframes up { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
@@ -692,6 +704,8 @@ button.tile .eyebrow::after { content: ' ›'; }
       <span><i style="background:linear-gradient(90deg,var(--legend),var(--legend-2))"></i>레전드</span>
       <span><i style="background:var(--blue)"></i>블루 아이즈</span>
       <span><i style="background:var(--yel-bg);box-shadow:inset 0 0 0 1px var(--yel)"></i>버스터즈 대장</span>
+      <span><b class="bd b4">4진</b>4단 진화 있음</span>
+      <span><b class="bd bu">초본</b>초본능 있음</span>
       <span><i style="background:transparent;box-shadow:inset 0 0 0 2px var(--path)"></i>단챠 경로</span>
     </div>
     <div class="trackwrap">
@@ -1587,6 +1601,10 @@ window.NyankoUI = (function () {
   // 레드 묘반권 파이파이 · 에어 광전기병 레이 · 메탈 사쿠라 · 파동 지옥 경찰 엠마 · 초생명체 빛의 여신 시리우스
   const BUSTER_IDS = new Set([284, 287, 398, 560, 687]);
   const tagCls = (cat) => (!cat || cat.id == null) ? '' : BLUE_IDS.has(Number(cat.id)) ? 'c-blue' : BUSTER_IDS.has(Number(cat.id)) ? 'c-buster' : '';
+  // 4진: 4단 진화가 있는 캐릭 (고드팻 한국판 데이터) / 초본: 초본능이 있는 캐릭 (나무위키 본능 문서)
+  const F4_IDS = new Set([60,  74,  76,  77,  136,  138,  139,  159,  178,  197,  213,  305,  306,  307,  360,  361,  362,  398,  418,  428,  432,  497]);
+  const UT_IDS = new Set([35,  43,  44,  58,  73,  84,  85,  86,  87,  88,  106,  107,  108,  125,  126,  135,  137,  144,  195,  196,  204,  227,  258,  259,  260,  262,  272,  273,  339,  352,  440,  534,  535]);
+  const badges = (cat) => (!cat || cat.id == null) ? '' : (F4_IDS.has(Number(cat.id)) ? '<i class="bd b4">4진</i>' : '') + (UT_IDS.has(Number(cat.id)) ? '<i class="bd bu">초본</i>' : '');
   const DEMO_SEED = 139026851;
   const STEP = 100;
   const LS_KEY = 'nyanko-tracker-v1';
@@ -1798,7 +1816,7 @@ window.NyankoUI = (function () {
     if (step) cls.push('on-path');
     if (q && matches(name, q)) cls.push('hit');
     let h = '<button type="button" class="' + cls.join(' ') + '" data-c="' + key + '" data-v="n">'
-      + '<span class="pos">' + k + tr + '</span><span class="nm">' + esc(name) + '</span>'
+      + '<span class="pos">' + k + tr + '</span><span class="nm">' + esc(name) + badges(cell.cat) + '</span>'
       + (step ? '<span class="step">' + step.n + '</span>' : '<span></span>') + '</button>';
 
     // 중복 리롤: 표 기준(같은 트랙 직전 칸과 중복) 또는 실제 경로에서 리롤된 경우
@@ -1809,18 +1827,18 @@ window.NyankoUI = (function () {
       if (rstep) c2.push('on-path');
       if (q && matches(rr.cat.name, q)) c2.push('hit');
       h += '<button type="button" class="' + c2.join(' ') + '" data-c="' + key + '" data-v="r">'
-        + '<span class="k">중복 시' + (rstep ? ' · ' + rstep.n : '') + '</span><span class="nm">' + esc(rr.cat.name) + '</span><span class="to">→' + nextLabel(rr.end) + '</span></button>';
+        + '<span class="k">중복 시' + (rstep ? ' · ' + rstep.n : '') + '</span><span class="nm">' + esc(rr.cat.name) + badges(rr.cat) + '</span><span class="to">→' + nextLabel(rr.end) + '</span></button>';
     }
     if (current.b.guaranteed && cell.g) {
       const c3 = ['sub', 'g'];
       if (q && matches(cell.g.uber.name, q)) c3.push('hit');
       h += '<button type="button" class="' + c3.join(' ') + '" data-c="' + key + '" data-v="g">'
-        + '<span class="k">확정</span><span class="nm r-uber ' + tagCls(cell.g.uber) + '">' + esc(cell.g.uber.name) + '</span><span class="to">→' + nextLabel(cell.g.end) + '</span></button>';
+        + '<span class="k">확정</span><span class="nm r-uber ' + tagCls(cell.g.uber) + '">' + esc(cell.g.uber.name) + badges(cell.g.uber) + '</span><span class="to">→' + nextLabel(cell.g.end) + '</span></button>';
       if (rr && rr.g) {
         const c4 = ['sub', 'g'];
         if (q && matches(rr.g.uber.name, q)) c4.push('hit');
         h += '<button type="button" class="' + c4.join(' ') + '" data-c="' + key + '" data-v="rg">'
-          + '<span class="k">중복 후 확정</span><span class="nm r-uber ' + tagCls(rr.g.uber) + '">' + esc(rr.g.uber.name) + '</span><span class="to">→' + nextLabel(rr.g.end) + '</span></button>';
+          + '<span class="k">중복 후 확정</span><span class="nm r-uber ' + tagCls(rr.g.uber) + '">' + esc(rr.g.uber.name) + badges(rr.g.uber) + '</span><span class="to">→' + nextLabel(rr.g.end) + '</span></button>';
       }
     }
     return h;
@@ -2041,7 +2059,7 @@ window.NyankoUI = (function () {
     }
     box.hidden = false;
     box.innerHTML = '<div class="ehead"><h3>' + title + '</h3><span>1A부터' + (end != null ? ' · 다 뽑으면 다음 시작 <b class="mono">' + E.label(end) + '</b>' : '') + '</span></div>'
-      + '<ol class="elist">' + items.map((it, i) => '<li class="ec ' + RCLS[it.rarity] + ' ' + tagCls(it.cat) + '" title="' + (it.g ? '확정 울트라' : E.label(it.c) + (it.rr ? ' 중복' : '')) + '"><i>' + (it.g ? '확정' : i + 1) + '</i><span>' + esc(it.cat ? it.cat.name : '-') + '</span></li>').join('') + '</ol>'
+      + '<ol class="elist">' + items.map((it, i) => '<li class="ec ' + RCLS[it.rarity] + ' ' + tagCls(it.cat) + '" title="' + (it.g ? '확정 울트라' : E.label(it.c) + (it.rr ? ' 중복' : '')) + '"><i>' + (it.g ? '확정' : i + 1) + '</i><span>' + esc(it.cat ? it.cat.name : '-') + '</span>' + badges(it.cat) + '</li>').join('') + '</ol>'
       + '<div class="eacts"><button type="button" class="btn" data-adv="1">' + (tk ? '1장 썼음' : '단챠 1번 했음') + '</button>'
       + '<button type="button" class="btn primary" data-adv="11"' + (end == null ? ' disabled' : '') + '>' + (tk ? '11장 썼음' : b.guaranteed ? '확정 11연 했음' : '11연 했음') + '</button></div>';
   }
@@ -2106,7 +2124,7 @@ window.NyankoUI = (function () {
       const items = [...cats.entries()].filter(([, c]) => c.rarity === r && (!q || norm(c.name).includes(q)));
       if (!items.length) return '';
       return '<div class="grp"><span>' + RNAME[r] + ' ' + items.length + '</span>' + items.map(([k, c]) =>
-        '<button type="button" class="fchip ' + RCLS[r] + ' ' + tagCls(c) + '" data-k="' + esc(k) + '" aria-pressed="' + pl.keys.has(k) + '">' + esc(c.name) + '</button>').join('') + '</div>';
+        '<button type="button" class="fchip ' + RCLS[r] + ' ' + tagCls(c) + '" data-k="' + esc(k) + '" data-n="' + esc(c.name) + '" aria-pressed="' + pl.keys.has(k) + '">' + esc(c.name) + badges(c) + '</button>').join('') + '</div>';
     }).join('');
     $('plPal').innerHTML = groups || '<span style="color:var(--muted);font-size:13px">맞는 캐릭이 없어요</span>';
     const chosen = [...pl.grp].map((g) => '<span class="it"><em>' + GRP[g] + '</em><button type="button" data-rmg="' + g + '" aria-label="' + GRP[g] + ' 빼기">×</button></span>')
@@ -2158,7 +2176,7 @@ window.NyankoUI = (function () {
       return '<li><div class="rh"><b>' + esc(longName(b)) + '</b>' + (sel && b.id === sel.id ? '<em>지금 고른 가챠</em>' : '') + (b.start && b.start > t ? '<em>' + md(b.start) + '부터</em>' : '') + '</div>'
         + '<div class="rd">' + head + '</div>'
         + '<div class="rc">' + (cats.length > shown.length ? '<span class="more">앞 ' + (cats.length - shown.length) + '마리 …</span>' : '')
-        + shown.map(({ x, goal }) => '<span class="' + RCLS[x.rarity] + ' ' + tagCls(x.cat) + (goal ? ' goal' : '') + '">' + (x.g ? '확정 ' : '') + esc(x.cat.name) + '</span>').join('') + '</div></li>';
+        + shown.map(({ x, goal }) => '<span class="' + RCLS[x.rarity] + ' ' + tagCls(x.cat) + (goal ? ' goal' : '') + '">' + (x.g ? '확정 ' : '') + esc(x.cat.name) + badges(x.cat) + '</span>').join('') + '</div></li>';
     }).join('');
     out.innerHTML = '<div class="fresult"><strong>' + esc(hi.cat.name) + ' · ' + esc(n.text) + '</strong>'
       + '<span>' + (n.cans ? '통조림으로 치면 ' + n.cans.toLocaleString('ko-KR') + '개 · ' : '') + '받는 칸 ' + hi.label + ' · 끝나면 다음 시작 <b class="mono">' + E.label(r.end) + '</b></span>'
@@ -2229,13 +2247,13 @@ window.NyankoUI = (function () {
         const cls = ['cc', RCLS[cell.rarity], tagCls(cell.cat)];
         if (stp) cls.push('on-path');
         if (q && matches(name, q)) { cls.push('hit'); hits++; if (!firstHit) firstHit = E.label(c); }
-        h += '<td><button type="button" class="' + cls.join(' ') + '" data-c="' + c + '" data-b="' + esc(d.b.id) + '" data-v="n"><span class="nm">' + esc(name) + '</span>' + (stp ? '<span class="step">' + stp.n + '</span>' : '') + '</button>';
+        h += '<td><button type="button" class="' + cls.join(' ') + '" data-c="' + c + '" data-b="' + esc(d.b.id) + '" data-v="n"><span class="nm">' + esc(name) + badges(cell.cat) + '</span>' + (stp ? '<span class="step">' + stp.n + '</span>' : '') + '</button>';
         const rc = cell.rerolled ? cell.rerolled.cat : (rstp ? rstp.p.cat : null);
         if (rc) {
           const c2 = ['cc', 'rr'];
           if (rstp) c2.push('on-path');
           if (q && matches(rc.name, q)) { c2.push('hit'); hits++; if (!firstHit) firstHit = E.label(c) + ' 중복'; }
-          h += '<button type="button" class="' + c2.join(' ') + '" data-c="' + c + '" data-b="' + esc(d.b.id) + '" data-v="r">중복 시 ' + esc(rc.name) + (rstp ? ' · ' + rstp.n : '') + '</button>';
+          h += '<button type="button" class="' + c2.join(' ') + '" data-c="' + c + '" data-b="' + esc(d.b.id) + '" data-v="r">중복 시 ' + esc(rc.name) + badges(rc) + (rstp ? ' · ' + rstp.n : '') + '</button>';
         }
         h += '</td>';
       }
@@ -2361,7 +2379,7 @@ window.NyankoUI = (function () {
   $('plPal').addEventListener('click', (e) => {
     const t = e.target.closest('.fchip'); if (!t) return;
     const k = t.dataset.k;
-    if (pl.keys.has(k)) pl.keys.delete(k); else { pl.keys.add(k); pl.names.set(k, t.textContent); }
+    if (pl.keys.has(k)) pl.keys.delete(k); else { pl.keys.add(k); pl.names.set(k, t.dataset.n || t.textContent); }
     renderPlanner();
   });
   $('plList').addEventListener('click', (e) => {
@@ -2523,7 +2541,7 @@ window.NyankoUI = (function () {
       const items = [...cats.entries()].filter(([, c]) => c.rarity === r && (!q || norm(c.name).includes(q)));
       if (!items.length) return '';
       return '<div class="grp"><span>' + RNAME[r] + ' ' + items.length + '</span>' + items.map(([k, c]) =>
-        '<button type="button" class="fchip ' + RCLS[r] + ' ' + tagCls(c) + '" data-k="' + esc(k) + '"' + (rf.gNext && r !== 2 ? ' disabled' : '') + '>' + esc(c.name) + '</button>').join('') + '</div>';
+        '<button type="button" class="fchip ' + RCLS[r] + ' ' + tagCls(c) + '" data-k="' + esc(k) + '"' + (rf.gNext && r !== 2 ? ' disabled' : '') + '>' + esc(c.name) + badges(c) + '</button>').join('') + '</div>';
     }).join('');
     $('rfPal').innerHTML = groups || '<span class="ph" style="color:var(--muted);font-size:13px">맞는 캐릭이 없어요</span>';
     const mixed = new Set(rf.bx).size > 1;
