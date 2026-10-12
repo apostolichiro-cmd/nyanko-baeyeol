@@ -500,22 +500,23 @@ button.tile .eyebrow::after { content: ' ›'; }
 }
 .cchip small { font-size: 11px; font-weight: 500; font-family: var(--font-mono); }
 .cchip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
-.cmpscroll { overflow: auto; max-height: min(78vh, 980px); overscroll-behavior: contain; }
-.cmp { border-collapse: separate; border-spacing: 0; min-width: 100%; }
+.cmpscroll { overflow: visible; }
+.cmp { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; }
+.cmp col.lab { width: 46px; }
 .cmp th, .cmp td { padding: 3px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .cmp tr.tb > * { border-bottom-color: color-mix(in srgb, var(--line) 50%, transparent); }
 .cmp thead th {
-  position: sticky; top: 0; z-index: 2; background: var(--surface); font-size: 12px; font-weight: 700; color: var(--muted);
-  text-align: left; padding: 8px 6px; min-width: 128px; max-width: 170px; line-height: 1.3;
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--surface); font-size: 12px; font-weight: 700; color: var(--muted);
+  text-align: left; padding: 8px 6px; line-height: 1.3; word-break: keep-all; overflow-wrap: anywhere;
 }
 .cmp thead th.sel { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
-.cmp thead th:first-child { left: 0; z-index: 3; min-width: 44px; }
-.cmp tbody th { position: sticky; left: 0; z-index: 1; background: var(--surface); font-size: 11px; color: var(--muted); font-weight: 500; padding: 9px 6px; text-align: left; }
+.cmp thead th:first-child { z-index: 3; }
+.cmp tbody th { font-size: 11px; color: var(--muted); font-weight: 500; padding: 9px 6px; text-align: left; }
 .cc {
   width: 100%; border: 0; border-radius: 6px; padding: 5px 7px; min-height: 34px; display: flex; align-items: center; justify-content: space-between;
   gap: 6px; text-align: left; font-size: 13px; font-weight: 600; background: var(--rare-bg); color: var(--ink);
 }
-.cc .nm { overflow-wrap: anywhere; line-height: 1.25; }
+.cc .nm { min-width: 0; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.25; }
 .cc .step {
   flex: none; font-family: var(--font-mono); font-size: 10px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px;
   background: var(--path); color: var(--on-ink); display: inline-grid; place-items: center;
@@ -530,6 +531,16 @@ button.tile .eyebrow::after { content: ' ›'; }
 .cc.on-path.hit { box-shadow: inset 0 0 0 2px var(--path), inset 0 0 0 5px var(--hit); }
 .cc.rr { background: transparent; min-height: 0; padding: 3px 7px; margin-top: 2px; font-size: 11px; color: var(--warn); font-weight: 600; justify-content: flex-start; }
 .cc:hover { filter: brightness(0.97); }
+@media (max-width: 560px) {
+  .cmpbar { padding: 8px; }
+  .cmp col.lab { width: 34px; }
+  .cmp th, .cmp td { padding: 2px; }
+  .cmp thead th { font-size: 11px; padding: 7px 3px; }
+  .cmp tbody th { font-size: 10px; padding: 8px 2px; letter-spacing: -0.02em; }
+  .cc { font-size: 12px; padding: 4px 5px; min-height: 32px; gap: 3px; }
+  .cc .step { font-size: 9px; min-width: 15px; height: 15px; padding: 0 3px; }
+  .cc.rr { font-size: 10px; padding: 2px 5px; }
+}
 
 .slots { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .slots .lbl { font-size: 12px; color: var(--muted); font-weight: 500; margin-right: 2px; }
@@ -2170,8 +2181,13 @@ window.NyankoUI = (function () {
   }
   function cmpBanners() {
     const list = sortedBanners().filter((x) => x.s.k !== 'past');
-    const ids = Array.isArray(state.cmpIds) ? state.cmpIds.filter((id) => list.some((x) => x.b.id === id)) : [];
-    const on = new Set(ids.length ? ids : list.filter((x) => x.s.k === 'live').map((x) => x.b.id));
+    const narrow = matchMedia('(max-width: 560px)').matches;
+    let ids = Array.isArray(state.cmpIds) ? state.cmpIds.filter((id) => list.some((x) => x.b.id === id)) : [];
+    if (narrow && ids.length > 3) ids = ids.slice(-3);
+    let def = list.filter((x) => x.s.k === 'live').map((x) => x.b.id);
+    // 폰에서는 처음에 지금 고른 가챠 포함 3개만 (화면 폭에 맞게)
+    if (narrow) def = [state.bannerId].concat(def).filter((id, i, a) => id && a.indexOf(id) === i && list.some((x) => x.b.id === id)).slice(0, 3);
+    const on = new Set(ids.length ? ids : def);
     if (!on.size && list.length) on.add(list[0].b.id);
     return { list, on };
   }
@@ -2203,7 +2219,7 @@ window.NyankoUI = (function () {
       return { b, cells, path };
     });
     let hits = 0, firstHit = '';
-    let h = '<table class="cmp"><thead><tr><th scope="col">칸</th>' + data.map((d) => '<th scope="col"' + (d.b.id === state.bannerId ? ' class="sel"' : '') + '>' + esc(shortName(d.b)) + '</th>').join('') + '</tr></thead><tbody>';
+    let h = '<table class="cmp"><colgroup><col class="lab">' + data.map(() => '<col>').join('') + '</colgroup><thead><tr><th scope="col">칸</th>' + data.map((d) => '<th scope="col"' + (d.b.id === state.bannerId ? ' class="sel"' : '') + '>' + esc(shortName(d.b)) + '</th>').join('') + '</tr></thead><tbody>';
     for (let c = 0; c < n; c++) {
       h += '<tr class="' + (c % 2 ? 'tb' : 'ta') + '"><th scope="row" class="mono">' + E.label(c) + '</th>';
       for (const d of data) {
@@ -2366,8 +2382,16 @@ window.NyankoUI = (function () {
   $('cmpBar').addEventListener('click', (e) => {
     const t = e.target.closest('.cchip'); if (!t) return;
     const { list, on } = cmpBanners();
-    if (on.has(t.dataset.id)) { if (on.size > 1) on.delete(t.dataset.id); } else on.add(t.dataset.id);
-    state.cmpIds = list.map((x) => x.b.id).filter((id) => on.has(id));
+    // 고른 순서대로 기억 · 폰에서는 3개 넘으면 제일 먼저 고른 걸 뺌
+    let ids = (Array.isArray(state.cmpIds) ? state.cmpIds : []).filter((id) => on.has(id));
+    list.forEach((x) => { if (on.has(x.b.id) && !ids.includes(x.b.id)) ids.push(x.b.id); });
+    const id = t.dataset.id;
+    if (on.has(id)) { if (ids.length > 1) ids = ids.filter((x) => x !== id); }
+    else {
+      ids.push(id);
+      if (matchMedia('(max-width: 560px)').matches && ids.length > 3) { ids.shift(); toast('폰에서는 3개까지 나란히 보여줘요'); }
+    }
+    state.cmpIds = ids;
     persist(); renderCompare();
   });
   $('cmpBox').addEventListener('click', (e) => {
