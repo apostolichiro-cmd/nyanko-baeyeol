@@ -606,13 +606,36 @@ button.tile .eyebrow::after { content: ' ›'; }
 .plres .alone { margin: 0; font-size: 12px; color: var(--muted); }
 /* 세션: 오른쪽 아래 + 버튼 */
 .wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
-.fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 35; width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--ink); color: var(--on-ink); font-size: 30px; font-weight: 400; line-height: 1; display: grid; place-items: center; box-shadow: 0 8px 24px color-mix(in srgb, #000 28%, transparent); cursor: pointer; transition: bottom 160ms ease; }
-.fab span { display: block; margin-top: -3px; transition: transform 160ms ease; }
-.fab[aria-expanded="true"] span { transform: rotate(45deg); }
-.fab[data-has="1"]::after { content: ''; position: absolute; top: 3px; right: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--supa); border: 2px solid var(--bg); }
-.toast:not([hidden]) ~ .fab { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
-.sesspanel { position: fixed; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 36; width: min(400px, calc(100vw - 32px)); max-height: min(72vh, 640px); overflow: auto; overscroll-behavior: contain; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: 0 16px 40px color-mix(in srgb, #000 24%, transparent); padding: 14px; display: grid; gap: 12px; align-content: start; }
-.toast:not([hidden]) ~ .sesspanel { bottom: calc(152px + env(safe-area-inset-bottom, 0px)); max-height: min(60vh, 600px); }
+/* + 버튼: 귀 달린 고양이 얼굴 모양 */
+.fab { position: fixed; right: 18px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 35; width: 60px; height: 60px; padding: 0; border: 0; background: transparent; color: #FFFFFF; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: bottom 180ms ease, transform 220ms cubic-bezier(.34, 1.56, .64, 1); }
+.fab:hover { transform: translateY(-3px); }
+.fab:active { transform: scale(0.92); }
+.fab:focus-visible { outline: none; }
+.fab:focus-visible .face { box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--focus); }
+.fab .face { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; border-radius: 50%; border: 3px solid var(--surface);
+  background: radial-gradient(circle at 32% 24%, #FFD796 0%, #F7A53F 38%, #E3801A 72%, #C9650C 100%);
+  box-shadow: 0 14px 28px -8px rgba(201, 101, 12, 0.6), 0 3px 8px rgba(0, 0, 0, 0.16), inset 0 -4px 0 rgba(122, 58, 0, 0.18), inset 0 3px 0 rgba(255, 255, 255, 0.4); }
+.fab .plus { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; filter: drop-shadow(0 1px 0 rgba(122, 58, 0, 0.35)); transition: transform 300ms cubic-bezier(.34, 1.56, .64, 1); }
+.fab[aria-expanded="true"] .plus { transform: rotate(135deg); }
+.fab .ear { position: absolute; top: -11px; width: 22px; height: 24px; z-index: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); transform-origin: 50% 100%;
+  background: linear-gradient(175deg, #F9B055, #E2821C); transition: transform 280ms cubic-bezier(.34, 1.56, .64, 1); }
+.fab .ear::before { content: ''; position: absolute; left: 27%; right: 27%; top: 30%; bottom: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); background: linear-gradient(180deg, #FFC7B4, #F59A84); }
+.fab .ear.l { left: 3px; transform: rotate(-17deg); }
+.fab .ear.r { right: 3px; transform: rotate(17deg); }
+.fab:hover .ear.l { transform: rotate(-24deg); }
+.fab:hover .ear.r { transform: rotate(24deg); }
+.fab[aria-expanded="true"] .ear.l { transform: rotate(-38deg) scaleY(0.78); }
+.fab[aria-expanded="true"] .ear.r { transform: rotate(38deg) scaleY(0.78); }
+.fab .dot { position: absolute; z-index: 2; bottom: 1px; right: -1px; width: 16px; height: 16px; border-radius: 50%; background: var(--supa); border: 3px solid var(--surface); display: none; }
+.fab[data-has="1"] .dot { display: block; }
+.toast:not([hidden]) ~ .fab { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+@media (prefers-reduced-motion: no-preference) {
+  .fab { animation: fab-in 520ms cubic-bezier(.34, 1.56, .64, 1) 200ms backwards; }
+  @keyframes fab-in { from { transform: scale(0.3) translateY(12px); opacity: 0; } }
+}
+@media (prefers-reduced-motion: reduce) { .fab, .fab .plus, .fab .ear { transition: none; } }
+.sesspanel { position: fixed; right: 16px; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); z-index: 36; width: min(400px, calc(100vw - 32px)); max-height: min(72vh, 640px); overflow: auto; overscroll-behavior: contain; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: 0 16px 40px color-mix(in srgb, #000 24%, transparent); padding: 14px; display: grid; gap: 12px; align-content: start; }
+.toast:not([hidden]) ~ .sesspanel { bottom: calc(158px + env(safe-area-inset-bottom, 0px)); max-height: min(60vh, 600px); }
 .sesshead h2 { margin: 0; font-size: 17px; }
 .sesshead small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
 .sesscur { border-radius: var(--r-md); background: var(--bg); padding: 10px 12px; display: grid; gap: 4px; }
@@ -1064,7 +1087,7 @@ button.tile .eyebrow::after { content: ' ›'; }
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<button type="button" class="fab" id="fab" aria-label="세션 저장·불러오기" aria-expanded="false" aria-controls="sessPanel"><span aria-hidden="true">+</span></button>
+<button type="button" class="fab" id="fab" aria-label="세션 저장·불러오기" title="세션 저장·불러오기" aria-expanded="false" aria-controls="sessPanel"><span class="ear l" aria-hidden="true"></span><span class="ear r" aria-hidden="true"></span><span class="face" aria-hidden="true"><svg class="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="dot" aria-hidden="true"></span></button>
 <section class="sesspanel" id="sessPanel" role="dialog" aria-labelledby="sessTitle" hidden>
   <div class="sesshead"><h2 id="sessTitle">세션</h2><small id="sessSub"></small></div>
   <div class="sesscur" id="sessCur"></div>
