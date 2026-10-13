@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "냥코 배열 뷰어",
+  "short_name": "냥코 배열",
+  "description": "시드만 넣으면 레어 티켓·냥코 티켓 다음 뽑기랑 목표 캐릭터까지 경로를 보여줘요",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "ko",
+  "background_color": "#F2F3F6",
+  "theme_color": "#F2F3F6",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
