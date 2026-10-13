@@ -2223,17 +2223,18 @@ window.NyankoUI = (function () {
     }
     const { pathPulls, b } = current;
     const tk = isTk(b);
-    const findR = (r) => { const i = pathPulls.findIndex((p) => p.cat && p.rarity === r); return i < 0 ? null : { i, p: pathPulls[i] }; };
+    const lp = longPulls();
+    const findR = (r) => { const i = lp.findIndex((p) => p.cat && p.rarity === r); return i < 0 ? null : { i, p: lp[i] }; };
     const tiles = [];
     if (!tk) {
       const u = findR(2);
       tiles.push(u ? tile('uber', '다음 울트라', esc(u.p.cat.name), '단챠 ' + (u.i + 1) + '번째 · ' + E.label(u.p.c))
-        : tile('uber', '다음 울트라', '없음', '표 범위 안에서는 안 나와요'));
+        : tile('uber', '다음 울트라', '없음', planRows() + '줄 안에서는 안 나와요'));
     }
     if (!tk || b.kind === 'legend') {
       const l = findR(3);
       tiles.push(l ? tile('legend', '다음 레전드', esc(l.p.cat.name), (tk ? '티켓 ' + (l.i + 1) + '장째' : '단챠 ' + (l.i + 1) + '번째') + ' · ' + E.label(l.p.c))
-        : tile('legend', '다음 레전드', '없음', b.rates[3] ? '표 범위 안에서는 안 나와요' : '이 가챠엔 레전드가 없어요'));
+        : tile('legend', '다음 레전드', '없음', b.rates[3] ? planRows() + '줄 안에서는 안 나와요' : '이 가챠엔 레전드가 없어요'));
     }
     tiles.push(goalTile('blue', 'blue', '다음 블루 아이즈'), goalTile('buster', 'buster', '다음 버스터즈 대장'));
     for (let i = 0; tiles.length < 4 && i < pathPulls.length; i++) {
@@ -2330,6 +2331,23 @@ window.NyankoUI = (function () {
 
   // ---------- 다음 11연 · 목표까지 경로 · 나란히 비교 · 저장한 시드 ----------
   const isTk = (b) => !!b && (b.kind === 'platinum' || b.kind === 'legend');
+  // 경로 찾기·요약은 표에 펼친 줄 수와 상관없이 앞으로 1000줄(2000칸)까지 봄
+  const PLAN_ROWS = 1000;
+  const planRows = () => Math.max(rows, PLAN_ROWS);
+  let longCache = null;
+  // 지금 가챠에서 한 장씩 뽑을 때의 경로 (표보다 멀리)
+  function longPulls() {
+    if (!current) return [];
+    const R = planRows();
+    const key = state.seed + '|' + (state.last ? E.catKey(state.last) : '') + '|' + current.b.id + '|' + R;
+    if (longCache && longCache.key === key) return longCache.list;
+    const s = E.seeds(state.seed, R * 2 + 80);
+    const list = [];
+    let c = 0, last = state.last || null;
+    while (c <= R * 2 - 1) { const p = E.pull(s, c, current.b, last); if (!p.cat) break; list.push(p); c = p.end; last = p.cat; }
+    longCache = { key, list };
+    return list;
+  }
   const helperOf = (b) => ({ b, single: b.kind === 'legend' ? 6000 : isTk(b) ? 3000 : 150, eleven: b.guaranteed && !isTk(b) ? 1500 : 0 });
   const PKEYS = ['rare', 'supa', 'uber', 'legend'];
   const pCatOf = (e) => (Array.isArray(e) ? { id: e[0], name: e[1] } : (e && typeof e === 'object' ? { id: e.id ?? null, name: e.name } : { id: null, name: String(e) }));
@@ -2348,8 +2366,9 @@ window.NyankoUI = (function () {
     if (state.seed == null || isNaN(state.seed) || !helpers.length) return { none: 'seed' };
     const any = helpers.some((h) => PKEYS.some((k, r) => (h.b.pools[k] || []).some((e) => isT(pCatOf(e), r))));
     if (!any) return { none: 'pool' };
-    const s = E.seeds(state.seed, rows * 2 + 80);
-    const res = window.NyankoPlan.find({ s, last: state.last, helpers, isTarget: isT, maxC: rows * 2 - 1 });
+    const R = planRows();
+    const s = E.seeds(state.seed, R * 2 + 80);
+    const res = window.NyankoPlan.find({ s, last: state.last, helpers, isTarget: isT, maxC: R * 2 - 1 });
     if (!res) return { none: 'range' };
     res.s = s;
     return res;
@@ -2381,7 +2400,7 @@ window.NyankoUI = (function () {
     const r = planRun(hs, goalFn(new Set([grp]), null));
     let v, m;
     if (r.none === 'pool') { v = '이 가챠엔 없어요'; m = '눌러서 다른 가챠까지 찾아보기'; }
-    else if (r.none) { v = '표 범위엔 없어요'; m = '100줄 더 보기로 늘려봐'; }
+    else if (r.none) { v = planRows() + '줄 안엔 없어요'; m = '눌러서 다른 가챠까지 찾아보기'; }
     else { const hi = planHit(r); v = esc(hi.cat.name); m = esc(planCount(r, hs).text) + ' · ' + hi.label; }
     return '<button type="button" class="tile ' + cls + '" data-goal="' + grp + '"><span class="eyebrow">' + title + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span></button>';
   }
@@ -2532,7 +2551,7 @@ window.NyankoUI = (function () {
     if (r.none) {
       const msg = r.none === 'seed' ? '시드랑 가챠를 먼저 골라줘.'
         : r.none === 'pool' ? '고른 목표가 ' + (pl.all ? '진행 중인 가챠' : '지금 고른 가챠') + '에 없어요.'
-        : '지금 표 범위(' + rows + '줄) 안에서는 못 받아. 표 아래 "100줄 더 보기"로 늘리면 더 멀리까지 찾아.';
+        : '앞으로 ' + planRows() + '줄 안에서는 못 받아.';
       out.innerHTML = '<div class="plhint"><b>경로가 없어.</b> ' + msg + '</div>';
       return;
     }
@@ -2542,9 +2561,10 @@ window.NyankoUI = (function () {
     let alone = '';
     if (current) {
       const unit = isTk(sel) ? '티켓으로만' : '단챠로만';
-      const i = current.pathPulls.findIndex((p) => p.cat && isT(p.cat, p.rarity));
-      alone = i < 0 ? '참고로 지금 고른 가챠에서 ' + unit + ' 하면 표 범위 안엔 없어.'
-        : '참고로 지금 고른 가챠에서 ' + unit + ' 하면 ' + (i + 1) + (isTk(sel) ? '장째' : '번째') + '에 ' + esc(current.pathPulls[i].cat.name) + '.';
+      const lp = longPulls();
+      const i = lp.findIndex((p) => p.cat && isT(p.cat, p.rarity));
+      alone = i < 0 ? '참고로 지금 고른 가챠에서 ' + unit + ' 하면 ' + planRows() + '줄 안엔 없어.'
+        : '참고로 지금 고른 가챠에서 ' + unit + ' 하면 ' + (i + 1) + (isTk(sel) ? '장째' : '번째') + '에 ' + esc(lp[i].cat.name) + '.';
     }
     const lastEdge = r.edges[r.edges.length - 1];
     const steps = routeSteps(r.edges, helpers, (e, xi) => e === lastEdge && xi === r.hitIdx);
@@ -2602,11 +2622,12 @@ window.NyankoUI = (function () {
       out.innerHTML = '<div class="plhint"><b>경로가 없어.</b> 고른 목표가 ' + (pl.all ? '쓸 수 있는 가챠' : '지금 고른 가챠') + '에 없어요.</div>';
       return;
     }
-    const s = E.seeds(state.seed, rows * 2 + 80);
-    const r = window.NyankoPlan.best({ s, last: state.last, helpers, value, lim, maxC: rows * 2 - 1 });
-    const more = r.cut ? '표 범위(' + rows + '줄) 끝까지 봤어. "100줄 더 보기"로 늘리면 더 받을 수도 있어.' : '';
+    const BR = Math.max(rows, 500);
+    const s = E.seeds(state.seed, BR * 2 + 80);
+    const r = window.NyankoPlan.best({ s, last: state.last, helpers, value, lim, maxC: BR * 2 - 1 });
+    const more = r.cut ? '앞으로 ' + BR + '줄까지만 셌어. 가진 게 더 남아도 그 뒤는 안 봤어.' : '';
     if (!r.got.length) {
-      out.innerHTML = '<div class="plhint"><b>가진 걸로는 ' + (goals ? '목표가' : '울트라가') + ' 안 나와.</b> ' + (more || '표 범위(' + rows + '줄) 안에서 찾아봤어.') + '</div>';
+      out.innerHTML = '<div class="plhint"><b>가진 걸로는 ' + (goals ? '목표가' : '울트라가') + ' 안 나와.</b> ' + (more || '앞으로 ' + BR + '줄 안에서 찾아봤어.') + '</div>';
       return;
     }
     r.s = s;
@@ -3544,13 +3565,14 @@ window.NyankoUI = (function () {
     const { b, pulls } = cur;
     let html = '';
     for (const id of TARGETS[b.id] || []) {
-      const i = pulls.findIndex((p) => p.item === id);
+      const lp = nLong().pulls;
+      const i = lp.findIndex((p) => p.item === id);
       const r = b.tiers.find((t) => t.items.includes(id));
       const cls = r && r.rarity >= 4 ? 'legend' : r && r.rarity >= 3 ? 'uber' : '';
       const gt = (v, m) => '<button type="button" class="tile ' + cls + '" data-ngoal="' + id + '"><span class="eyebrow">다음 ' + esc(nm(id)) + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span></button>';
       html += i < 0
-        ? gt('표 범위엔 없어요', '눌러서 뽑기 바꿔 가며 찾아보기')
-        : gt((i + 1) + '장째', '위치 ' + label(pulls[i].c) + (pulls[i].rerolled ? ' (중복 리롤)' : ''));
+        ? gt(nPlanRows() + '줄 안엔 없어요', '눌러서 뽑기 바꿔 가며 찾아보기')
+        : gt((i + 1) + '장째', '위치 ' + label(lp[i].c) + (lp[i].rerolled ? ' (중복 리롤)' : ''));
     }
     const ten = pulls.slice(0, 10);
     const end = ten.length === 10 ? label(ten[9].end) : '?';
@@ -3977,6 +3999,19 @@ window.NyankoUI = (function () {
   // ---------- 목표까지 경로 (냥코 티켓) ----------
   // 여섯 뽑기가 시드 하나를 같이 써서, 다른 뽑기에서 중복 리롤이 나면 트랙을 갈아탈 수 있음
   // 상태: (쓴 시드 수 c, 직전 아이템) · 티켓마다 무게(냥코 1 · 럭키 3 · 럭키 G 5)를 둬서 제일 적게 쓰는 순서
+  // 경로 찾기·요약은 표에 펼친 줄 수와 상관없이 앞으로 1000줄(2000칸)까지 봄
+  const PLAN_ROWS = 1000;
+  const nPlanRows = () => Math.max(rows, PLAN_ROWS);
+  let nLongCache = null;
+  function nLong() {
+    if (!cur) return { s: [], pulls: [] };
+    const R = nPlanRows();
+    const key = st.seed + '|' + (st.last || '') + '|' + cur.b.id + '|' + R;
+    if (nLongCache && nLongCache.key === key) return nLongCache;
+    const s = N.seeds(st.seed, R * 2 + 80);
+    nLongCache = { key, s, pulls: N.path(s, cur.b, st.last, R * 2 - 1, R * 2) };
+    return nLongCache;
+  }
   const NP_GOALS = ['dark-catseye', 'uber-rare-catseye', 'epic-catfruit', 'treasure-radar', 'superfeline', 'catamin-c', 'rich-cat', '1m-xp'];
   const TK_W = { '냥코 티켓': 1, '럭키 티켓': 3, '럭키 티켓 G': 5 };
   const NP_KEY = 'nyanko-nplan';
@@ -4051,9 +4086,10 @@ window.NyankoUI = (function () {
     const hasGoal = (b) => b.tiers.some((t) => t.items.some(isGoal));
     if (!list.length) return hint('<b>경로가 없어.</b> 아래에서 쓸 수 있는 뽑기를 하나 이상 켜줘.');
     if (!list.some(({ b }) => hasGoal(b))) return hint('<b>경로가 없어.</b> 고른 건 ' + esc(N.BANNERS.filter(hasGoal).map((b) => b.name).join(', ')) + '에서만 나와. 아래에서 그 뽑기를 켜줘.');
-    const r = nFind(cur.T.s, st.last, list, isGoal, rows * 2 - 1);
-    if (!r) return hint('<b>경로가 없어.</b> 지금 표 범위(' + rows + '줄) 안에서는 못 받아. 표 아래 "100줄 더 보기"로 늘리면 더 멀리까지 찾아.');
-    r.s = cur.T.s;
+    const L = nLong();
+    const r = nFind(L.s, st.last, list, isGoal, nPlanRows() * 2 - 1);
+    if (!r) return hint('<b>경로가 없어.</b> 앞으로 ' + nPlanRows() + '줄 안에서는 못 받아.');
+    r.s = L.s;
     np.res = { r, list };
     const cnt = {};
     r.edges.forEach((e) => { const t = list[e.bi].b.ticket; cnt[t] = (cnt[t] || 0) + 1; });
@@ -4070,8 +4106,8 @@ window.NyankoUI = (function () {
         + (g.edges.length <= 4 ? '<div class="rc">' + chips + '</div>' : '<details><summary>나오는 것 ' + g.edges.length + '개 보기</summary><div class="rc">' + chips + '</div></details>')
         + '</li>';
     }).join('');
-    const i = cur.pulls.findIndex((p) => isGoal(p.item));
-    const alone = '참고로 지금 고른 ' + esc(cur.b.name) + '에서 한 장씩만 뽑으면 ' + (i < 0 ? '표 범위 안엔 없어.' : (i + 1) + '장째에 ' + esc(nm(cur.pulls[i].item)) + '.');
+    const i = L.pulls.findIndex((p) => isGoal(p.item));
+    const alone = '참고로 지금 고른 ' + esc(cur.b.name) + '에서 한 장씩만 뽑으면 ' + (i < 0 ? nPlanRows() + '줄 안엔 없어.' : (i + 1) + '장째에 ' + esc(nm(L.pulls[i].item)) + '.');
     out.innerHTML = '<div class="plres"><div class="plhead"><span class="eyebrow">티켓 제일 적게 쓰는 방법</span>'
       + '<strong class="' + RCLS[goalE.rarity] + '">' + esc(nm(goalE.item)) + '</strong>'
       + '<span class="plsum">' + esc(sum) + '</span>'
