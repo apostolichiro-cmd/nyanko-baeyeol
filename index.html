@@ -4238,10 +4238,10 @@ window.NyankoUI = (function () {
     set: (seed, last, history) => {
       st.last = seed == null ? null : (last || null);
       st.history = seed == null || !Array.isArray(history) ? [] : history.slice();
-      st.seed = seed == null ? null : seed;
+      st.seed = seed == null || seed === DEMO ? null : seed;
+      if (st.seed == null) { st.last = null; st.history = []; }
       demo = false; rows = STEP;
       persist();
-      if (st.seed == null) { st.seed = DEMO; demo = true; }
       render();
     },
   };
@@ -4253,8 +4253,8 @@ window.NyankoUI = (function () {
       if (!d) return;
       st.seed = d.seed ?? null; st.last = d.last ?? null; if (d.bannerId) st.bannerId = d.bannerId;
       st.history = Array.isArray(d.history) ? d.history.slice() : []; st.updatedAt = d.updatedAt || 0;
+      if (st.seed === DEMO) { st.seed = null; st.last = null; st.history = []; }
       demo = false; rows = STEP; writeLocal();
-      if (st.seed == null) { st.seed = DEMO; demo = true; }
       render();
     },
     attach: (r) => { ref = r || null; if (ref) { dirty = true; flush(); } },
@@ -4262,7 +4262,8 @@ window.NyankoUI = (function () {
 
   // ---------- boot ----------
   readLocal();
-  if (st.seed == null) { st.seed = DEMO; demo = true; }
+  // 냥코 티켓 시드는 안 넣었으면 빈칸으로 둠 (예전에 예시 시드가 저장돼 있으면 지움)
+  if (st.seed === DEMO) { st.seed = null; st.last = null; st.history = []; writeLocal(); }
   render();
   connect();
 })();
