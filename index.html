@@ -604,6 +604,18 @@ button.tile .eyebrow::after { content: ' ›'; }
 .route details summary { font-size: 12px; color: var(--muted); cursor: pointer; padding: 2px 0; }
 .route details[open] summary { margin-bottom: 4px; }
 .plres .alone { margin: 0; font-size: 12px; color: var(--muted); }
+/* 냥코 티켓: 목표까지 경로 · 레어 티켓 계산 */
+.npsub { font-size: 13px; font-weight: 700; color: var(--ink); }
+.npsub small { font-weight: 500; color: var(--muted); margin-left: 6px; }
+.ftoggle small { font-weight: 500; opacity: 0.75; margin-left: 6px; font-size: 11px; }
+#npUse .ftoggle, #nrtAb .ftoggle { color: var(--ink); }
+#npUse .ftoggle[aria-pressed="true"], #nrtAb .ftoggle[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.plbudget.rtin { grid-template-columns: repeat(2, minmax(0, 200px)); }
+.rtrow { display: grid; gap: 6px; }
+.rtlbl { font-size: 12px; font-weight: 700; color: var(--muted); }
+.rtmiles { display: flex; flex-wrap: wrap; gap: 6px; }
+.rtmiles span { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.rtmiles b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 /* 가진 걸로 최대한 */
 .plmode { justify-self: start; max-width: 100%; }
 .plmode button { min-height: 34px; }
@@ -917,6 +929,28 @@ button.tile .eyebrow::after { content: ' ›'; }
 
     <section class="eleven" id="nnext" aria-label="다음 10장" hidden></section>
 
+    <section class="finder planner" id="nplanner" hidden aria-labelledby="npTitle">
+      <div class="sec-head" style="margin:0"><h2 id="npTitle">목표까지 경로</h2><button type="button" class="btn" id="npClose">닫기</button></div>
+      <p>받고 싶은 걸 고르면 지금 위치에서 <b>티켓을 제일 적게</b> 쓰고 받는 순서를 찾아줘. 여섯 뽑기가 시드를 같이 써서, 다른 뽑기로 뽑다가 중복이 나면 트랙을 갈아탈 수 있어.</p>
+      <div class="ftools" id="npGoals"></div>
+      <div class="npsub">쓸 수 있는 뽑기<small>지금 게임에 열려 있는 것만 켜줘</small></div>
+      <div class="ftools" id="npUse"></div>
+      <div id="npOut" aria-live="polite"></div>
+      <p class="plnote">럭키 티켓은 아껴 쓰도록 1장을 냥코 티켓 3장, 럭키 티켓 G는 5장으로 쳐서 계산해.</p>
+    </section>
+
+    <section class="finder planner" id="nrt" hidden aria-labelledby="nrtTitle">
+      <div class="sec-head" style="margin:0"><h2 id="nrtTitle">레어 티켓 계산</h2><button type="button" class="btn" id="nrtClose">닫기</button></div>
+      <p>냥코 뽑기에서 <b>이미 만렙인 능력</b>의 파란 구슬이 나오면 5개마다 레어 티켓 1장으로 바뀌어. 지금 시드로 몇 장 뽑으면 레어 티켓이 몇 장 나오는지 세어줘.</p>
+      <div class="plbudget rtin">
+        <label>뽑을 장수<input id="nrtN" inputmode="numeric" autocomplete="off" placeholder="30"></label>
+        <label>지금 모아둔 구슬 (0~4개)<input id="nrtHave" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+      </div>
+      <div class="npsub">만렙인 능력<small>아직 만렙 아닌 건 눌러서 빼줘</small></div>
+      <div class="ftools" id="nrtAb"></div>
+      <div id="nrtOut" aria-live="polite"></div>
+    </section>
+
     <section aria-label="일반 뽑기 배열">
       <div class="tools" style="margin-bottom:10px">
         <div class="search">
@@ -925,7 +959,7 @@ button.tile .eyebrow::after { content: ' ›'; }
         </div>
         <span class="hitinfo" id="nhitinfo"></span>
         <div class="tbtns">
-          <div class="seg" id="nViewSeg" role="group" aria-label="보기"><button type="button" data-view="one" aria-pressed="true">한 뽑기</button><button type="button" data-view="cmp" aria-pressed="false">나란히 비교</button></div>
+          <button type="button" class="btn" id="npOpen">목표까지 경로</button><button type="button" class="btn" id="nrtOpen">레어 티켓 계산</button><div class="seg" id="nViewSeg" role="group" aria-label="보기"><button type="button" data-view="one" aria-pressed="true">한 뽑기</button><button type="button" data-view="cmp" aria-pressed="false">나란히 비교</button></div>
         </div>
       </div>
       <div class="legendkey" style="margin-bottom:10px">
@@ -3354,9 +3388,10 @@ window.NyankoUI = (function () {
       const i = pulls.findIndex((p) => p.item === id);
       const r = b.tiers.find((t) => t.items.includes(id));
       const cls = r && r.rarity >= 4 ? 'legend' : r && r.rarity >= 3 ? 'uber' : '';
+      const gt = (v, m) => '<button type="button" class="tile ' + cls + '" data-ngoal="' + id + '"><span class="eyebrow">다음 ' + esc(nm(id)) + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span></button>';
       html += i < 0
-        ? tile(cls, '다음 ' + esc(nm(id)), '표 범위엔 없어요', '100줄 더 보기로 늘려봐')
-        : tile(cls, '다음 ' + esc(nm(id)), (i + 1) + '장째', '위치 ' + label(pulls[i].c) + (pulls[i].rerolled ? ' (중복 리롤)' : ''));
+        ? gt('표 범위엔 없어요', '눌러서 뽑기 바꿔 가며 찾아보기')
+        : gt((i + 1) + '장째', '위치 ' + label(pulls[i].c) + (pulls[i].rerolled ? ' (중복 리롤)' : ''));
     }
     const ten = pulls.slice(0, 10);
     const end = ten.length === 10 ? label(ten[9].end) : '?';
@@ -3366,6 +3401,8 @@ window.NyankoUI = (function () {
       const thirty = pulls.slice(0, 30);
       const cats30 = thirty.filter((p) => CATS.has(p.item)).length;
       html += tile('', b.ticket + ' 30장 쓰면', '캐릭 ' + cats30 + ' · 파란 구슬 ' + (thirty.length - cats30), '다음 시작 ' + (thirty.length === 30 ? label(thirty[29].end) : '?'));
+      const rr = rtRun(200), nx = rr && rr.at[0];
+      html += '<button type="button" class="tile" data-nrt="1"><span class="eyebrow">다음 레어 티켓</span><span class="v">' + (nx ? nx + '장째' : '200장 안엔 없어요') + '</span><span class="m">' + esc(b.ticket) + ' 30장이면 레어 티켓 ' + (rr ? rr.tick[Math.min(30, rr.tick.length - 1)] : 0) + '장</span></button>';
     } else {
       const cnt = [0, 0, 0, 0, 0]; ten.forEach((p) => cnt[p.rarity]++);
       const parts = [];
@@ -3373,6 +3410,7 @@ window.NyankoUI = (function () {
       html += tile('', b.ticket + ' 10장 쓰면', esc(parts.join(' · ')), '다음 시작 ' + end);
     }
     box.innerHTML = html;
+    box.classList.toggle('four', box.children.length === 4);
   }
 
   function norm(s) { return String(s || '').toLowerCase().replace(/\s+/g, ''); }
@@ -3439,7 +3477,7 @@ window.NyankoUI = (function () {
   }
 
   function render() {
-    renderBanners(); renderSeed(); compute(); renderSummary(); renderNext(); renderTable();
+    renderBanners(); renderSeed(); compute(); renderSummary(); renderNext(); renderTable(); renderNPlan(); renderRT();
   }
 
   function openSheet(c, v) {
@@ -3776,6 +3814,217 @@ window.NyankoUI = (function () {
     UI.toast(n === 1 ? nm(p.item) + ' 뽑음' : ticket + ' ' + n + '장 씀', '되돌리기', () => $('nundo').click(), '다음 결과부터 1A로 다시 시작');
   }
   $('nnext').addEventListener('click', (e) => { const t = e.target.closest('button[data-adv]'); if (t && !t.disabled) nAdvance(Number(t.dataset.adv)); });
+
+  // ---------- 목표까지 경로 (냥코 티켓) ----------
+  // 여섯 뽑기가 시드 하나를 같이 써서, 다른 뽑기에서 중복 리롤이 나면 트랙을 갈아탈 수 있음
+  // 상태: (쓴 시드 수 c, 직전 아이템) · 티켓마다 무게(냥코 1 · 럭키 3 · 럭키 G 5)를 둬서 제일 적게 쓰는 순서
+  const NP_GOALS = ['dark-catseye', 'uber-rare-catseye', 'epic-catfruit', 'treasure-radar', 'superfeline', 'catamin-c', 'rich-cat', '1m-xp'];
+  const TK_W = { '냥코 티켓': 1, '럭키 티켓': 3, '럭키 티켓 G': 5 };
+  const NP_KEY = 'nyanko-nplan';
+  const np = { goals: new Set(['dark-catseye']), use: new Set(['n', 'cf', 'ce']), res: null };
+  try {
+    const o = JSON.parse(localStorage.getItem(NP_KEY) || 'null');
+    if (o) {
+      if (Array.isArray(o.goals)) np.goals = new Set(o.goals.filter((x) => NP_GOALS.includes(x)));
+      if (Array.isArray(o.use)) np.use = new Set(o.use.filter((x) => N.BANNERS.some((b) => b.id === x)));
+    }
+  } catch (e) { /* ignore */ }
+  const saveNp = () => { try { localStorage.setItem(NP_KEY, JSON.stringify({ goals: [...np.goals], use: [...np.use] })); } catch (e) { /* ignore */ } };
+  const nSmooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+  // 목표 아이템까지 티켓을 제일 적게 쓰는 순서 (다익스트라, 무게가 작은 정수라 칸별 대기열로)
+  // list: [{ b, w }] · 반환: { cost, edges: [{ bi, c, end, item, rarity, rr }], end, last } 또는 null
+  function nFind(s, last, list, isGoal, maxC) {
+    const nodes = new Map(), buckets = [];
+    const push = (cost, k) => { (buckets[cost] || (buckets[cost] = [])).push(k); };
+    const k0 = '0|' + (last || '');
+    nodes.set(k0, { c: 0, last: last || null, cost: 0, prev: null, edge: null, done: false });
+    push(0, k0);
+    let best = null, left = 1, budget = 400000;
+    for (let cost = 0; left > 0; cost++) {
+      if (best && best.cost <= cost) break;
+      const q = buckets[cost];
+      if (!q) continue;
+      for (let qi = 0; qi < q.length; qi++) {
+        left--;
+        const key = q[qi], nd = nodes.get(key);
+        if (!nd || nd.done || nd.cost !== cost) continue;
+        nd.done = true;
+        if (nd.c > maxC || --budget < 0) continue;
+        for (let bi = 0; bi < list.length; bi++) {
+          const p = N.pull(s, nd.c, list[bi].b, nd.last);
+          const edge = { bi, c: nd.c, end: p.end, item: p.item, rarity: p.rarity, rr: p.rerolled };
+          const nc = cost + list[bi].w;
+          if (isGoal(p.item)) {
+            if (!best || nc < best.cost || (nc === best.cost && p.end < best.edge.end)) best = { cost: nc, from: key, edge };
+            continue;
+          }
+          const k2 = p.end + '|' + p.item;
+          const ex = nodes.get(k2);
+          if (ex && ex.cost <= nc) continue;
+          nodes.set(k2, { c: p.end, last: p.item, cost: nc, prev: key, edge, done: false });
+          push(nc, k2); left++;
+        }
+      }
+    }
+    if (!best) return null;
+    const edges = [best.edge];
+    for (let k = best.from; k;) { const nd = nodes.get(k); if (!nd || !nd.edge) break; edges.push(nd.edge); k = nd.prev; }
+    edges.reverse();
+    return { cost: best.cost, edges, end: best.edge.end, last: best.edge.item };
+  }
+  function npOpen(goal) {
+    if (goal) { np.goals = new Set([goal]); saveNp(); }
+    $('nplanner').hidden = false;
+    renderNPlan();
+    $('nplanner').scrollIntoView({ block: 'start', behavior: nSmooth() });
+  }
+  function renderNPlan() {
+    if ($('nplanner').hidden) return;
+    $('npGoals').innerHTML = NP_GOALS.map((g) => '<button type="button" class="ftoggle" data-g="' + g + '" aria-pressed="' + np.goals.has(g) + '">' + esc(nm(g)) + '</button>').join('');
+    $('npUse').innerHTML = N.BANNERS.map((b) => '<button type="button" class="ftoggle" data-u="' + b.id + '" aria-pressed="' + np.use.has(b.id) + '">' + esc(NSHORT[b.id] || b.name) + '<small>' + esc(b.ticket) + '</small></button>').join('');
+    const out = $('npOut');
+    np.res = null;
+    const hint = (h) => { out.innerHTML = '<div class="plhint">' + h + '</div>'; };
+    if (!np.goals.size) return hint('위에서 받고 싶은 걸 골라줘. 여러 개 고르면 그중 제일 빨리 받는 걸 찾아.');
+    if (!cur) return hint('<b>경로가 없어.</b> 일반 뽑기 시드를 먼저 넣어줘.');
+    const list = N.BANNERS.filter((b) => np.use.has(b.id)).map((b) => ({ b, w: TK_W[b.ticket] || 1 }));
+    const isGoal = (id) => np.goals.has(id);
+    const hasGoal = (b) => b.tiers.some((t) => t.items.some(isGoal));
+    if (!list.length) return hint('<b>경로가 없어.</b> 아래에서 쓸 수 있는 뽑기를 하나 이상 켜줘.');
+    if (!list.some(({ b }) => hasGoal(b))) return hint('<b>경로가 없어.</b> 고른 건 ' + esc(N.BANNERS.filter(hasGoal).map((b) => b.name).join(', ')) + '에서만 나와. 아래에서 그 뽑기를 켜줘.');
+    const r = nFind(cur.T.s, st.last, list, isGoal, rows * 2 - 1);
+    if (!r) return hint('<b>경로가 없어.</b> 지금 표 범위(' + rows + '줄) 안에서는 못 받아. 표 아래 "100줄 더 보기"로 늘리면 더 멀리까지 찾아.');
+    r.s = cur.T.s;
+    np.res = { r, list };
+    const cnt = {};
+    r.edges.forEach((e) => { const t = list[e.bi].b.ticket; cnt[t] = (cnt[t] || 0) + 1; });
+    const sum = Object.keys(cnt).map((t) => t + ' ' + cnt[t] + '장').join(' + ');
+    const groups = [];
+    for (const e of r.edges) { const g = groups[groups.length - 1]; if (g && g.bi === e.bi) g.edges.push(e); else groups.push({ bi: e.bi, edges: [e] }); }
+    const goalE = r.edges[r.edges.length - 1];
+    const steps = groups.map((g) => {
+      const b = list[g.bi].b, first = g.edges[0], end = g.edges[g.edges.length - 1];
+      const chips = g.edges.map((e) => '<span class="' + RCLS[e.rarity] + (e === goalE ? ' goal' : '') + '">' + esc(nm(e.item)) + (e.rr ? ' (중복)' : '') + '</span>').join('');
+      return '<li><div class="rh"><b>' + esc(b.name) + '</b>' + (b.id === st.bannerId ? '<em>지금 고른 뽑기</em>' : '') + '</div>'
+        + '<div class="rd">' + esc(b.ticket) + ' ' + g.edges.length + '장 <span class="mono">' + label(first.c) + (g.edges.length > 1 ? ' → ' + label(end.c) : '') + '</span>'
+        + (g.edges.includes(goalE) ? ' <span class="got">→ <span>' + esc(nm(goalE.item)) + '</span></span>' : '') + '</div>'
+        + (g.edges.length <= 4 ? '<div class="rc">' + chips + '</div>' : '<details><summary>나오는 것 ' + g.edges.length + '개 보기</summary><div class="rc">' + chips + '</div></details>')
+        + '</li>';
+    }).join('');
+    const i = cur.pulls.findIndex((p) => isGoal(p.item));
+    const alone = '참고로 지금 고른 ' + esc(cur.b.name) + '에서 한 장씩만 뽑으면 ' + (i < 0 ? '표 범위 안엔 없어.' : (i + 1) + '장째에 ' + esc(nm(cur.pulls[i].item)) + '.');
+    out.innerHTML = '<div class="plres"><div class="plhead"><span class="eyebrow">티켓 제일 적게 쓰는 방법</span>'
+      + '<strong class="' + RCLS[goalE.rarity] + '">' + esc(nm(goalE.item)) + '</strong>'
+      + '<span class="plsum">' + esc(sum) + '</span>'
+      + '<span class="plmeta">받는 칸 <b class="mono">' + label(goalE.c) + (goalE.rr ? ' 중복' : '') + '</b> · 끝나면 다음 시작 <b class="mono">' + label(r.end) + '</b></span></div>'
+      + '<ol class="route">' + steps + '</ol>'
+      + '<p class="alone">' + alone + '</p>'
+      + '<div class="frow"><button type="button" class="btn primary" id="npApply">이 경로대로 다 뽑았어</button></div></div>';
+  }
+  function npApply() {
+    if (!np.res) return;
+    const { r } = np.res;
+    st.history.push({ seed: st.seed, last: st.last, item: null });
+    if (st.history.length > 60) st.history.shift();
+    st.seed = r.s[r.end]; st.last = r.last; demo = false; rows = STEP;
+    $('nplanner').hidden = true;
+    persist(); render();
+    UI.toast(nm(r.last) + '까지 경로대로 뽑음', '되돌리기', () => $('nundo').click(), '다음 결과부터 1A로 다시 시작');
+  }
+  $('npOpen').addEventListener('click', () => npOpen(null));
+  $('npClose').addEventListener('click', () => { $('nplanner').hidden = true; });
+  $('npGoals').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-g]'); if (!t) return;
+    const g = t.dataset.g;
+    if (np.goals.has(g)) np.goals.delete(g); else np.goals.add(g);
+    saveNp(); renderNPlan();
+  });
+  $('npUse').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-u]'); if (!t) return;
+    const u = t.dataset.u;
+    if (np.use.has(u)) np.use.delete(u); else np.use.add(u);
+    saveNp(); renderNPlan();
+  });
+  $('npOut').addEventListener('click', (e) => { if (e.target.id === 'npApply') npApply(); });
+
+  // ---------- 레어 티켓 계산 ----------
+  // 냥코 뽑기·냥코 뽑기+에서 이미 만렙인 능력의 파란 구슬이 나오면 5개마다 레어 티켓 1장으로 바뀜
+  const ABIL = ['cat-cannon-attack', 'cat-cannon-charge', 'worker-cat-rate', 'worker-cat-wallet', 'base-defense', 'research', 'accounting', 'study', 'cat-energy'];
+  const RT_KEY = 'nyanko-rt';
+  const rt = { n: 30, have: 0, off: new Set() };
+  try {
+    const o = JSON.parse(localStorage.getItem(RT_KEY) || 'null');
+    if (o) {
+      rt.n = Math.min(2000, Math.max(1, Math.floor(Number(o.n)) || 30));
+      rt.have = Math.min(4, Math.max(0, Math.floor(Number(o.have)) || 0));
+      if (Array.isArray(o.off)) rt.off = new Set(o.off.filter((x) => ABIL.includes(x)));
+    }
+  } catch (e) { /* ignore */ }
+  const saveRt = () => { try { localStorage.setItem(RT_KEY, JSON.stringify({ n: rt.n, have: rt.have, off: [...rt.off] })); } catch (e) { /* ignore */ } };
+  const rtBanner = () => N.BANNERS.find((b) => b.id === (st.bannerId === 'np' ? 'np' : 'n'));
+  // 지금 시드에서 한 장씩 count장: tick[i] = i장 뽑은 뒤 받은 레어 티켓 수, at = 레어 티켓이 생기는 장수
+  function rtRun(count) {
+    if (st.seed == null) return null;
+    const b = rtBanner();
+    const s = N.seeds(st.seed, count * 3 + 80);
+    const pulls = N.path(s, b, st.last, Infinity, count);
+    let orbs = rt.have, got = 0;
+    const tick = [0], left = [orbs], at = [];
+    pulls.forEach((p, i) => {
+      if (ABIL.includes(p.item) && !rt.off.has(p.item)) { orbs++; if (orbs === 5) { orbs = 0; got++; at.push(i + 1); } }
+      tick.push(got); left.push(orbs);
+    });
+    return { b, pulls, tick, left, at };
+  }
+  function rtOpen() {
+    $('nrt').hidden = false;
+    renderRT();
+    $('nrt').scrollIntoView({ block: 'start', behavior: nSmooth() });
+  }
+  function renderRT() {
+    if ($('nrt').hidden) return;
+    if (document.activeElement !== $('nrtN')) $('nrtN').value = String(rt.n);
+    if (document.activeElement !== $('nrtHave')) $('nrtHave').value = String(rt.have);
+    $('nrtAb').innerHTML = ABIL.map((a) => '<button type="button" class="ftoggle" data-a="' + a + '" aria-pressed="' + !rt.off.has(a) + '">' + esc(nm(a)) + '</button>').join('');
+    const out = $('nrtOut');
+    const r = rtRun(Math.max(rt.n, 200));
+    if (!r) { out.innerHTML = '<div class="plhint">일반 뽑기 시드를 먼저 넣어줘.</div>'; return; }
+    if (rt.off.size === ABIL.length) { out.innerHTML = '<div class="plhint"><b>만렙인 능력이 없으면 레어 티켓으로 안 바뀌어.</b> 위에서 만렙인 능력을 켜줘.</div>'; return; }
+    const N0 = Math.min(rt.n, r.pulls.length);
+    const first = r.pulls.slice(0, N0);
+    const cats = first.filter((p) => CATS.has(p.item)).length;
+    const orbs = first.filter((p) => ABIL.includes(p.item));
+    const maxed = orbs.filter((p) => !rt.off.has(p.item)).length;
+    const got = r.tick[N0], left = r.left[N0];
+    const nxt = r.at.find((k) => k > N0);
+    const note = st.bannerId === 'n' || st.bannerId === 'np' ? '' : '<p class="alone">지금 고른 뽑기엔 파란 구슬이 안 나와서 냥코 뽑기로 뽑는 걸로 계산했어.</p>';
+    const miles = r.at.slice(0, 10).map((k, j) => '<span>' + (j + 1) + '장째 <b>' + k + '</b>장 뽑으면</span>').join('');
+    const marks = [10, 30, 50, 100, 200].map((k) => '<span>' + k + '장 → <b>' + r.tick[Math.min(k, r.tick.length - 1)] + '</b>장</span>').join('');
+    out.innerHTML = '<div class="plres"><div class="plhead"><span class="eyebrow">' + esc(r.b.name) + ' ' + N0 + '장 뽑으면</span>'
+      + '<strong>레어 티켓 ' + got + '장</strong>'
+      + '<span class="plsum">파란 구슬 ' + orbs.length + '개' + (orbs.length !== maxed ? ' (만렙 능력 ' + maxed + '개)' : '') + (rt.have ? ' + 모아둔 ' + rt.have + '개' : '') + ' → 레어 티켓 ' + got + '장 · 구슬 ' + left + '개 남음</span>'
+      + '<span class="plmeta">캐릭 ' + cats + '마리 · ' + (nxt ? '다음 레어 티켓은 <b>' + (nxt - N0) + '장</b> 더 뽑으면 (' + nxt + '장째)' : '다음 레어 티켓은 ' + r.pulls.length + '장 안엔 없어') + '</span></div>'
+      + '<div class="rtrow"><span class="rtlbl">레어 티켓 받는 시점</span><div class="rtmiles">' + (miles || '<span>' + r.pulls.length + '장 안엔 없어</span>') + '</div></div>'
+      + '<div class="rtrow"><span class="rtlbl">장수별 레어 티켓</span><div class="rtmiles">' + marks + '</div></div>'
+      + note + '</div>';
+  }
+  $('nrtOpen').addEventListener('click', rtOpen);
+  $('nrtClose').addEventListener('click', () => { $('nrt').hidden = true; });
+  let rtTimer = null;
+  const rtLater = () => { clearTimeout(rtTimer); rtTimer = setTimeout(() => { saveRt(); renderRT(); renderSummary(); }, 250); };
+  $('nrtN').addEventListener('input', (e) => { rt.n = Math.min(2000, Math.max(1, Number(String(e.target.value).replace(/[^0-9]/g, '')) || 1)); rtLater(); });
+  $('nrtHave').addEventListener('input', (e) => { rt.have = Math.min(4, Math.max(0, Number(String(e.target.value).replace(/[^0-9]/g, '')) || 0)); rtLater(); });
+  $('nrtAb').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-a]'); if (!t) return;
+    const a = t.dataset.a;
+    if (rt.off.has(a)) rt.off.delete(a); else rt.off.add(a);
+    saveRt(); renderRT(); renderSummary();
+  });
+  $('nsummary').addEventListener('click', (e) => {
+    const g = e.target.closest('[data-ngoal]');
+    if (g) { npOpen(g.dataset.ngoal); return; }
+    if (e.target.closest('[data-nrt]')) rtOpen();
+  });
   // 레어 뽑기 쪽 "저장한 시드"가 계정을 바꿀 때 냥코 티켓 시드도 같이 바꿈
   window.NyankoNormalBridge = {
     get: () => ({ seed: demo ? null : st.seed, last: st.last, history: st.history.slice(-30) }),
