@@ -580,6 +580,29 @@ button.tile .eyebrow::after { content: ' ›'; }
 .cc.r-common.on-path { box-shadow: inset 0 0 0 2px var(--path); }
 .cc.r-common.hit { box-shadow: inset 0 0 0 3px var(--hit); }
 .cc.r-common.on-path.hit { box-shadow: inset 0 0 0 2px var(--path), inset 0 0 0 5px var(--hit); }
+/* 목표까지 경로: 결과 카드 */
+.planner .plopts { display: flex; gap: 0 18px; flex-wrap: wrap; }
+.planner .plnote { font-size: 12px; }
+.planner .chk { min-height: 34px; }
+#plAllList { color: var(--ink); }
+#plAllList[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.plhint { font-size: 13px; color: var(--muted); padding: 10px 12px; border-radius: var(--r-md); background: var(--bg); }
+.plhint b { color: var(--ink); }
+.plres { border-radius: var(--r-md); padding: 12px; background: var(--bg); display: grid; gap: 10px; }
+.plhead { display: grid; gap: 2px; }
+.plhead strong { font-size: 19px; line-height: 1.3; color: var(--ink); }
+.plhead strong.r-supa { color: var(--supa); }
+.plhead strong.r-uber { color: var(--uber); }
+.plhead strong.r-legend { color: var(--legend); }
+.plhead strong.c-blue { color: var(--blue); }
+.plhead strong.c-buster { color: var(--yel); }
+.plsum { font-size: 15px; font-weight: 700; }
+.plmeta { font-size: 12px; color: var(--muted); }
+.plmeta b { color: var(--ink); }
+.route .got { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.route details summary { font-size: 12px; color: var(--muted); cursor: pointer; padding: 2px 0; }
+.route details[open] summary { margin-bottom: 4px; }
+.plres .alone { margin: 0; font-size: 12px; color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: up 180ms ease-out; }
   @keyframes up { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
@@ -673,9 +696,9 @@ button.tile .eyebrow::after { content: ' ›'; }
 
   <section class="eleven" id="eleven" aria-label="다음 11연" hidden></section>
 
-  <section class="finder" id="planner" hidden aria-labelledby="plTitle">
+  <section class="finder planner" id="planner" hidden aria-labelledby="plTitle">
     <div class="sec-head" style="margin:0"><h2 id="plTitle">목표 캐릭까지 경로</h2><button type="button" class="btn" id="plClose">닫기</button></div>
-    <p>받고 싶은 캐릭을 고르면 지금 위치에서 <b>제일 적게 쓰고</b> 받는 순서를 찾아줘. 단챠, 확정 11연, 다른 가챠로 트랙 갈아타기까지 다 따져봐. 단챠 1번은 통조림 150개(레어 티켓 1장), 확정 11연은 1500개로 치고, 플래티넘·레전드 티켓은 아껴 쓰도록 1장을 3000개로 쳐.</p>
+    <p>받고 싶은 캐릭을 고르면 지금 위치에서 <b>제일 싸게</b> 받는 순서를 찾아줘.</p>
     <div class="ftools" id="plGrp">
       <button type="button" class="ftoggle" data-grp="blue" aria-pressed="false">블루 아이즈 아무나</button>
       <button type="button" class="ftoggle" data-grp="buster" aria-pressed="false">버스터즈 대장 아무나</button>
@@ -683,11 +706,17 @@ button.tile .eyebrow::after { content: ' ›'; }
     </div>
     <div class="ftools">
       <input id="plQ" type="search" placeholder="캐릭 이름으로 찾기" aria-label="목표 캐릭 이름으로 찾기" autocomplete="off">
-      <label class="chk"><input type="checkbox" id="plAll" checked>진행 중인 다른 가챠도 쓰기</label>
+      <button type="button" class="ftoggle" id="plAllList" aria-pressed="false">전체 목록</button>
     </div>
-    <div class="fpalbox"><div class="fpal" id="plPal"></div></div>
-    <div class="flist" id="plList" aria-live="polite"></div>
+    <div class="fpalbox" id="plPalBox" hidden><div class="fpal" id="plPal"></div></div>
+    <div class="flist" id="plList" aria-live="polite" hidden></div>
+    <div class="plopts">
+      <label class="chk"><input type="checkbox" id="plAll" checked>진행 중인 다른 가챠도 쓰기</label>
+      <label class="chk"><input type="checkbox" id="plPlat" checked>플래티넘 티켓도 쓰기</label>
+      <label class="chk"><input type="checkbox" id="plLeg">레전드 티켓도 쓰기</label>
+    </div>
     <div id="plOut" aria-live="polite"></div>
+    <p class="plnote">단챠 1번은 통조림 150개(레어 티켓 1장), 확정 11연은 1500개로 치고, 티켓은 아껴 쓰도록 플래티넘 1장을 3000개, 레전드 1장을 6000개로 쳐서 계산해.</p>
   </section>
 
   <section aria-label="배열">
@@ -1998,7 +2027,7 @@ window.NyankoUI = (function () {
 
   // ---------- 다음 11연 · 목표까지 경로 · 나란히 비교 · 저장한 시드 ----------
   const isTk = (b) => !!b && (b.kind === 'platinum' || b.kind === 'legend');
-  const helperOf = (b) => ({ b, single: isTk(b) ? 3000 : 150, eleven: b.guaranteed && !isTk(b) ? 1500 : 0 });
+  const helperOf = (b) => ({ b, single: b.kind === 'legend' ? 6000 : isTk(b) ? 3000 : 150, eleven: b.guaranteed && !isTk(b) ? 1500 : 0 });
   const PKEYS = ['rare', 'supa', 'uber', 'legend'];
   const pCatOf = (e) => (Array.isArray(e) ? { id: e[0], name: e[1] } : (e && typeof e === 'object' ? { id: e.id ?? null, name: e.name } : { id: null, name: String(e) }));
   const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
@@ -2097,7 +2126,11 @@ window.NyankoUI = (function () {
   }
 
   // 목표까지 경로
-  const pl = { grp: new Set(), keys: new Set(), names: new Map(), all: true, res: null };
+  const pl = { grp: new Set(), keys: new Set(), names: new Map(), all: true, plat: true, leg: false, list: false, res: null };
+  // 다른 가챠·플티·레전드 티켓 쓰기 설정은 이 기기에 기억
+  const PL_KEY = 'nyanko-plan-opts';
+  try { const o = JSON.parse(localStorage.getItem(PL_KEY) || 'null'); if (o) { pl.all = o.all !== false; pl.plat = o.plat !== false; pl.leg = !!o.leg; } } catch (e) { /* ignore */ }
+  const savePl = () => { try { localStorage.setItem(PL_KEY, JSON.stringify({ all: pl.all, plat: pl.plat, leg: pl.leg })); } catch (e) { /* ignore */ } };
   function plHelpers() {
     const sel = currentBanner();
     if (!sel) return [];
@@ -2107,6 +2140,9 @@ window.NyankoUI = (function () {
     if (pl.all) {
       for (const { b, s } of sortedBanners()) {
         if (s.k !== 'live' || b.sample || b.id === sel.id) continue;
+        // 레전드 티켓은 많이 못 모으니까 "레전드 티켓도 쓰기"를 켰을 때만 씀 (레전드 뽑기를 직접 고르면 항상 씀)
+        if (b.kind === 'legend' && !pl.leg) continue;
+        if (b.kind === 'platinum' && !pl.plat) continue;
         const k = b.gacha + '|' + b.rates.join(',');
         if (seen.has(k)) continue;
         seen.add(k); list.push(b);
@@ -2118,6 +2154,7 @@ window.NyankoUI = (function () {
   function plOpen(grp) {
     if (grp) { pl.grp = new Set([grp]); pl.keys = new Set(); }
     $('plQ').value = '';
+    pl.list = false;
     $('planner').hidden = false;
     renderPlanner();
     $('planner').scrollIntoView({ block: 'start', behavior: smooth() });
@@ -2125,31 +2162,43 @@ window.NyankoUI = (function () {
   function renderPlanner() {
     if ($('planner').hidden) return;
     $('plAll').checked = pl.all;
+    $('plPlat').checked = pl.plat;
+    $('plLeg').checked = pl.leg;
+    $('plAllList').setAttribute('aria-pressed', String(pl.list));
     $('plGrp').querySelectorAll('button[data-grp]').forEach((x) => x.setAttribute('aria-pressed', String(pl.grp.has(x.dataset.grp))));
-    const cats = new Map();
-    for (const h of plHelpers()) {
-      PKEYS.forEach((k, r) => (h.b.pools[k] || []).forEach((e) => {
-        const c = pCatOf(e), key = E.catKey(c);
-        if (!cats.has(key)) cats.set(key, Object.assign(c, { rarity: r }));
-      }));
-    }
+    // 캐릭 목록은 이름을 치거나 "전체 목록"을 눌렀을 때만 펼침
     const q = norm($('plQ').value);
-    const groups = [3, 2, 1, 0].map((r) => {
-      const items = [...cats.entries()].filter(([, c]) => c.rarity === r && (!q || norm(c.name).includes(q)));
-      if (!items.length) return '';
-      return '<div class="grp"><span>' + RNAME[r] + ' ' + items.length + '</span>' + items.map(([k, c]) =>
-        '<button type="button" class="fchip ' + RCLS[r] + ' ' + tagCls(c) + '" data-k="' + esc(k) + '" data-n="' + esc(c.name) + '" aria-pressed="' + pl.keys.has(k) + '">' + esc(c.name) + badges(c) + '</button>').join('') + '</div>';
-    }).join('');
-    $('plPal').innerHTML = groups || '<span style="color:var(--muted);font-size:13px">맞는 캐릭이 없어요</span>';
-    const chosen = [...pl.grp].map((g) => '<span class="it"><em>' + GRP[g] + '</em><button type="button" data-rmg="' + g + '" aria-label="' + GRP[g] + ' 빼기">×</button></span>')
-      .concat([...pl.keys].map((k) => '<span class="it">' + esc(pl.names.get(k) || k) + '<button type="button" data-rmk="' + esc(k) + '" aria-label="빼기">×</button></span>'));
-    $('plList').innerHTML = chosen.length ? chosen.join('') : '<span class="ph">목표를 골라줘. 여러 개 고르면 그중 제일 싸게 받는 걸 찾아.</span>';
+    const showPal = pl.list || !!q;
+    $('plPalBox').hidden = !showPal;
+    if (showPal) {
+      const cats = new Map();
+      for (const h of plHelpers()) {
+        PKEYS.forEach((k, r) => (h.b.pools[k] || []).forEach((e) => {
+          const c = pCatOf(e), key = E.catKey(c);
+          if (!cats.has(key)) cats.set(key, Object.assign(c, { rarity: r }));
+        }));
+      }
+      const groups = [3, 2, 1, 0].map((r) => {
+        const items = [...cats.entries()].filter(([, c]) => c.rarity === r && (!q || norm(c.name).includes(q)));
+        if (!items.length) return '';
+        return '<div class="grp"><span>' + RNAME[r] + ' ' + items.length + '</span>' + items.map(([k, c]) =>
+          '<button type="button" class="fchip ' + RCLS[r] + ' ' + tagCls(c) + '" data-k="' + esc(k) + '" data-n="' + esc(c.name) + '" aria-pressed="' + pl.keys.has(k) + '">' + esc(c.name) + badges(c) + '</button>').join('') + '</div>';
+      }).join('');
+      $('plPal').innerHTML = groups || '<span style="color:var(--muted);font-size:13px">맞는 캐릭이 없어요</span>';
+    }
+    // 묶음(블루 아이즈 등)은 위 버튼에 켜진 걸로 보이니까, 여기엔 이름으로 고른 캐릭만
+    const chosen = [...pl.keys].map((k) => '<span class="it">' + esc(pl.names.get(k) || k) + '<button type="button" data-rmk="' + esc(k) + '" aria-label="빼기">×</button></span>');
+    $('plList').hidden = !chosen.length;
+    $('plList').innerHTML = chosen.join('');
     runPlanner();
   }
   function runPlanner() {
     const out = $('plOut');
     pl.res = null;
-    if (!pl.grp.size && !pl.keys.size) { out.innerHTML = ''; return; }
+    if (!pl.grp.size && !pl.keys.size) {
+      out.innerHTML = '<div class="plhint">위에서 목표를 골라줘. 묶음 버튼을 누르거나 이름을 쳐서 고르면 돼. 여러 마리 고르면 그중 제일 싸게 받는 걸 찾아.</div>';
+      return;
+    }
     const helpers = plHelpers();
     const isT = goalFn(pl.grp, pl.keys);
     const r = planRun(helpers, isT);
@@ -2157,7 +2206,7 @@ window.NyankoUI = (function () {
       const msg = r.none === 'seed' ? '시드랑 가챠를 먼저 골라줘.'
         : r.none === 'pool' ? '고른 목표가 ' + (pl.all ? '진행 중인 가챠' : '지금 고른 가챠') + '에 없어요.'
         : '지금 표 범위(' + rows + '줄) 안에서는 못 받아. 표 아래 "100줄 더 보기"로 늘리면 더 멀리까지 찾아.';
-      out.innerHTML = '<div class="fresult"><strong>경로가 없어</strong><span>' + msg + '</span></div>';
+      out.innerHTML = '<div class="plhint"><b>경로가 없어.</b> ' + msg + '</div>';
       return;
     }
     pl.res = { r, helpers };
@@ -2183,19 +2232,24 @@ window.NyankoUI = (function () {
       const first = g.edges[0], end = g.edges[g.edges.length - 1];
       const cats = [];
       g.edges.forEach((e) => e.cats.forEach((x, xi) => cats.push({ x, goal: e === lastEdge && xi === r.hitIdx })));
+      const goalHere = cats.some((c) => c.goal);
       const head = g.kind === 'e'
-        ? '확정 11연 <span class="mono">' + E.label(first.c) + '에서</span>'
+        ? '확정 11연 1번 <span class="mono">' + E.label(first.c) + '에서</span>'
         : (isTk(b) ? '티켓 ' + g.edges.length + '장' : '단챠 ' + g.edges.length + '번') + ' <span class="mono">' + E.label(first.c) + (g.edges.length > 1 ? ' → ' + E.label(end.c) : '') + '</span>';
-      const shown = cats.length > 14 ? cats.slice(-14) : cats;
-      return '<li><div class="rh"><b>' + esc(longName(b)) + '</b>' + (sel && b.id === sel.id ? '<em>지금 고른 가챠</em>' : '') + (b.start && b.start > t ? '<em>' + md(b.start) + '부터</em>' : '') + '</div>'
-        + '<div class="rd">' + head + '</div>'
-        + '<div class="rc">' + (cats.length > shown.length ? '<span class="more">앞 ' + (cats.length - shown.length) + '마리 …</span>' : '')
-        + shown.map(({ x, goal }) => '<span class="' + RCLS[x.rarity] + ' ' + tagCls(x.cat) + (goal ? ' goal' : '') + '">' + (x.g ? '확정 ' : '') + esc(x.cat.name) + badges(x.cat) + '</span>').join('') + '</div></li>';
+      const chips = cats.map(({ x, goal }) => '<span class="' + RCLS[x.rarity] + ' ' + tagCls(x.cat) + (goal ? ' goal' : '') + '">' + (x.g ? '확정 ' : '') + esc(x.cat.name) + badges(x.cat) + '</span>').join('');
+      const tags = (sel && b.id === sel.id ? '<em>지금 고른 가챠</em>' : '') + (b.start && b.start > t ? '<em>' + md(b.start) + '부터</em>' : '');
+      return '<li><div class="rh"><b>' + esc(longName(b)) + '</b>' + tags + '</div>'
+        + '<div class="rd">' + head + (goalHere ? ' <span class="got">→ ' + esc(hi.cat.name) + '</span>' : '') + '</div>'
+        + (cats.length <= 4 ? '<div class="rc">' + chips + '</div>'
+          : '<details><summary>나오는 캐릭 ' + cats.length + '마리 보기</summary><div class="rc">' + chips + '</div></details>')
+        + '</li>';
     }).join('');
-    out.innerHTML = '<div class="fresult"><strong>' + esc(hi.cat.name) + ' · ' + esc(n.text) + '</strong>'
-      + '<span>' + (n.cans ? '통조림으로 치면 ' + n.cans.toLocaleString('ko-KR') + '개 · ' : '') + '받는 칸 ' + hi.label + ' · 끝나면 다음 시작 <b class="mono">' + E.label(r.end) + '</b></span>'
+    out.innerHTML = '<div class="plres"><div class="plhead"><span class="eyebrow">제일 싸게 받는 방법</span>'
+      + '<strong class="' + RCLS[hi.rarity] + ' ' + tagCls(hi.cat) + '">' + esc(hi.cat.name) + badges(hi.cat) + '</strong>'
+      + '<span class="plsum">' + esc(n.text) + (n.cans ? ' · 통조림 ' + n.cans.toLocaleString('ko-KR') + '개 어치' : '') + '</span>'
+      + '<span class="plmeta">받는 칸 <b class="mono">' + hi.label + '</b> · 끝나면 다음 시작 <b class="mono">' + E.label(r.end) + '</b></span></div>'
       + '<ol class="route">' + steps + '</ol>'
-      + (alone ? '<span class="alone">' + alone + '</span>' : '')
+      + (alone ? '<p class="alone">' + alone + '</p>' : '')
       + '<div class="frow"><button type="button" class="btn primary" id="plApply">이 경로대로 다 뽑았어</button></div></div>';
   }
   function plApply() {
@@ -2394,6 +2448,7 @@ window.NyankoUI = (function () {
     const t = e.target.closest('.fchip'); if (!t) return;
     const k = t.dataset.k;
     if (pl.keys.has(k)) pl.keys.delete(k); else { pl.keys.add(k); pl.names.set(k, t.dataset.n || t.textContent); }
+    if (!pl.list) $('plQ').value = '';
     renderPlanner();
   });
   $('plList').addEventListener('click', (e) => {
@@ -2404,7 +2459,10 @@ window.NyankoUI = (function () {
   });
   let plqTimer = null;
   $('plQ').addEventListener('input', () => { clearTimeout(plqTimer); plqTimer = setTimeout(renderPlanner, 150); });
-  $('plAll').addEventListener('change', (e) => { pl.all = e.target.checked; renderPlanner(); });
+  $('plAll').addEventListener('change', (e) => { pl.all = e.target.checked; savePl(); renderPlanner(); });
+  $('plPlat').addEventListener('change', (e) => { pl.plat = e.target.checked; savePl(); renderPlanner(); });
+  $('plLeg').addEventListener('change', (e) => { pl.leg = e.target.checked; savePl(); renderPlanner(); });
+  $('plAllList').addEventListener('click', () => { pl.list = !pl.list; renderPlanner(); });
   $('plOut').addEventListener('click', (e) => { if (e.target.id === 'plApply') plApply(); });
   $('viewSeg').addEventListener('click', (e) => {
     const t = e.target.closest('button[data-view]'); if (!t) return;
