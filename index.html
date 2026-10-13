@@ -18,6 +18,15 @@
 <meta property="og:image:alt" content="냥코 배열 뷰어 — A/B 배열 표와 목표까지 경로">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
+<!-- 홈 화면 앱 -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="냥코 배열">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 html, body { margin: 0; }
@@ -749,6 +758,7 @@ button.tile .eyebrow::after { content: ' ›'; }
       <p>시드로 미리 보는 냥코대전쟁 뽑기 결과</p>
     </div>
     <div class="topr">
+      <button type="button" class="acct" id="installBtn" hidden>앱으로 설치</button>
       <button type="button" class="acct" id="acctBtn" data-state="out" aria-controls="acctBox" aria-expanded="false"><span class="led"></span><span id="acctText">로그인</span></button>
       <div class="sync" id="sync" data-state="idle"><span class="led"></span><span id="syncText">일정 불러오는 중</span></div>
       <div class="seg theme" id="themeSeg" role="group" aria-label="화면 밝기"><button type="button" data-theme-set="auto" aria-pressed="true">자동</button><button type="button" data-theme-set="light" aria-pressed="false">밝게</button><button type="button" data-theme-set="dark" aria-pressed="false">어둡게</button></div>
@@ -4462,6 +4472,27 @@ paint();
 let was = false;
 try { was = !!localStorage.getItem(HINT); } catch (e) { /* ignore */ }
 if (was) load().catch(() => {});
+</script>
+<script>
+/* 홈 화면 앱: 서비스 워커 등록 + "앱으로 설치" 버튼 */
+(function () {
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+  var btn = document.getElementById('installBtn');
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  if (!btn || standalone) return;
+  var deferred = null;
+  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (ios) btn.hidden = false;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; btn.hidden = false; });
+  window.addEventListener('appinstalled', function () { deferred = null; btn.hidden = true; });
+  btn.addEventListener('click', function () {
+    if (deferred) { var d = deferred; deferred = null; d.prompt(); d.userChoice.then(function (r) { if (r && r.outcome === 'accepted') btn.hidden = true; }).catch(function () {}); return; }
+    var t = window.NyankoUI && window.NyankoUI.toast;
+    if (t) t(ios ? 'Safari 아래 공유 버튼 → "홈 화면에 추가"를 눌러줘' : '브라우저 메뉴(⋮) → "앱 설치" 또는 "홈 화면에 추가"를 눌러줘');
+  });
+})();
 </script>
 
 </body>
