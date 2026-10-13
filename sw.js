@@ -1,8 +1,8 @@
 // 홈 화면 앱용 서비스 워커
 // 사이트 파일은 항상 인터넷에서 새로 받아오고(그래서 업데이트하면 바로 반영됨),
 // 인터넷이 안 될 때만 마지막으로 받아둔 걸 보여줌.
-const CACHE = 'nyanko-v1';
-const CORE = ['./', './index.html', './data.js', './manifest.webmanifest', './icon-192.png'];
+const CACHE = 'nyanko-v2';
+const CORE = ['./', './index.html', './data.js', './manifest.webmanifest', './icon-w-192.png'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
