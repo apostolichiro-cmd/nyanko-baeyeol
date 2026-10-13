@@ -618,6 +618,17 @@ button.tile .eyebrow::after { content: ' ›'; }
 .plgot .r-legend { background: var(--legend-bg); color: var(--legend); }
 .plgot .c-blue { background: var(--blue-bg); color: var(--blue); }
 .plgot .c-buster { background: var(--yel-bg); color: var(--yel); }
+/* 계정에 저장 (이메일 로그인) */
+.acct { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 0 12px; min-height: 34px; font-size: 13px; font-weight: 700; }
+.acct .led { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.acct[data-state="in"] .led { background: var(--supa); }
+.acctbox { margin-bottom: 14px; }
+.acctform { display: grid; gap: 8px; max-width: 440px; }
+.acctform input { width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: var(--r-md); padding: 10px 12px; font-size: 16px; min-height: 44px; }
+.acctbox .frow .btn[disabled] { opacity: 0.5; }
+.acctmsg { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink); }
+.acctmsg:empty { display: none; }
+.acctbox .acctwho b { overflow-wrap: anywhere; }
 /* 링크로 보내기 · 받은 시드 */
 .sharebox { display: grid; gap: 12px; padding: 12px; border-radius: var(--r-md); background: var(--bg); }
 .shrow { display: flex; gap: 8px 12px; align-items: center; flex-wrap: wrap; }
@@ -655,6 +666,7 @@ button.tile .eyebrow::after { content: ' ›'; }
       <p>시드로 미리 보는 냥코대전쟁 뽑기 결과</p>
     </div>
     <div class="topr">
+      <button type="button" class="acct" id="acctBtn" data-state="out" aria-controls="acctBox" aria-expanded="false"><span class="led"></span><span id="acctText">로그인</span></button>
       <div class="sync" id="sync" data-state="idle"><span class="led"></span><span id="syncText">일정 불러오는 중</span></div>
       <div class="seg theme" id="themeSeg" role="group" aria-label="화면 밝기"><button type="button" data-theme-set="auto" aria-pressed="true">자동</button><button type="button" data-theme-set="light" aria-pressed="false">밝게</button><button type="button" data-theme-set="dark" aria-pressed="false">어둡게</button></div>
     </div>
@@ -665,6 +677,26 @@ button.tile .eyebrow::after { content: ' ›'; }
     <button type="button" role="tab" id="tabNormal" data-mode="normal" aria-selected="false">냥코 티켓<span>냥코 뽑기 · 럭키 뽑기</span></button>
     <button type="button" role="tab" id="tabGift" data-mode="gift" aria-selected="false">보상 받기<span>한국판 앱 바로 열기</span></button>
   </div>
+
+  <section class="finder acctbox" id="acctBox" hidden aria-labelledby="acctTitle">
+    <div class="sec-head" style="margin:0"><h2 id="acctTitle">계정에 저장</h2><button type="button" class="btn" id="acctClose">닫기</button></div>
+    <div id="acctOut">
+      <p>이메일로 로그인하면 레어 뽑기·냥코 티켓 시드랑 저장한 시드가 계정에 저장돼. 폰이든 PC든 로그인만 하면 그대로 이어져.</p>
+      <form class="acctform" id="acctForm" novalidate>
+        <input id="acctEmail" type="email" autocomplete="email" inputmode="email" placeholder="이메일" aria-label="이메일" spellcheck="false">
+        <input id="acctPw" type="password" autocomplete="current-password" placeholder="비밀번호 (6자 이상)" aria-label="비밀번호">
+        <div class="frow"><button type="submit" class="btn primary" id="acctLogin">로그인</button><button type="button" class="btn" id="acctSignup">처음이면 가입하기</button></div>
+      </form>
+      <p><button type="button" class="linkbtn" id="acctReset">비밀번호를 잊었어</button></p>
+      <p class="plnote">비밀번호는 구글 Firebase가 관리해서 이 사이트엔 안 남아. 로그인 안 해도 지금처럼 이 기기에는 저장돼.</p>
+    </div>
+    <div id="acctIn" hidden>
+      <p class="acctwho"><b id="acctWho"></b>로 로그인돼 있어. 바꾸는 건 바로바로 계정에 저장돼.</p>
+      <p id="acctSaved"></p>
+      <div class="frow"><button type="button" class="btn" id="acctLogout">로그아웃</button></div>
+    </div>
+    <p class="acctmsg" id="acctMsg" role="status" aria-live="polite"></p>
+  </section>
 
   <div class="importbox" id="importBox" hidden role="region" aria-label="링크로 받은 시드"></div>
 
@@ -3211,6 +3243,28 @@ window.NyankoUI = (function () {
     if (e.target.id === 'rfApply') rfApply();
   });
 
+  // ---------- 계정에 저장 (이메일 로그인 모듈이 붙임) ----------
+  window.NyankoRareSync = {
+    get: () => {
+      syncSlot();
+      const a = (state.slots || []).find((x) => x.id === state.slotId);
+      if (a) captureNormal(a);
+      return JSON.parse(JSON.stringify({ seed: state.seed, last: state.last, bannerId: state.bannerId, history: state.history.slice(-40), updatedAt: state.updatedAt, slots: state.slots || [], slotId: state.slotId || null }));
+    },
+    apply: (d) => {
+      if (!d) return;
+      state.seed = d.seed ?? null; state.last = d.last ?? null;
+      if (d.bannerId) state.bannerId = d.bannerId;
+      state.history = Array.isArray(d.history) ? d.history.slice() : [];
+      state.slots = Array.isArray(d.slots) ? d.slots.slice(0, 10) : [];
+      state.slotId = state.slots.some((x) => x.id === d.slotId) ? d.slotId : null;
+      state.updatedAt = d.updatedAt || 0;
+      rows = STEP; writeLocal(); renderAll();
+    },
+    // ref.set(data) 로 저장하는 곳을 붙이면 지금 상태를 바로 한 번 올림
+    attach: (ref) => { userRef = ref || null; if (userRef) { dirty = true; flush(); } },
+  };
+
   // ---------- boot ----------
   readLocal();
   renderAll();
@@ -3254,7 +3308,7 @@ window.NyankoUI = (function () {
   async function flush() {
     if (writing || !dirty || !ref) return;
     writing = true; dirty = false;
-    try { await ref.set({ seed: st.seed, last: st.last, bannerId: st.bannerId, history: st.history.slice(-40), updatedAt: st.updatedAt }); }
+    try { await ref.set({ seed: demo ? null : st.seed, last: demo ? null : st.last, bannerId: st.bannerId, history: st.history.slice(-40), updatedAt: st.updatedAt }); }
     catch (e) { if (e && e.code === 'invalid_argument') ref = null; }
     finally { writing = false; if (dirty) flush(); }
   }
@@ -3736,12 +3790,215 @@ window.NyankoUI = (function () {
     },
   };
 
+  // 계정에 저장 (이메일 로그인 모듈이 붙임)
+  window.NyankoNormalSync = {
+    get: () => JSON.parse(JSON.stringify({ seed: demo ? null : st.seed, last: demo ? null : st.last, bannerId: st.bannerId, history: st.history.slice(-40), updatedAt: st.updatedAt })),
+    apply: (d) => {
+      if (!d) return;
+      st.seed = d.seed ?? null; st.last = d.last ?? null; if (d.bannerId) st.bannerId = d.bannerId;
+      st.history = Array.isArray(d.history) ? d.history.slice() : []; st.updatedAt = d.updatedAt || 0;
+      demo = false; rows = STEP; writeLocal();
+      if (st.seed == null) { st.seed = DEMO; demo = true; }
+      render();
+    },
+    attach: (r) => { ref = r || null; if (ref) { dirty = true; flush(); } },
+  };
+
   // ---------- boot ----------
   readLocal();
   if (st.seed == null) { st.seed = DEMO; demo = true; }
   render();
   connect();
 })();
+</script>
+<script type="module">
+/* 계정에 저장: 이메일·비밀번호 로그인 (Firebase 인증) + 계정마다 문서 하나 (Firestore users/{uid})
+ * 문서: { rare: 레어 뽑기 상태(저장한 시드 포함), normal: 냥코 티켓 상태, updatedAt }
+ * 보안 규칙으로 자기 문서만 읽고 쓸 수 있음. Firebase는 이 기기에서 로그인한 적이 있거나 계정 창을 열 때만 불러옴
+ * 로그인할 때: 기기와 계정 중 더 최근 것을 쓰고, 다른 쪽 "저장한 시드"와 보던 시드는 빠짐없이 합침 */
+const FB = 'https://www.gstatic.com/firebasejs/10.12.2/';
+const CONFIG = {
+  apiKey: 'AIzaSyAwD0ljCE1Q94bceITIiKjxz0PH0z6mspw',
+  authDomain: 'nyanko-baeyeol.firebaseapp.com',
+  projectId: 'nyanko-baeyeol',
+  storageBucket: 'nyanko-baeyeol.firebasestorage.app',
+  messagingSenderId: '880625060671',
+  appId: '1:880625060671:web:789fc1a1ad037ae5e6a18a',
+};
+const HINT = 'nyanko-acct';
+const $ = (id) => document.getElementById(id);
+const Rare = () => window.NyankoRareSync;
+const Norm = () => window.NyankoNormalSync;
+const toast = (m, sub) => { if (window.NyankoUI) window.NyankoUI.toast(m, null, null, sub); };
+let fb = null, loading = null, user = null, unsub = null, lastSaved = 0, busy = false, syncing = false;
+
+function load() {
+  if (fb) return Promise.resolve(fb);
+  if (!loading) {
+    loading = Promise.all([import(FB + 'firebase-app.js'), import(FB + 'firebase-auth.js'), import(FB + 'firebase-firestore.js')]).then(([A, U, S]) => {
+      const app = A.initializeApp(CONFIG);
+      const auth = U.getAuth(app);
+      auth.languageCode = 'ko';
+      fb = { U, S, auth, db: S.getFirestore(app) };
+      U.onAuthStateChanged(auth, (u) => { onUser(u).catch(() => { syncing = false; paint(); }); });
+      return fb;
+    }).catch((e) => { loading = null; throw e; });
+  }
+  return loading;
+}
+
+const clean = (d) => JSON.parse(JSON.stringify(d == null ? null : d));
+const sameSlot = (a, b) => a.seed === b.seed && (a.nseed ?? null) === (b.nseed ?? null);
+// 기기(L)와 계정(R) 레어 뽑기 상태 합치기
+function mergeRare(L, R) {
+  if (!R) return L;
+  const remoteNewer = (R.updatedAt || 0) > (L.updatedAt || 0);
+  const newer = remoteNewer ? R : L, older = remoteNewer ? L : R;
+  const out = clean(newer);
+  out.slots = Array.isArray(out.slots) ? out.slots : [];
+  let changed = false;
+  for (const s of older.slots || []) {
+    if (s && s.seed != null && out.slots.length < 10 && !out.slots.some((x) => sameSlot(x, s))) { out.slots.push(s); changed = true; }
+  }
+  // 다른 쪽에서 보던 시드가 어디에도 저장 안 돼 있으면 남겨 둠
+  if (older.seed != null && older.seed !== out.seed && out.slots.length < 10 && !out.slots.some((x) => x.seed === older.seed)) {
+    out.slots.push({ id: 's' + Date.now().toString(36), name: remoteNewer ? '이 기기 시드' : '계정에 있던 시드', seed: older.seed, last: older.last || null, history: (older.history || []).slice(-30) });
+    changed = true;
+  }
+  if (changed) out.updatedAt = Date.now();
+  return out;
+}
+
+async function onUser(u) {
+  user = u || null;
+  if (unsub) { unsub(); unsub = null; }
+  if (!u) {
+    if (Rare()) Rare().attach(null);
+    if (Norm()) Norm().attach(null);
+    try { localStorage.removeItem(HINT); } catch (e) { /* ignore */ }
+    paint();
+    return;
+  }
+  try { localStorage.setItem(HINT, '1'); } catch (e) { /* ignore */ }
+  syncing = true; paint();
+  const { S, db } = fb;
+  const ref = S.doc(db, 'users', u.uid);
+  let remote = {};
+  try {
+    const snap = await S.getDoc(ref);
+    remote = snap.exists() ? snap.data() : {};
+  } catch (e) {
+    syncing = false; paint();
+    msg('계정에 저장된 걸 못 불러왔어. 인터넷 연결을 확인하고 다시 로그인해줘.');
+    return;
+  }
+  if (!user || user.uid !== u.uid) return;
+  Rare().apply(mergeRare(Rare().get(), remote.rare || null));
+  const nL = Norm().get(), nR = remote.normal;
+  if (nR && (nR.updatedAt || 0) > (nL.updatedAt || 0)) Norm().apply(nR);
+  const writer = (key) => ({
+    set: (d) => S.setDoc(ref, { [key]: clean(d), updatedAt: Date.now() }, { merge: true }).then(() => { lastSaved = Date.now(); paint(); }, (e) => {
+      if (e && e.code === 'permission-denied') msg('계정에 저장이 안 됐어. 로그아웃했다가 다시 로그인해줘.');
+      throw e;
+    }),
+  });
+  Rare().attach(writer('rare'));
+  Norm().attach(writer('normal'));
+  // 다른 기기에서 바꾸면 바로 가져옴
+  unsub = S.onSnapshot(ref, (snap) => {
+    if (snap.metadata.hasPendingWrites || !snap.exists()) return;
+    const d = snap.data();
+    let got = false;
+    if (d.rare && (d.rare.updatedAt || 0) > (Rare().get().updatedAt || 0)) { Rare().apply(d.rare); got = true; }
+    if (d.normal && (d.normal.updatedAt || 0) > (Norm().get().updatedAt || 0)) { Norm().apply(d.normal); got = true; }
+    if (got) toast('다른 기기에서 바꾼 걸 불러왔어요');
+  }, () => {});
+  syncing = false; paint();
+}
+
+const hhmm = (t) => { const d = new Date(t), p = (n) => String(n).padStart(2, '0'); return p(d.getHours()) + ':' + p(d.getMinutes()); };
+function msg(t) { $('acctMsg').textContent = t || ''; }
+function paint() {
+  const btn = $('acctBtn');
+  btn.dataset.state = user ? 'in' : 'out';
+  $('acctText').textContent = user ? '내 계정' : '로그인';
+  btn.title = user ? (user.email || '') + ' 로그인됨' : '이메일로 로그인해서 계정에 저장';
+  $('acctOut').hidden = !!user;
+  $('acctIn').hidden = !user;
+  if (user) {
+    $('acctWho').textContent = user.email || '';
+    $('acctSaved').textContent = syncing ? '계정이랑 맞추는 중…' : lastSaved ? '마지막 저장 ' + hhmm(lastSaved) : '계정이랑 맞췄어.';
+  }
+}
+function setBusy(on) { ['acctLogin', 'acctSignup', 'acctReset'].forEach((id) => { $(id).disabled = on; }); }
+const ERR = {
+  'auth/invalid-email': '이메일 형식이 이상해. 다시 확인해줘.',
+  'auth/invalid-credential': '이메일이나 비밀번호가 틀렸어.',
+  'auth/wrong-password': '이메일이나 비밀번호가 틀렸어.',
+  'auth/user-not-found': '이메일이나 비밀번호가 틀렸어.',
+  'auth/missing-password': '비밀번호를 넣어줘.',
+  'auth/email-already-in-use': '이미 가입된 이메일이야. 로그인을 눌러줘.',
+  'auth/weak-password': '비밀번호는 6자 이상이어야 해.',
+  'auth/too-many-requests': '너무 많이 시도했어. 잠깐 있다가 다시 해줘.',
+  'auth/network-request-failed': '인터넷 연결을 확인해줘.',
+  'auth/user-disabled': '쓸 수 없게 된 계정이야.',
+};
+const errText = (e) => ERR[e && e.code] || ('잘 안 됐어' + (e && e.code ? ' (' + e.code + ')' : '') + '. 다시 해줘.');
+const LOAD_FAIL = '로그인 기능을 못 불러왔어. 인터넷 연결을 확인해줘.';
+
+async function submit(kind) {
+  if (busy) return;
+  const email = $('acctEmail').value.trim(), pw = $('acctPw').value;
+  if (!/^[^@ ]+@[^@ ]+[.][^@ ]+$/.test(email)) { msg('이메일을 확인해줘.'); $('acctEmail').focus(); return; }
+  if (pw.length < 6) { msg('비밀번호는 6자 이상이어야 해.'); $('acctPw').focus(); return; }
+  busy = true; setBusy(true);
+  msg(kind === 'up' ? '가입하는 중…' : '로그인하는 중…');
+  let F;
+  try { F = await load(); } catch (e) { busy = false; setBusy(false); msg(LOAD_FAIL); return; }
+  try {
+    if (kind === 'up') await F.U.createUserWithEmailAndPassword(F.auth, email, pw);
+    else await F.U.signInWithEmailAndPassword(F.auth, email, pw);
+    $('acctPw').value = '';
+    msg('');
+    toast(kind === 'up' ? '가입했어요' : '로그인했어요', '이제 바꾸는 건 계정에 저장돼요');
+  } catch (e) { msg(errText(e)); }
+  finally { busy = false; setBusy(false); }
+}
+
+$('acctBtn').addEventListener('click', () => {
+  const box = $('acctBox');
+  box.hidden = !box.hidden;
+  $('acctBtn').setAttribute('aria-expanded', String(!box.hidden));
+  if (box.hidden) return;
+  paint();
+  box.scrollIntoView({ block: 'nearest' });
+  load().catch(() => msg(LOAD_FAIL));
+});
+$('acctClose').addEventListener('click', () => { $('acctBox').hidden = true; $('acctBtn').setAttribute('aria-expanded', 'false'); });
+$('acctForm').addEventListener('submit', (e) => { e.preventDefault(); submit('in'); });
+$('acctSignup').addEventListener('click', () => submit('up'));
+$('acctReset').addEventListener('click', async () => {
+  const email = $('acctEmail').value.trim();
+  if (!email) { msg('위에 가입한 이메일을 먼저 넣어줘.'); $('acctEmail').focus(); return; }
+  setBusy(true);
+  try {
+    const F = await load();
+    await F.U.sendPasswordResetEmail(F.auth, email);
+    msg('비밀번호 재설정 메일을 보냈어. 메일함이랑 스팸함을 확인해줘.');
+  } catch (e) { msg(e && e.code ? errText(e) : LOAD_FAIL); }
+  finally { setBusy(false); }
+});
+$('acctLogout').addEventListener('click', async () => {
+  if (!fb) return;
+  try { await fb.U.signOut(fb.auth); toast('로그아웃했어요', '이 기기에 있던 시드는 그대로 남아 있어요'); }
+  catch (e) { msg(errText(e)); }
+});
+
+paint();
+// 이 기기에서 로그인한 적이 있으면 바로 이어서 연결
+let was = false;
+try { was = !!localStorage.getItem(HINT); } catch (e) { /* ignore */ }
+if (was) load().catch(() => {});
 </script>
 
 </body>
