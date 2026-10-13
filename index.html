@@ -604,6 +604,42 @@ button.tile .eyebrow::after { content: ' ›'; }
 .route details summary { font-size: 12px; color: var(--muted); cursor: pointer; padding: 2px 0; }
 .route details[open] summary { margin-bottom: 4px; }
 .plres .alone { margin: 0; font-size: 12px; color: var(--muted); }
+/* 세션: 오른쪽 아래 + 버튼 */
+.wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+.fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 35; width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--ink); color: var(--on-ink); font-size: 30px; font-weight: 400; line-height: 1; display: grid; place-items: center; box-shadow: 0 8px 24px color-mix(in srgb, #000 28%, transparent); cursor: pointer; transition: bottom 160ms ease; }
+.fab span { display: block; margin-top: -3px; transition: transform 160ms ease; }
+.fab[aria-expanded="true"] span { transform: rotate(45deg); }
+.fab[data-has="1"]::after { content: ''; position: absolute; top: 3px; right: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--supa); border: 2px solid var(--bg); }
+.toast:not([hidden]) ~ .fab { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+.sesspanel { position: fixed; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 36; width: min(400px, calc(100vw - 32px)); max-height: min(72vh, 640px); overflow: auto; overscroll-behavior: contain; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: 0 16px 40px color-mix(in srgb, #000 24%, transparent); padding: 14px; display: grid; gap: 12px; align-content: start; }
+.toast:not([hidden]) ~ .sesspanel { bottom: calc(152px + env(safe-area-inset-bottom, 0px)); max-height: min(60vh, 600px); }
+.sesshead h2 { margin: 0; font-size: 17px; }
+.sesshead small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+.sesscur { border-radius: var(--r-md); background: var(--bg); padding: 10px 12px; display: grid; gap: 4px; }
+.sesscur .sc-top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.sesscur .sc-top b { font-size: 15px; }
+.sesscur em { font-style: normal; font-size: 11px; font-weight: 700; color: var(--supa); }
+.smeta { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12px; color: var(--muted); }
+.smeta b { font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.sesslist { display: grid; gap: 6px; }
+.sessrow { display: flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px 6px 8px 12px; }
+.sessrow[aria-current="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.sessrow .sr-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.sessrow .sr-main > b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sessrow .btn { min-height: 36px; padding: 6px 10px; font-size: 13px; }
+.sessrow .ib { flex: none; border: 0; background: transparent; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; font-size: 15px; }
+.sessrow .ib:hover { background: var(--sunk); color: var(--ink); }
+.sessrow .now { font-size: 12px; font-weight: 700; color: var(--supa); padding: 0 6px; white-space: nowrap; }
+.sessempty { margin: 0; font-size: 13px; color: var(--muted); }
+.sessform { display: grid; gap: 6px; }
+.sessform > b { font-size: 13px; }
+.sfrow { display: flex; gap: 6px; }
+.sfrow input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: var(--r-md); padding: 8px 10px; font-size: 16px; min-height: 42px; }
+.sfrow .btn { min-height: 42px; padding: 8px 12px; }
+.sessacts { display: flex; gap: 8px; flex-wrap: wrap; }
+.sessacts .btn { flex: 1 1 auto; justify-content: center; }
+.sesschip { border: 0; font: inherit; font-size: 13px; cursor: pointer; padding: 3px 10px; }
+.sesschip b { font-weight: 700; }
 /* 냥코 티켓: 목표까지 경로 · 레어 티켓 계산 */
 .npsub { font-size: 13px; font-weight: 700; color: var(--ink); }
 .npsub small { font-weight: 500; color: var(--muted); margin-left: 6px; }
@@ -693,7 +729,7 @@ button.tile .eyebrow::after { content: ' ›'; }
   <section class="finder acctbox" id="acctBox" hidden aria-labelledby="acctTitle">
     <div class="sec-head" style="margin:0"><h2 id="acctTitle">계정에 저장</h2><button type="button" class="btn" id="acctClose">닫기</button></div>
     <div id="acctOut">
-      <p>이메일로 로그인하면 레어 뽑기·냥코 티켓 시드랑 저장한 시드가 계정에 저장돼. 폰이든 PC든 로그인만 하면 그대로 이어져.</p>
+      <p>이메일로 로그인하면 레어 뽑기·냥코 티켓 시드, 보상 받은 것, 저장한 세션이 계정에 저장돼. 폰이든 PC든 로그인만 하면 그대로 이어져.</p>
       <form class="acctform" id="acctForm" novalidate>
         <input id="acctEmail" type="email" autocomplete="email" inputmode="email" placeholder="이메일" aria-label="이메일" spellcheck="false">
         <input id="acctPw" type="password" autocomplete="current-password" placeholder="비밀번호 (6자 이상)" aria-label="비밀번호">
@@ -714,7 +750,6 @@ button.tile .eyebrow::after { content: ' ›'; }
 
   <div id="rareMode" class="mode">
   <section class="seedbar" aria-label="시드">
-    <div class="slots" id="slots" hidden></div>
     <div class="seedrow">
       <div class="field">
         <label for="seed">내 시드</label>
@@ -729,14 +764,8 @@ button.tile .eyebrow::after { content: ' ›'; }
       <span id="lastWrap" hidden class="chip">직전: <b id="lastName"></b><button type="button" id="clearLast" aria-label="직전 캐릭 지우기">×</button></span>
       <span id="seedNote"></span>
       <button type="button" class="linkbtn" id="rfind">내 시드 찾기</button>
-      <button type="button" class="linkbtn" id="slotAdd">시드 저장</button>
+      <button type="button" class="chip sesschip" id="sessChip" hidden>세션 <b id="sessChipName"></b></button>
       <button type="button" class="linkbtn" id="shareOpen" aria-expanded="false" aria-controls="shareBox">링크로 보내기 · 가져오기</button>
-    </div>
-    <div class="slotform" id="slotForm" hidden>
-      <input id="slotName" type="text" maxlength="12" placeholder="이름 (예: 본계정)" aria-label="저장할 이름" autocomplete="off">
-      <input id="slotSeed" class="mono" inputmode="numeric" placeholder="시드" aria-label="저장할 시드" autocomplete="off">
-      <button type="button" class="btn primary" id="slotSave">저장</button>
-      <button type="button" class="btn" id="slotCancel">취소</button>
     </div>
     <div class="sharebox" id="shareBox" hidden>
       <div class="shrow">
@@ -744,7 +773,7 @@ button.tile .eyebrow::after { content: ' ›'; }
         <button type="button" class="btn" data-share="cur">링크 복사</button>
       </div>
       <div class="shrow">
-        <div class="shtxt"><b>저장한 시드 전부 백업</b><small id="shareBakNote">폰 바꿀 때 이 링크 하나면 다 옮겨져.</small></div>
+        <div class="shtxt"><b>저장한 세션 전부 백업</b><small id="shareBakNote">폰 바꿀 때 이 링크 하나면 다 옮겨져.</small></div>
         <button type="button" class="btn" data-share="bak" id="shareBak">백업 링크 복사</button>
       </div>
       <div class="shout" id="shareOut" hidden>
@@ -875,7 +904,7 @@ button.tile .eyebrow::after { content: ' ›'; }
       <li><b>목표까지 경로</b>는 진행 중인 가챠를 오가며 트랙을 갈아타는 것까지 따져서 통조림을 제일 적게 쓰는 순서를 알려줘요. 그대로 뽑았으면 "이 경로대로 다 뽑았어"를 누르면 돼요.</li>
       <li><b>다음 11연</b> 버튼으로 단챠 1번이나 11연 1번 한 걸 칸을 안 찾고 바로 넘길 수 있어요.</li>
       <li><b>나란히 비교</b>는 같은 칸에서 가챠마다 뭐가 나오는지 옆으로 보여줘요. 칸을 누르면 그 가챠에서 거기까지 뽑은 걸로 넘어가요.</li>
-      <li><b>시드 저장</b>으로 계정마다 시드를 이름 붙여 두고 눌러서 바꿀 수 있어요. 냥코 티켓 시드도 같이 바뀌어요.</li>
+      <li>오른쪽 아래 <b>+</b> 버튼에서 <b>세션</b>을 저장하고 불러올 수 있어요. 레어 뽑기 시드랑 냥코 티켓 시드를 계정마다 한 번에 묶어 둬요.</li>
       <li><b>내 시드 찾기</b>는 고른 가챠에서 연속으로 나온 캐릭을 순서대로 넣으면 시드 42억 개를 이 기기 안에서 전부 확인해요. 확정 11연의 11번째는 "다음은 확정 울트라"를 켜고 넣어줘.</li>
       <li>계산 규칙은 시드 트래커 사이트(고드팻)의 표와 대조해 모두 일치했어요. 플래티넘·레전드 뽑기도 같은 시드를 써요.</li>
       <li>이 사이트는 Claude 없이 도는 복사본이라, 가챠 일정은 위에 적힌 데이터 기준 날짜까지만 들어 있어요. 시드와 진행 기록은 이 기기 브라우저에만 저장돼요.</li>
@@ -1035,6 +1064,17 @@ button.tile .eyebrow::after { content: ' ›'; }
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<button type="button" class="fab" id="fab" aria-label="세션 저장·불러오기" aria-expanded="false" aria-controls="sessPanel"><span aria-hidden="true">+</span></button>
+<section class="sesspanel" id="sessPanel" role="dialog" aria-labelledby="sessTitle" hidden>
+  <div class="sesshead"><h2 id="sessTitle">세션</h2><small id="sessSub"></small></div>
+  <div class="sesscur" id="sessCur"></div>
+  <div class="sessform" id="slotForm" hidden>
+    <b id="slotFormTitle"></b>
+    <div class="sfrow"><input id="slotName" type="text" maxlength="12" placeholder="이름 (예: 본계정)" aria-label="세션 이름" autocomplete="off"><button type="button" class="btn primary" id="slotSave">저장</button><button type="button" class="btn" id="slotCancel">취소</button></div>
+  </div>
+  <div class="sesslist" id="slots"></div>
+  <div class="sessacts"><button type="button" class="btn primary" id="slotAdd">지금 상태 저장</button><button type="button" class="btn" id="sessNew">새 세션 시작</button></div>
+</section>
 
 <script src="data.js"></script>
 <script>
@@ -1635,8 +1675,14 @@ window.NyankoUI = (function () {
     giftDone[a.closest('.gift').dataset.k] = Date.now();
     try { localStorage.setItem(GIFT_KEY, JSON.stringify(giftDone)); } catch (err) { /* ignore */ }
     setTimeout(paintGifts, 300);
+    document.dispatchEvent(new CustomEvent('nyanko:gifts'));
   });
   paintGifts();
+  // 세션 저장용: 보상 받은 기록 읽기·바꾸기
+  window.NyankoGifts = {
+    get: () => Object.assign({}, giftDone),
+    set: (o) => { giftDone = Object.assign({}, o || {}); try { localStorage.setItem(GIFT_KEY, JSON.stringify(giftDone)); } catch (e) { /* ignore */ } paintGifts(); },
+  };
   // 화면 밝기: 자동(기기 설정 따라감) · 밝게 · 어둡게 — 고른 건 이 기기에 저장
   const THEME_KEY = 'nyanko-theme';
   const THEME_BG = { light: '#F2F3F6', dark: '#0E1014' };
@@ -2647,8 +2693,12 @@ window.NyankoUI = (function () {
     $('hitinfo').textContent = !q ? '' : hits ? hits + '칸 · 처음 ' + firstHit : '이 범위엔 없어요';
   }
 
-  // 저장한 시드 (계정마다 레어 뽑기 시드 + 냥코 티켓 시드)
+  // 세션: 레어 뽑기 시드 + 냥코 티켓 시드 + 보상 받은 것을 한 번에 저장 (계정마다 하나씩, 10개까지)
+  // 지금 세션이 있으면 바꾸는 건 그 세션에 바로 저장됨. 오른쪽 아래 + 버튼에서 저장·불러오기
   const NB = () => window.NyankoNormalBridge || null;
+  const GF = () => window.NyankoGifts || null;
+  const giftN = (o) => Object.keys(o || {}).length;
+  const newSid = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   function syncSlot() {
     const sl = state.slotId && (state.slots || []).find((x) => x.id === state.slotId);
     if (!sl) return;
@@ -2660,80 +2710,134 @@ window.NyankoUI = (function () {
     const v = nb.get();
     sl.nseed = v.seed; sl.nlast = v.last; sl.nhistory = v.history;
   }
+  function captureGifts(sl) {
+    const g = GF();
+    if (g && sl) sl.gifts = g.get();
+  }
   function snapshot() {
-    const nb = NB();
-    return { slotId: state.slotId, seed: state.seed, last: state.last, history: state.history.slice(), n: nb ? nb.get() : null };
+    const nb = NB(), g = GF();
+    return { slotId: state.slotId, seed: state.seed, last: state.last, history: state.history.slice(), n: nb ? nb.get() : null, gifts: g ? g.get() : null };
   }
   function restore(snap) {
     syncSlot();
-    captureNormal((state.slots || []).find((x) => x.id === state.slotId));
+    const cur = (state.slots || []).find((x) => x.id === state.slotId);
+    captureNormal(cur); captureGifts(cur);
     state.slotId = snap.slotId; state.seed = snap.seed; state.last = snap.last; state.history = snap.history; rows = STEP;
-    const nb = NB();
+    const nb = NB(), g = GF();
     if (nb && snap.n) nb.set(snap.n.seed, snap.n.last, snap.n.history);
+    if (g && snap.gifts) g.set(snap.gifts);
     persist(); renderAll();
+  }
+  // 지금 보던 게 어느 세션에도 없는데 시드나 보상 기록이 있으면 true
+  function hasData() {
+    const nb = NB(), nv = nb ? nb.get() : null, g = GF();
+    return (state.seed != null && !isNaN(state.seed) && state.seed !== DEMO_SEED) || !!(nv && nv.seed != null) || !!(g && giftN(g.get()));
+  }
+  function makeSession(name) {
+    const sl = { id: newSid(), name, seed: state.seed === DEMO_SEED ? null : (state.seed ?? null), last: state.last || null, history: state.history.slice(-30) };
+    captureNormal(sl); captureGifts(sl);
+    return sl;
+  }
+  function sessMeta(seed, nseed, gifts) {
+    return '<span class="smeta"><span>레어 <b>' + (seed != null ? esc(seed) : '없음') + '</b></span><span>냥티 <b>' + (nseed != null ? esc(nseed) : '없음') + '</b></span>'
+      + (GF() ? '<span>보상 <b>' + (gifts ? giftN(gifts) + '개 받음' : '-') + '</b></span>' : '') + '</span>';
   }
   function renderSlots() {
     const list = state.slots || [];
-    const box = $('slots');
-    $('slotAdd').hidden = list.length > 0;
-    box.hidden = !list.length;
-    if (!list.length) { box.innerHTML = ''; return; }
-    box.innerHTML = '<span class="lbl">저장한 시드</span>' + list.map((sl) => {
-      const on = sl.id === state.slotId;
-      return '<span class="slot"' + (on ? ' aria-current="true"' : '') + '><button type="button" class="sw" data-id="' + esc(sl.id) + '">' + esc(sl.name)
-        + '<small class="mono">' + esc(on ? state.seed : sl.seed) + '</small></button>'
-        + '<button type="button" class="x" data-del="' + esc(sl.id) + '" aria-label="' + esc(sl.name) + ' 지우기">×</button></span>';
-    }).join('') + (list.length < 10 ? '<button type="button" class="slotplus" data-add="1">+ 저장</button>' : '');
+    const active = list.find((x) => x.id === state.slotId);
+    $('sessChip').hidden = !active;
+    if (active) $('sessChipName').textContent = active.name;
+    $('fab').dataset.has = active ? '1' : '';
     if (!$('shareBox').hidden) renderShare();
+    if ($('sessPanel').hidden) return;
+    $('sessSub').textContent = '레어 뽑기 시드 · 냥코 티켓 시드' + (GF() ? ' · 보상 받은 것' : '') + '을 한 번에 저장해. 지금 세션은 바꾸는 대로 자동 저장돼.';
+    const nb = NB(), nv = nb ? nb.get() : null, g = GF();
+    const live = sessMeta(state.seed === DEMO_SEED ? null : state.seed, nv ? nv.seed : null, g ? g.get() : null);
+    $('sessCur').innerHTML = active
+      ? '<div class="sc-top"><span class="eyebrow">지금 세션</span><b>' + esc(active.name) + '</b><em>자동 저장 중</em></div>' + live
+      : '<div class="sc-top"><span class="eyebrow">지금 상태</span><b>세션에 저장 안 됨</b></div>' + live;
+    $('slots').innerHTML = list.length ? list.map((sl) => {
+      const on = sl.id === state.slotId;
+      const meta = on ? live : sessMeta(sl.seed, sl.nseed, sl.gifts);
+      return '<div class="sessrow"' + (on ? ' aria-current="true"' : '') + '><div class="sr-main"><b>' + esc(sl.name) + '</b>' + meta + '</div>'
+        + (on ? '<span class="now">보는 중</span>' : '<button type="button" class="btn" data-id="' + esc(sl.id) + '">불러오기</button>')
+        + '<button type="button" class="ib" data-ren="' + esc(sl.id) + '" aria-label="' + esc(sl.name) + ' 이름 바꾸기">✎</button>'
+        + '<button type="button" class="ib" data-del="' + esc(sl.id) + '" aria-label="' + esc(sl.name) + ' 지우기">×</button></div>';
+    }).join('') : '<p class="sessempty">저장한 세션이 아직 없어. 아래 "지금 상태 저장"을 눌러봐.</p>';
+    $('slotAdd').disabled = list.length >= 10;
+    $('sessNew').disabled = list.length >= 10;
   }
-  function openSlotForm() {
+  let formMode = 'cur', formId = null;
+  function openSlotForm(mode, id) {
+    formMode = mode || 'cur'; formId = id || null;
+    const sl = id ? (state.slots || []).find((x) => x.id === id) : null;
+    $('slotFormTitle').textContent = formMode === 'ren' ? '이름 바꾸기' : formMode === 'new' ? '새 세션 (빈 상태로 시작)' : '지금 상태를 새 세션으로 저장';
+    $('slotName').value = sl ? sl.name : '';
+    $('slotName').placeholder = formMode === 'new' ? '이름 (예: 부계정)' : '이름 (예: 본계정)';
     $('slotForm').hidden = false;
-    $('slotName').value = '';
-    $('slotSeed').value = state.seed != null && !isNaN(state.seed) ? String(state.seed) : '';
-    $('slotSeed').setAttribute('aria-invalid', 'false');
     $('slotName').focus();
   }
   function saveSlot() {
-    const v = parseSeed($('slotSeed').value);
-    if (v === null || isNaN(v)) { $('slotSeed').setAttribute('aria-invalid', 'true'); $('slotSeed').focus(); return; }
     if (!Array.isArray(state.slots)) state.slots = [];
     const list = state.slots;
-    if (list.length >= 10) { toast('시드는 10개까지 저장돼요'); return; }
-    const name = ($('slotName').value.trim() || ('시드 ' + (list.length + 1))).slice(0, 12);
-    const snap = snapshot();
+    const typed = $('slotName').value.trim().slice(0, 12);
+    if (formMode === 'ren') {
+      const sl = list.find((x) => x.id === formId);
+      $('slotForm').hidden = true;
+      if (sl && typed && typed !== sl.name) { sl.name = typed; persist(); renderSlots(); toast('이름을 바꿨어요'); }
+      return;
+    }
+    if (list.length >= 10) { toast('세션은 10개까지 저장돼요'); return; }
+    const snap = snapshot(), added = [];
     const from = list.find((x) => x.id === state.slotId);
-    if (from) { syncSlot(); captureNormal(from); }
-    const sl = { id: 's' + Date.now().toString(36), name, seed: v, last: null, history: [] };
-    const same = v === state.seed;
-    if (same) { sl.last = state.last; sl.history = state.history.slice(-30); captureNormal(sl); }
-    list.push(sl);
-    state.slotId = sl.id;
-    if (!same) {
-      state.seed = v; state.last = null; state.history = []; rows = STEP;
-      const nb = NB();
-      if (nb && from) nb.set(null);
+    if (from) { syncSlot(); captureNormal(from); captureGifts(from); }
+    const name = typed || ('세션 ' + (list.length + 1));
+    let kept = '';
+    if (formMode === 'new') {
+      // 지금 보던 게 세션에 없으면 먼저 남겨 둠
+      if (!from && hasData() && list.length < 9) { const k = makeSession('저장 안 한 세션'); list.push(k); added.push(k.id); kept = k.name; }
+      const sl = { id: newSid(), name, seed: null, last: null, history: [], nseed: null, nlast: null, nhistory: [], gifts: {} };
+      list.push(sl); added.push(sl.id);
+      state.slotId = sl.id; state.seed = null; state.last = null; state.history = []; rows = STEP;
+      const nb = NB(), g = GF();
+      if (nb) nb.set(null);
+      if (g) g.set({});
+    } else {
+      const sl = makeSession(name);
+      list.push(sl); added.push(sl.id);
+      state.slotId = sl.id;
     }
     $('slotForm').hidden = true;
+    const wasNew = formMode === 'new';
     persist(); renderAll();
-    UI.toast(name + ' 저장했어요', '되돌리기', () => {
-      const i = list.indexOf(sl); if (i >= 0) list.splice(i, 1);
-      state.slotId = null; restore(snap);
-    }, '눌러서 시드를 바꿀 수 있어요');
+    UI.toast(wasNew ? name + ' 세션을 새로 시작했어요' : name + ' 세션으로 저장했어요', '되돌리기', () => {
+      state.slots = (state.slots || []).filter((x) => !added.includes(x.id));
+      restore(snap);
+    }, kept ? '보던 건 "' + kept + '"으로 남겨 뒀어요' : wasNew ? '시드를 넣으면 이 세션에 저장돼요' : '이제 바꾸는 건 이 세션에 자동 저장돼요');
   }
   function switchSlot(id) {
-    const to = (state.slots || []).find((x) => x.id === id);
+    const list = state.slots || [];
+    const to = list.find((x) => x.id === id);
     if (!to || id === state.slotId) return;
     const snap = snapshot();
-    const from = state.slots.find((x) => x.id === state.slotId);
-    if (from) { syncSlot(); captureNormal(from); }
+    const from = list.find((x) => x.id === state.slotId);
+    if (from) { syncSlot(); captureNormal(from); captureGifts(from); }
+    let kept = null;
+    if (!from && hasData() && list.length < 10) { kept = makeSession('저장 안 한 세션'); list.push(kept); }
     state.slotId = id;
     state.seed = to.seed ?? null; state.last = to.last || null;
     state.history = Array.isArray(to.history) ? to.history.slice() : [];
     rows = STEP;
-    const nb = NB();
+    const nb = NB(), g = GF();
     if (nb) nb.set(to.nseed ?? null, to.nlast || null, to.nhistory || []);
+    // 예전에 저장한(보상 기록이 없는) 세션이면 보상 표시는 그대로 둠
+    if (g && to.gifts) g.set(to.gifts);
+    closeSess();
     persist(); renderAll();
-    UI.toast(to.name + ' 시드로 바꿨어요', '되돌리기', () => restore(snap), '냥코 티켓 시드도 같이 바뀌어요');
+    UI.toast(to.name + ' 세션을 불러왔어요', '되돌리기', () => {
+      if (kept) state.slots = (state.slots || []).filter((x) => x !== kept);
+      restore(snap);
+    }, kept ? '보던 건 "저장 안 한 세션"으로 남겨 뒀어요' : '레어·냥코 티켓 시드' + (g ? '랑 보상 받은 것까지' : '가') + ' 바뀌었어요');
   }
   function delSlot(id) {
     const list = state.slots || [];
@@ -2743,12 +2847,28 @@ window.NyankoUI = (function () {
     const was = state.slotId === id;
     if (was) state.slotId = null;
     persist(); renderSlots();
-    UI.toast(gone.name + ' 지웠어요', '되돌리기', () => {
+    UI.toast(gone.name + ' 세션을 지웠어요', '되돌리기', () => {
       list.splice(Math.min(i, list.length), 0, gone);
       if (was) state.slotId = id;
       persist(); renderSlots();
-    });
+    }, was ? '지금 보던 시드는 그대로 있어요' : '');
   }
+  function openSess() {
+    $('sessPanel').hidden = false;
+    $('fab').setAttribute('aria-expanded', 'true');
+    $('slotForm').hidden = true;
+    renderSlots();
+  }
+  function closeSess() {
+    $('sessPanel').hidden = true;
+    $('fab').setAttribute('aria-expanded', 'false');
+  }
+  // 보상 받기에서 누르면 지금 세션에도 저장
+  document.addEventListener('nyanko:gifts', () => {
+    const a = (state.slots || []).find((x) => x.id === state.slotId);
+    if (a) captureGifts(a);
+    persist(); renderSlots();
+  });
 
   $('summary').addEventListener('click', (e) => { const t = e.target.closest('[data-goal]'); if (t) plOpen(t.dataset.goal); });
   $('eleven').addEventListener('click', (e) => { const t = e.target.closest('button[data-adv]'); if (t && !t.disabled) advance(Number(t.dataset.adv)); });
@@ -2820,16 +2940,27 @@ window.NyankoUI = (function () {
     if (state.seed === before) renderAll();
   });
   $('cmore').addEventListener('click', () => { rows += STEP; compute(); renderTable(); });
-  $('slotAdd').addEventListener('click', openSlotForm);
+  $('slotAdd').addEventListener('click', () => openSlotForm('cur'));
+  $('sessNew').addEventListener('click', () => openSlotForm('new'));
   $('slots').addEventListener('click', (e) => {
     const t = e.target.closest('button'); if (!t) return;
-    if (t.dataset.add) openSlotForm();
-    else if (t.dataset.del) delSlot(t.dataset.del);
+    if (t.dataset.del) delSlot(t.dataset.del);
+    else if (t.dataset.ren) openSlotForm('ren', t.dataset.ren);
     else if (t.dataset.id) switchSlot(t.dataset.id);
   });
   $('slotSave').addEventListener('click', saveSlot);
   $('slotCancel').addEventListener('click', () => { $('slotForm').hidden = true; });
-  ['slotName', 'slotSeed'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveSlot(); } }));
+  $('slotName').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveSlot(); } });
+  $('fab').addEventListener('click', () => { if ($('sessPanel').hidden) openSess(); else closeSess(); });
+  $('sessChip').addEventListener('click', openSess);
+  // 바깥을 누르면 닫힘 (누른 순간의 경로로 판단: 안에서 다시 그려져도 안 닫히게)
+  document.addEventListener('click', (e) => {
+    if ($('sessPanel').hidden) return;
+    const path = e.composedPath ? e.composedPath() : [];
+    if (['sessPanel', 'fab', 'sessChip', 'toast'].some((id) => path.includes($(id)))) return;
+    closeSess();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('sessPanel').hidden) closeSess(); });
 
   // ---------- 링크로 보내기 · 백업 · 가져오기 ----------
   // 링크 끝 #k= 뒤에 시드 정보를 JSON → base64url 로 넣음 (서버에 안 감)
@@ -2870,8 +3001,9 @@ window.NyankoUI = (function () {
         bannerId: typeof d.b === 'string' && d.b.length <= 80 ? d.b : null };
     }
     if (d.t === 'b' && Array.isArray(d.sl)) {
-      const slots = d.sl.slice(0, 10).map((x) => x && ({ name: okName(x.n), seed: okSeed(x.s), last: okLast(x.l), nseed: okSeed(x.ns), nlast: okItem(x.nl) }))
-        .filter((x) => x && x.seed != null);
+      const okGifts = (g) => (Array.isArray(g) ? Object.fromEntries(g.filter((k) => typeof k === 'string' && k.length <= 60 && !/[^A-Za-z0-9_]/.test(k.split('/').join(''))).slice(0, 60).map((k) => [k, 1])) : undefined);
+      const slots = d.sl.slice(0, 10).map((x) => x && ({ name: okName(x.n), seed: okSeed(x.s), last: okLast(x.l), nseed: okSeed(x.ns), nlast: okItem(x.nl), gifts: okGifts(x.g) }))
+        .filter((x) => x && (x.seed != null || x.nseed != null));
       return slots.length ? { kind: 'b', slots } : null;
     }
     return null;
@@ -2880,7 +3012,7 @@ window.NyankoUI = (function () {
     syncSlot();
     const list = state.slots || [];
     const active = list.find((x) => x.id === state.slotId);
-    if (active) captureNormal(active);
+    if (active) { captureNormal(active); captureGifts(active); }
     if (kind === 'cur') {
       if (state.seed == null || isNaN(state.seed)) return null;
       const nb = NB(), nv = nb ? nb.get() : null;
@@ -2890,9 +3022,9 @@ window.NyankoUI = (function () {
       if (nv && nv.seed != null) d.m = { s: nv.seed, l: nv.last ?? null };
       return d;
     }
-    const sl = list.filter((x) => x.seed != null);
+    const sl = list.filter((x) => x.seed != null || x.nseed != null);
     if (!sl.length) return null;
-    return { v: 1, t: 'b', sl: sl.map((x) => ({ n: x.name, s: x.seed, l: packLast(x.last), ns: x.nseed ?? null, nl: x.nlast ?? null })) };
+    return { v: 1, t: 'b', sl: sl.map((x) => { const o = { n: x.name, s: x.seed ?? null, l: packLast(x.last), ns: x.nseed ?? null, nl: x.nlast ?? null }; if (x.gifts) o.g = Object.keys(x.gifts); return o; }) };
   }
   let shareUrl = '';
   async function copyLink(msg) {
@@ -2901,7 +3033,7 @@ window.NyankoUI = (function () {
   }
   function makeLink(kind) {
     const d = shareData(kind);
-    if (!d) { toast(kind === 'cur' ? '시드를 먼저 넣어줘' : '저장한 시드가 아직 없어요'); return; }
+    if (!d) { toast(kind === 'cur' ? '시드를 먼저 넣어줘' : '저장한 세션이 아직 없어요'); return; }
     shareUrl = linkBase() + '#k=' + packCode(d);
     $('shareOut').hidden = false;
     $('shareLink').value = shareUrl;
@@ -2909,9 +3041,9 @@ window.NyankoUI = (function () {
     copyLink(kind === 'cur' ? '시드 링크를 복사했어요' : '백업 링크를 복사했어요 (' + d.sl.length + '개)');
   }
   function renderShare() {
-    const n = (state.slots || []).filter((x) => x.seed != null).length;
+    const n = (state.slots || []).filter((x) => x.seed != null || x.nseed != null).length;
     $('shareBak').disabled = !n;
-    $('shareBakNote').textContent = n ? '저장한 시드 ' + n + '개를 링크 하나로. 폰 바꿀 때나 다른 기기에서 열 때 써.' : '"시드 저장"으로 저장한 시드가 있으면 링크 하나로 다 옮길 수 있어.';
+    $('shareBakNote').textContent = n ? '저장한 세션 ' + n + '개를 링크 하나로. 폰 바꿀 때나 다른 기기에서 열 때 써.' : '오른쪽 아래 + 에서 세션을 저장하면 링크 하나로 다 옮길 수 있어.';
   }
   // 받은 링크 확인 상자
   let imp = null;
@@ -2922,14 +3054,14 @@ window.NyankoUI = (function () {
     if (d.kind === 'c') {
       const b = d.bannerId ? bannerById(d.bannerId) : null;
       const mine = state.seed != null && !isNaN(state.seed) && state.seed !== DEMO_SEED;
-      box.innerHTML = '<div class="ihead"><b>링크로 받은 시드' + (d.name ? ' · ' + esc(d.name) : '') + '</b><small>' + (mine ? '보던 시드는 "저장한 시드"에 남겨 두고 바꿔.' : '누르면 이 시드로 배열을 보여줘.') + '</small></div>'
+      box.innerHTML = '<div class="ihead"><b>링크로 받은 시드' + (d.name ? ' · ' + esc(d.name) : '') + '</b><small>' + (mine ? '보던 건 세션으로 남겨 두고 바꿔.' : '누르면 이 시드로 배열을 보여줘.') + '</small></div>'
         + '<dl>' + (d.seed != null ? '<dt>레어 뽑기</dt><dd class="mono">' + d.seed + (d.last ? '<small>직전 ' + esc(d.last.name) + '</small>' : '') + '</dd>' : '')
         + (d.nseed != null ? '<dt>냥코 티켓</dt><dd class="mono">' + d.nseed + '</dd>' : '')
         + (b ? '<dt>가챠</dt><dd>' + esc(b.title || shortName(b)) + '</dd>' : '') + '</dl>'
         + '<div class="frow"><button type="button" class="btn primary" data-imp="use">이 시드로 보기</button><button type="button" class="btn" data-imp="no">닫기</button></div>';
     } else {
-      box.innerHTML = '<div class="ihead"><b>백업한 시드 ' + d.slots.length + '개</b><small>지금 저장한 시드는 그대로 두고, 없는 것만 더해.</small></div>'
-        + '<div class="ilist">' + d.slots.map((x) => '<span>' + esc(x.name || '이름 없음') + '<small class="mono">' + x.seed + '</small></span>').join('') + '</div>'
+      box.innerHTML = '<div class="ihead"><b>백업한 세션 ' + d.slots.length + '개</b><small>지금 저장한 세션은 그대로 두고, 없는 것만 더해.</small></div>'
+        + '<div class="ilist">' + d.slots.map((x) => '<span>' + esc(x.name || '이름 없음') + '<small class="mono">' + (x.seed ?? ('냥티 ' + x.nseed)) + '</small></span>').join('') + '</div>'
         + '<div class="frow"><button type="button" class="btn primary" data-imp="add">가져오기</button><button type="button" class="btn" data-imp="no">닫기</button></div>';
     }
     box.hidden = false;
@@ -2948,7 +3080,7 @@ window.NyankoUI = (function () {
     const hasMine = (state.seed != null && !isNaN(state.seed) && state.seed !== DEMO_SEED) || (nv && nv.seed != null);
     if (!from && hasMine && list.length < 10) {
       const mine = { id: newId(0), name: '내 시드', seed: state.seed === DEMO_SEED ? null : state.seed, last: state.last, history: state.history.slice(-30) };
-      captureNormal(mine);
+      captureNormal(mine); captureGifts(mine);
       if (!list.some((x) => sameSlot(x, mine))) { list.push(mine); added.push(mine.id); kept = mine.name; }
     }
     // 저장한 시드가 있으면 받은 시드도 하나 더 만들어서 오가며 볼 수 있게
@@ -2972,7 +3104,7 @@ window.NyankoUI = (function () {
     UI.toast('받은 시드로 바꿨어요', '되돌리기', () => {
       state.slots = (state.slots || []).filter((x) => !added.includes(x.id));
       restore(snap);
-    }, kept ? '보던 시드는 "' + kept + '"로 저장해 뒀어요' : (slotId ? '저장한 시드에서 오가며 볼 수 있어요' : ''));
+    }, kept ? '보던 시드는 "' + kept + '"로 저장해 뒀어요' : (slotId ? '오른쪽 아래 + 에서 오가며 볼 수 있어요' : ''));
   }
   function importAdd(d) {
     const snap = snapshot();
@@ -2982,11 +3114,12 @@ window.NyankoUI = (function () {
     d.slots.forEach((x, i) => {
       if (list.some((y) => sameSlot(y, x))) return;
       if (list.length >= 10) { full = true; return; }
-      const sl = { id: newId(i), name: x.name || '시드 ' + (list.length + 1), seed: x.seed, last: x.last, history: [], nseed: x.nseed, nlast: x.nlast, nhistory: [] };
+      const sl = { id: newId(i), name: x.name || '세션 ' + (list.length + 1), seed: x.seed, last: x.last, history: [], nseed: x.nseed, nlast: x.nlast, nhistory: [] };
+      if (x.gifts) sl.gifts = x.gifts;
       list.push(sl); added.push(sl.id);
     });
     showImport(null);
-    if (!added.length) { persist(); renderAll(); toast(full ? '시드는 10개까지 저장돼요' : '이미 다 저장돼 있는 시드예요'); return; }
+    if (!added.length) { persist(); renderAll(); toast(full ? '세션은 10개까지 저장돼요' : '이미 다 저장돼 있는 세션이에요'); return; }
     // 보던 시드가 없으면 가져온 첫 시드로 바꿈
     const empty = !state.slotId && (state.seed == null || state.seed === DEMO_SEED);
     if (empty) {
@@ -2994,12 +3127,14 @@ window.NyankoUI = (function () {
       state.slotId = to.id; state.seed = to.seed; state.last = to.last; state.history = []; rows = STEP;
       const nb = NB();
       if (nb) nb.set(to.nseed ?? null, to.nlast || null, []);
+      const g2 = GF();
+      if (g2 && to.gifts) g2.set(to.gifts);
     }
     persist(); renderAll();
-    UI.toast('시드 ' + added.length + '개 가져왔어요', '되돌리기', () => {
+    UI.toast('세션 ' + added.length + '개 가져왔어요', '되돌리기', () => {
       state.slots = (state.slots || []).filter((x) => !added.includes(x.id));
       if (empty) restore(snap); else { persist(); renderAll(); }
-    }, full ? '10개까지만 저장돼서 몇 개는 못 넣었어요' : '위 "저장한 시드"에서 골라 봐');
+    }, full ? '10개까지만 저장돼서 몇 개는 못 넣었어요' : '오른쪽 아래 + 에서 골라 봐');
   }
   function checkHash() {
     const d = parseShared(location.hash);
@@ -3282,8 +3417,8 @@ window.NyankoUI = (function () {
     get: () => {
       syncSlot();
       const a = (state.slots || []).find((x) => x.id === state.slotId);
-      if (a) captureNormal(a);
-      return JSON.parse(JSON.stringify({ seed: state.seed, last: state.last, bannerId: state.bannerId, history: state.history.slice(-40), updatedAt: state.updatedAt, slots: state.slots || [], slotId: state.slotId || null }));
+      if (a) { captureNormal(a); captureGifts(a); }
+      return JSON.parse(JSON.stringify({ seed: state.seed, last: state.last, bannerId: state.bannerId, history: state.history.slice(-40), updatedAt: state.updatedAt, slots: state.slots || [], slotId: state.slotId || null, gifts: GF() ? GF().get() : undefined }));
     },
     apply: (d) => {
       if (!d) return;
@@ -3292,6 +3427,7 @@ window.NyankoUI = (function () {
       state.history = Array.isArray(d.history) ? d.history.slice() : [];
       state.slots = Array.isArray(d.slots) ? d.slots.slice(0, 10) : [];
       state.slotId = state.slots.some((x) => x.id === d.slotId) ? d.slotId : null;
+      if (d.gifts && GF()) GF().set(d.gifts);
       state.updatedAt = d.updatedAt || 0;
       rows = STEP; writeLocal(); renderAll();
     },
@@ -4113,6 +4249,12 @@ function mergeRare(L, R) {
   if (older.seed != null && older.seed !== out.seed && out.slots.length < 10 && !out.slots.some((x) => x.seed === older.seed)) {
     out.slots.push({ id: 's' + Date.now().toString(36), name: remoteNewer ? '이 기기 시드' : '계정에 있던 시드', seed: older.seed, last: older.last || null, history: (older.history || []).slice(-30) });
     changed = true;
+  }
+  // 보상 받은 건 양쪽 다 합침
+  if (older.gifts || out.gifts) {
+    const gu = Object.assign({}, older.gifts || {}, out.gifts || {});
+    if (Object.keys(gu).length !== Object.keys(out.gifts || {}).length) changed = true;
+    out.gifts = gu;
   }
   if (changed) out.updatedAt = Date.now();
   return out;
