@@ -599,10 +599,45 @@ button.tile .eyebrow::after { content: ' ›'; }
 .plsum { font-size: 15px; font-weight: 700; }
 .plmeta { font-size: 12px; color: var(--muted); }
 .plmeta b { color: var(--ink); }
-.route .got { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.route .got { font-weight: 700; color: var(--ink); }
+.route .got span { white-space: nowrap; }
 .route details summary { font-size: 12px; color: var(--muted); cursor: pointer; padding: 2px 0; }
 .route details[open] summary { margin-bottom: 4px; }
 .plres .alone { margin: 0; font-size: 12px; color: var(--muted); }
+/* 가진 걸로 최대한 */
+.plmode { justify-self: start; max-width: 100%; }
+.plmode button { min-height: 34px; }
+.plbudget { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.plbudget label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); min-width: 0; }
+.plbudget input { width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: var(--r-md); padding: 8px 10px; min-height: 42px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 16px; }
+@media (max-width: 560px) { .plbudget { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.plgot { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 2px; }
+.plgot span { font-size: 13px; padding: 2px 8px; border-radius: 6px; font-weight: 700; background: var(--rare-bg); color: var(--ink); }
+.plgot .r-supa { background: var(--supa-bg); color: var(--supa); }
+.plgot .r-uber { background: var(--uber-bg); color: var(--uber); }
+.plgot .r-legend { background: var(--legend-bg); color: var(--legend); }
+.plgot .c-blue { background: var(--blue-bg); color: var(--blue); }
+.plgot .c-buster { background: var(--yel-bg); color: var(--yel); }
+/* 링크로 보내기 · 받은 시드 */
+.sharebox { display: grid; gap: 12px; padding: 12px; border-radius: var(--r-md); background: var(--bg); }
+.shrow { display: flex; gap: 8px 12px; align-items: center; flex-wrap: wrap; }
+.shtxt { flex: 1 1 220px; min-width: 0; display: grid; gap: 2px; font-size: 14px; }
+.shtxt small { font-size: 12px; color: var(--muted); }
+.shout { display: flex; gap: 8px; flex-wrap: wrap; }
+.shout input, .shin input { flex: 1 1 200px; min-width: 0; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--r-md); padding: 9px 12px; font-size: 14px; min-height: 44px; }
+.shout input { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.shin input[aria-invalid="true"] { border-color: var(--warn); }
+.importbox { display: grid; gap: 10px; padding: 14px; margin-bottom: 14px; border-radius: var(--r-lg); background: var(--surface); border: 2px solid var(--ink); }
+.importbox .ihead { display: grid; gap: 2px; }
+.importbox .ihead b { font-size: 16px; }
+.importbox .ihead small { font-size: 12px; color: var(--muted); }
+.importbox dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 14px; }
+.importbox dt { color: var(--muted); }
+.importbox dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.importbox dd small { font-family: var(--font-ui); color: var(--muted); margin-left: 6px; }
+.importbox .ilist { display: flex; flex-wrap: wrap; gap: 6px; }
+.importbox .ilist span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 13px; font-weight: 700; }
+.importbox .ilist small { font-weight: 500; color: var(--muted); margin-left: 4px; }
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: up 180ms ease-out; }
   @keyframes up { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
@@ -631,6 +666,8 @@ button.tile .eyebrow::after { content: ' ›'; }
     <button type="button" role="tab" id="tabGift" data-mode="gift" aria-selected="false">보상 받기<span>한국판 앱 바로 열기</span></button>
   </div>
 
+  <div class="importbox" id="importBox" hidden role="region" aria-label="링크로 받은 시드"></div>
+
   <div id="rareMode" class="mode">
   <section class="seedbar" aria-label="시드">
     <div class="slots" id="slots" hidden></div>
@@ -649,12 +686,32 @@ button.tile .eyebrow::after { content: ' ›'; }
       <span id="seedNote"></span>
       <button type="button" class="linkbtn" id="rfind">내 시드 찾기</button>
       <button type="button" class="linkbtn" id="slotAdd">시드 저장</button>
+      <button type="button" class="linkbtn" id="shareOpen" aria-expanded="false" aria-controls="shareBox">링크로 보내기 · 가져오기</button>
     </div>
     <div class="slotform" id="slotForm" hidden>
       <input id="slotName" type="text" maxlength="12" placeholder="이름 (예: 본계정)" aria-label="저장할 이름" autocomplete="off">
       <input id="slotSeed" class="mono" inputmode="numeric" placeholder="시드" aria-label="저장할 시드" autocomplete="off">
       <button type="button" class="btn primary" id="slotSave">저장</button>
       <button type="button" class="btn" id="slotCancel">취소</button>
+    </div>
+    <div class="sharebox" id="shareBox" hidden>
+      <div class="shrow">
+        <div class="shtxt"><b>지금 시드 보내기</b><small>레어 뽑기·냥코 티켓 시드랑 직전 캐릭이 같이 가. 친구한테 보내거나 다른 기기에서 열 때 써.</small></div>
+        <button type="button" class="btn" data-share="cur">링크 복사</button>
+      </div>
+      <div class="shrow">
+        <div class="shtxt"><b>저장한 시드 전부 백업</b><small id="shareBakNote">폰 바꿀 때 이 링크 하나면 다 옮겨져.</small></div>
+        <button type="button" class="btn" data-share="bak" id="shareBak">백업 링크 복사</button>
+      </div>
+      <div class="shout" id="shareOut" hidden>
+        <input id="shareLink" readonly aria-label="만든 링크">
+        <button type="button" class="btn" id="shareCopy">다시 복사</button>
+        <button type="button" class="btn primary" id="shareSend" hidden>보내기</button>
+      </div>
+      <div class="shrow shin">
+        <input id="shareIn" type="text" placeholder="받은 링크나 코드 붙여넣기" aria-label="받은 링크나 코드" autocomplete="off" spellcheck="false">
+        <button type="button" class="btn" id="shareImport">가져오기</button>
+      </div>
     </div>
   </section>
 
@@ -698,7 +755,14 @@ button.tile .eyebrow::after { content: ' ›'; }
 
   <section class="finder planner" id="planner" hidden aria-labelledby="plTitle">
     <div class="sec-head" style="margin:0"><h2 id="plTitle">목표 캐릭까지 경로</h2><button type="button" class="btn" id="plClose">닫기</button></div>
-    <p>받고 싶은 캐릭을 고르면 지금 위치에서 <b>제일 싸게</b> 받는 순서를 찾아줘.</p>
+    <div class="seg plmode" id="plMode" role="group" aria-label="찾는 방식"><button type="button" data-pm="cheap" aria-pressed="true">제일 싸게 받기</button><button type="button" data-pm="budget" aria-pressed="false">가진 걸로 최대한</button></div>
+    <p id="plIntro">받고 싶은 캐릭을 고르면 지금 위치에서 <b>제일 싸게</b> 받는 순서를 찾아줘.</p>
+    <div class="plbudget" id="plBudget" hidden>
+      <label>통조림<input id="bCans" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+      <label>레어 티켓<input id="bRare" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+      <label>플래티넘 티켓<input id="bPlat" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+      <label>레전드 티켓<input id="bLeg" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+    </div>
     <div class="ftools" id="plGrp">
       <button type="button" class="ftoggle" data-grp="blue" aria-pressed="false">블루 아이즈 아무나</button>
       <button type="button" class="ftoggle" data-grp="buster" aria-pressed="false">버스터즈 대장 아무나</button>
@@ -712,11 +776,11 @@ button.tile .eyebrow::after { content: ' ›'; }
     <div class="flist" id="plList" aria-live="polite" hidden></div>
     <div class="plopts">
       <label class="chk"><input type="checkbox" id="plAll" checked>진행 중인 다른 가챠도 쓰기</label>
-      <label class="chk"><input type="checkbox" id="plPlat" checked>플래티넘 티켓도 쓰기</label>
-      <label class="chk"><input type="checkbox" id="plLeg">레전드 티켓도 쓰기</label>
+      <label class="chk" id="plPlatWrap"><input type="checkbox" id="plPlat" checked>플래티넘 티켓도 쓰기</label>
+      <label class="chk" id="plLegWrap"><input type="checkbox" id="plLeg">레전드 티켓도 쓰기</label>
     </div>
     <div id="plOut" aria-live="polite"></div>
-    <p class="plnote">단챠 1번은 통조림 150개(레어 티켓 1장), 확정 11연은 1500개로 치고, 티켓은 아껴 쓰도록 플래티넘 1장을 3000개, 레전드 1장을 6000개로 쳐서 계산해.</p>
+    <p class="plnote" id="plNote">단챠 1번은 통조림 150개(레어 티켓 1장), 확정 11연은 1500개로 치고, 티켓은 아껴 쓰도록 플래티넘 1장을 3000개, 레전드 1장을 6000개로 쳐서 계산해.</p>
   </section>
 
   <section aria-label="배열">
@@ -1627,7 +1691,111 @@ window.NyankoUI = (function () {
     return { cost: goal.cost, edges, hitIdx: goal.hitIdx, end: goal.edge.end, last: goal.edge.last };
   }
 
-  const api = { find };
+  /* 가진 통조림·티켓으로 원하는 캐릭을 최대한 많이 받는 경로
+   * 뽑을 때마다 위치 c가 늘기만 해서, c 순서대로 한 번씩 훑으면 됨
+   * 상태 (c, 직전 레어)마다 라벨을 여러 개 둠: 쓴 양 u(레어 단챠 + 11연×10) · e(11연) · p(플티) · l(레전드)과 받은 캐릭 묶음
+   * 라벨 A가 B보다 쓴 게 다 적거나 같고 B가 받은 캐릭을 다 가지고 있으면 B는 버림
+   * 통조림 K칸(150개 = 1칸), 레어 티켓 R장: 레어 단챠 + 11연×10 ≤ R + K, 11연 ≤ K / 10 */
+  // opts: { s, last, helpers: [{ b, eleven }], value(cat, rarity) → 점수(0이면 안 셈), lim: { R, K, P, L }, maxC, cap }
+  // 반환: { score, got: [{ cat, rarity }], edges, end, last, use: { u, e, p, l }, spend, cut }
+  function best(opts) {
+    const { s, helpers, value, maxC } = opts;
+    // 표가 길면 라벨 수를 줄여서 느려지지 않게
+    const cap = opts.cap || Math.max(8, Math.min(40, Math.floor(12000 / (maxC + 1))));
+    const R = opts.lim.R || 0, K = opts.lim.K || 0, P = opts.lim.P || 0, L = opts.lim.L || 0;
+    const kinds = helpers.map((h) => (h.b.kind === 'platinum' ? 'p' : h.b.kind === 'legend' ? 'l' : 'r'));
+    const nodes = new Map(); // c -> Map(lk -> { last, labels })
+    let maxEnd = 0;
+    const nodeAt = (c, lk, last) => {
+      let m = nodes.get(c);
+      if (!m) { m = new Map(); nodes.set(c, m); }
+      let nd = m.get(lk);
+      if (!nd) { nd = { last, labels: [] }; m.set(lk, nd); }
+      if (c > maxEnd) maxEnd = c;
+      return nd;
+    };
+    const sub = (a, b) => { if (a.size > b.size) return false; for (const k of a) if (!b.has(k)) return false; return true; };
+    const dom = (a, b) => a.u <= b.u && a.e <= b.e && a.p <= b.p && a.l <= b.l && sub(b.keys, a.keys);
+    const worse = (a, b) => b.score - a.score || a.spend - b.spend;
+    function put(nd, x) {
+      for (const y of nd.labels) if (dom(y, x)) return;
+      nd.labels = nd.labels.filter((y) => !dom(x, y));
+      nd.labels.push(x);
+      if (nd.labels.length > cap) { nd.labels.sort(worse); nd.labels.length = cap; }
+    }
+    const canR = (x, n) => x.u + n <= R + K;
+    const canAct = (x) => kinds.some((k, i) => (k === 'r' ? canR(x, 1) : k === 'p' ? x.p < P : x.l < L) || (helpers[i].eleven && x.e < Math.floor(K / 10) && canR(x, 10)));
+    function gain(x, cats) {
+      let keys = x.keys, score = x.score;
+      const idx = [];
+      cats.forEach((it, i) => {
+        if (!it.cat) return;
+        const v = value(it.cat, it.rarity);
+        if (!v) return;
+        const k = E.catKey(it.cat);
+        if (keys.has(k)) return;
+        if (keys === x.keys) keys = new Set(keys);
+        keys.add(k); score += v; idx.push(i);
+      });
+      return { keys, score, idx };
+    }
+    const spendOf = (x) => x.u * 150 + x.p * 3000 + x.l * 6000;
+    const start = { u: 0, e: 0, p: 0, l: 0, score: 0, spend: 0, keys: new Set(), prev: null, edge: null, c: 0 };
+    nodeAt(0, opts.last ? E.catKey(opts.last) : '-', opts.last || null).labels.push(start);
+    const pulls = new Map();
+    let top = start, cut = false;
+    const better = (a, b) => a.score > b.score || (a.score === b.score && (a.spend < b.spend || (a.spend === b.spend && a.c < b.c)));
+    for (let c = 0; c <= maxEnd; c++) {
+      const m = nodes.get(c);
+      if (!m) continue;
+      for (const [lk, nd] of m) {
+        for (const x of nd.labels) {
+          if (better(x, top)) top = x;
+          if (c > maxC) { if (!cut && canAct(x)) cut = true; continue; }
+          for (let bi = 0; bi < helpers.length; bi++) {
+            const kd = kinds[bi];
+            const okSingle = kd === 'r' ? canR(x, 1) : kd === 'p' ? x.p < P : x.l < L;
+            if (okSingle) {
+              const pk = bi + '|' + c + '|' + lk;
+              let p = pulls.get(pk);
+              if (p === undefined) { p = E.pull(s, c, helpers[bi].b, nd.last); pulls.set(pk, p); }
+              if (p.cat) {
+                const cats = [{ cat: p.cat, rarity: p.rarity, c, rr: p.rerolled }];
+                const g = gain(x, cats);
+                const y = { u: x.u + (kd === 'r' ? 1 : 0), e: x.e, p: x.p + (kd === 'p' ? 1 : 0), l: x.l + (kd === 'l' ? 1 : 0), score: g.score, keys: g.keys, prev: x, c: p.end,
+                  edge: { kind: 's', bi, c, end: p.end, cats, last: p.cat, gain: g.idx } };
+                y.spend = spendOf(y);
+                put(nodeAt(p.end, lastKey(p.cat, p.rarity), p.cat), y);
+              }
+            }
+            if (kd === 'r' && helpers[bi].eleven && x.e < Math.floor(K / 10) && canR(x, 10)) {
+              const gk = 'g' + bi + '|' + c + '|' + lk;
+              let gg = pulls.get(gk);
+              if (gg === undefined) { gg = E.guaranteedAt(s, c, helpers[bi].b, nd.last); pulls.set(gk, gg); }
+              if (gg && gg.steps.every((q) => q.cat)) {
+                const cats = gg.steps.map((q) => ({ cat: q.cat, rarity: q.rarity, c: q.c, rr: q.rerolled }));
+                cats.push({ cat: gg.uber, rarity: 2, c, g: true });
+                const g = gain(x, cats);
+                const y = { u: x.u + 10, e: x.e + 1, p: x.p, l: x.l, score: g.score, keys: g.keys, prev: x, c: gg.end,
+                  edge: { kind: 'e', bi, c, end: gg.end, cats, last: gg.uber, gain: g.idx } };
+                y.spend = spendOf(y);
+                put(nodeAt(gg.end, '-', gg.uber), y);
+              }
+            }
+          }
+        }
+      }
+    }
+    const edges = [];
+    for (let x = top; x && x.edge; x = x.prev) edges.push(x.edge);
+    edges.reverse();
+    const got = [];
+    edges.forEach((e) => e.gain.forEach((i) => got.push({ cat: e.cats[i].cat, rarity: e.cats[i].rarity })));
+    const lastE = edges[edges.length - 1];
+    return { score: top.score, got, edges, end: lastE ? lastE.end : 0, last: lastE ? lastE.last : (opts.last || null), use: { u: top.u, e: top.e, p: top.p, l: top.l }, spend: top.spend, cut };
+  }
+
+  const api = { find, best };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.NyankoPlan = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
@@ -2126,11 +2294,21 @@ window.NyankoUI = (function () {
   }
 
   // 목표까지 경로
-  const pl = { grp: new Set(), keys: new Set(), names: new Map(), all: true, plat: true, leg: false, list: false, res: null };
-  // 다른 가챠·플티·레전드 티켓 쓰기 설정은 이 기기에 기억
+  const pl = { grp: new Set(), keys: new Set(), names: new Map(), all: true, plat: true, leg: false, list: false, res: null, mode: 'cheap', bud: { cans: 0, rare: 0, plat: 0, leg: 0 } };
+  // 다른 가챠·플티·레전드 티켓 쓰기 설정, 찾는 방식, 가진 통조림·티켓 수는 이 기기에 기억
   const PL_KEY = 'nyanko-plan-opts';
-  try { const o = JSON.parse(localStorage.getItem(PL_KEY) || 'null'); if (o) { pl.all = o.all !== false; pl.plat = o.plat !== false; pl.leg = !!o.leg; } } catch (e) { /* ignore */ }
-  const savePl = () => { try { localStorage.setItem(PL_KEY, JSON.stringify({ all: pl.all, plat: pl.plat, leg: pl.leg })); } catch (e) { /* ignore */ } };
+  const BUD_MAX = { cans: 9999999, rare: 99999, plat: 9999, leg: 9999 };
+  const BUD_IDS = [['bCans', 'cans'], ['bRare', 'rare'], ['bPlat', 'plat'], ['bLeg', 'leg']];
+  const budNum = (k, v) => Math.min(BUD_MAX[k], Math.max(0, Math.floor(Number(String(v == null ? '' : v).replace(/[^0-9]/g, '')) || 0)));
+  try {
+    const o = JSON.parse(localStorage.getItem(PL_KEY) || 'null');
+    if (o) {
+      pl.all = o.all !== false; pl.plat = o.plat !== false; pl.leg = !!o.leg;
+      pl.mode = o.mode === 'budget' ? 'budget' : 'cheap';
+      if (o.bud) Object.keys(pl.bud).forEach((k) => { pl.bud[k] = budNum(k, o.bud[k]); });
+    }
+  } catch (e) { /* ignore */ }
+  const savePl = () => { try { localStorage.setItem(PL_KEY, JSON.stringify({ all: pl.all, plat: pl.plat, leg: pl.leg, mode: pl.mode, bud: pl.bud })); } catch (e) { /* ignore */ } };
   function plHelpers() {
     const sel = currentBanner();
     if (!sel) return [];
@@ -2141,8 +2319,9 @@ window.NyankoUI = (function () {
       for (const { b, s } of sortedBanners()) {
         if (s.k !== 'live' || b.sample || b.id === sel.id) continue;
         // 레전드 티켓은 많이 못 모으니까 "레전드 티켓도 쓰기"를 켰을 때만 씀 (레전드 뽑기를 직접 고르면 항상 씀)
-        if (b.kind === 'legend' && !pl.leg) continue;
-        if (b.kind === 'platinum' && !pl.plat) continue;
+        // 가진 걸로 최대한: 넣은 티켓이 있을 때만 그 뽑기를 씀
+        if (b.kind === 'legend' && !(pl.mode === 'budget' ? pl.bud.leg > 0 : pl.leg)) continue;
+        if (b.kind === 'platinum' && !(pl.mode === 'budget' ? pl.bud.plat > 0 : pl.plat)) continue;
         const k = b.gacha + '|' + b.rates.join(',');
         if (seen.has(k)) continue;
         seen.add(k); list.push(b);
@@ -2152,7 +2331,8 @@ window.NyankoUI = (function () {
     return list.map(helperOf);
   }
   function plOpen(grp) {
-    if (grp) { pl.grp = new Set([grp]); pl.keys = new Set(); }
+    // 요약 칸에서 열면 그 캐릭을 제일 싸게 받는 길을 보여줌
+    if (grp) { pl.grp = new Set([grp]); pl.keys = new Set(); pl.mode = 'cheap'; }
     $('plQ').value = '';
     pl.list = false;
     $('planner').hidden = false;
@@ -2164,6 +2344,17 @@ window.NyankoUI = (function () {
     $('plAll').checked = pl.all;
     $('plPlat').checked = pl.plat;
     $('plLeg').checked = pl.leg;
+    const bm = pl.mode === 'budget';
+    $('plMode').querySelectorAll('button[data-pm]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.pm === pl.mode)));
+    $('plIntro').innerHTML = bm
+      ? '가진 통조림이랑 티켓 수를 넣으면 그걸로 <b>최대한 많이</b> 받는 순서를 찾아줘. 목표를 고르면 그 캐릭을, 안 고르면 울트라·레전드를 최대한 많이.'
+      : '받고 싶은 캐릭을 고르면 지금 위치에서 <b>제일 싸게</b> 받는 순서를 찾아줘.';
+    $('plBudget').hidden = !bm;
+    BUD_IDS.forEach(([id, k]) => { if (document.activeElement !== $(id)) $(id).value = pl.bud[k] ? String(pl.bud[k]) : ''; });
+    $('plPlatWrap').hidden = bm; $('plLegWrap').hidden = bm;
+    $('plNote').textContent = bm
+      ? '레어 티켓은 단챠에 먼저 쓰고, 통조림은 단챠 1번에 150개, 확정 11연 1번에 1500개로 써. 플래티넘·레전드 티켓은 넣은 장수까지만 쓰고, 같은 캐릭이 또 나오면 한 마리로 쳐.'
+      : '단챠 1번은 통조림 150개(레어 티켓 1장), 확정 11연은 1500개로 치고, 티켓은 아껴 쓰도록 플래티넘 1장을 3000개, 레전드 1장을 6000개로 쳐서 계산해.';
     $('plAllList').setAttribute('aria-pressed', String(pl.list));
     $('plGrp').querySelectorAll('button[data-grp]').forEach((x) => x.setAttribute('aria-pressed', String(pl.grp.has(x.dataset.grp))));
     // 캐릭 목록은 이름을 치거나 "전체 목록"을 눌렀을 때만 펼침
@@ -2195,6 +2386,7 @@ window.NyankoUI = (function () {
   function runPlanner() {
     const out = $('plOut');
     pl.res = null;
+    if (pl.mode === 'budget') { runBudget(); return; }
     if (!pl.grp.size && !pl.keys.size) {
       out.innerHTML = '<div class="plhint">위에서 목표를 골라줘. 묶음 버튼을 누르거나 이름을 쳐서 고르면 돼. 여러 마리 고르면 그중 제일 싸게 받는 걸 찾아.</div>';
       return;
@@ -2219,31 +2411,8 @@ window.NyankoUI = (function () {
       alone = i < 0 ? '참고로 지금 고른 가챠에서 ' + unit + ' 하면 표 범위 안엔 없어.'
         : '참고로 지금 고른 가챠에서 ' + unit + ' 하면 ' + (i + 1) + (isTk(sel) ? '장째' : '번째') + '에 ' + esc(current.pathPulls[i].cat.name) + '.';
     }
-    const groups = [];
-    for (const e of r.edges) {
-      const g = groups[groups.length - 1];
-      if (g && g.kind === 's' && e.kind === 's' && g.bi === e.bi) g.edges.push(e);
-      else groups.push({ kind: e.kind, bi: e.bi, edges: [e] });
-    }
     const lastEdge = r.edges[r.edges.length - 1];
-    const t = today();
-    const steps = groups.map((g) => {
-      const b = helpers[g.bi].b;
-      const first = g.edges[0], end = g.edges[g.edges.length - 1];
-      const cats = [];
-      g.edges.forEach((e) => e.cats.forEach((x, xi) => cats.push({ x, goal: e === lastEdge && xi === r.hitIdx })));
-      const goalHere = cats.some((c) => c.goal);
-      const head = g.kind === 'e'
-        ? '확정 11연 1번 <span class="mono">' + E.label(first.c) + '에서</span>'
-        : (isTk(b) ? '티켓 ' + g.edges.length + '장' : '단챠 ' + g.edges.length + '번') + ' <span class="mono">' + E.label(first.c) + (g.edges.length > 1 ? ' → ' + E.label(end.c) : '') + '</span>';
-      const chips = cats.map(({ x, goal }) => '<span class="' + RCLS[x.rarity] + ' ' + tagCls(x.cat) + (goal ? ' goal' : '') + '">' + (x.g ? '확정 ' : '') + esc(x.cat.name) + badges(x.cat) + '</span>').join('');
-      const tags = (sel && b.id === sel.id ? '<em>지금 고른 가챠</em>' : '') + (b.start && b.start > t ? '<em>' + md(b.start) + '부터</em>' : '');
-      return '<li><div class="rh"><b>' + esc(longName(b)) + '</b>' + tags + '</div>'
-        + '<div class="rd">' + head + (goalHere ? ' <span class="got">→ ' + esc(hi.cat.name) + '</span>' : '') + '</div>'
-        + (cats.length <= 4 ? '<div class="rc">' + chips + '</div>'
-          : '<details><summary>나오는 캐릭 ' + cats.length + '마리 보기</summary><div class="rc">' + chips + '</div></details>')
-        + '</li>';
-    }).join('');
+    const steps = routeSteps(r.edges, helpers, (e, xi) => e === lastEdge && xi === r.hitIdx);
     out.innerHTML = '<div class="plres"><div class="plhead"><span class="eyebrow">제일 싸게 받는 방법</span>'
       + '<strong class="' + RCLS[hi.rarity] + ' ' + tagCls(hi.cat) + '">' + esc(hi.cat.name) + badges(hi.cat) + '</strong>'
       + '<span class="plsum">' + esc(n.text) + (n.cans ? ' · 통조림 ' + n.cans.toLocaleString('ko-KR') + '개 어치' : '') + '</span>'
@@ -2252,10 +2421,90 @@ window.NyankoUI = (function () {
       + (alone ? '<p class="alone">' + alone + '</p>' : '')
       + '<div class="frow"><button type="button" class="btn primary" id="plApply">이 경로대로 다 뽑았어</button></div></div>';
   }
+  // 경로 단계 목록 (같은 가챠 단챠는 한 줄로 묶음) · mark(e, i): 그 캐릭을 받으면 true
+  function routeSteps(edges, helpers, mark) {
+    const sel = current ? current.b : null;
+    const groups = [];
+    for (const e of edges) {
+      const g = groups[groups.length - 1];
+      if (g && g.kind === 's' && e.kind === 's' && g.bi === e.bi) g.edges.push(e);
+      else groups.push({ kind: e.kind, bi: e.bi, edges: [e] });
+    }
+    const t = today();
+    return groups.map((g) => {
+      const b = helpers[g.bi].b;
+      const first = g.edges[0], end = g.edges[g.edges.length - 1];
+      const cats = [];
+      g.edges.forEach((e) => e.cats.forEach((x, xi) => cats.push({ x, goal: mark(e, xi) })));
+      const got = cats.filter((c) => c.goal).map((c) => '<span>' + esc(c.x.cat.name) + '</span>');
+      const head = g.kind === 'e'
+        ? '확정 11연 1번 <span class="mono">' + E.label(first.c) + '에서</span>'
+        : (isTk(b) ? '티켓 ' + g.edges.length + '장' : '단챠 ' + g.edges.length + '번') + ' <span class="mono">' + E.label(first.c) + (g.edges.length > 1 ? ' → ' + E.label(end.c) : '') + '</span>';
+      const chips = cats.map(({ x, goal }) => '<span class="' + RCLS[x.rarity] + ' ' + tagCls(x.cat) + (goal ? ' goal' : '') + '">' + (x.g ? '확정 ' : '') + esc(x.cat.name) + badges(x.cat) + '</span>').join('');
+      const tags = (sel && b.id === sel.id ? '<em>지금 고른 가챠</em>' : '') + (b.start && b.start > t ? '<em>' + md(b.start) + '부터</em>' : '');
+      return '<li><div class="rh"><b>' + esc(longName(b)) + '</b>' + tags + '</div>'
+        + '<div class="rd">' + head + (got.length ? ' <span class="got">→ ' + got.join(', ') + '</span>' : '') + '</div>'
+        + (cats.length <= 4 ? '<div class="rc">' + chips + '</div>'
+          : '<details><summary>나오는 캐릭 ' + cats.length + '마리 보기</summary><div class="rc">' + chips + '</div></details>')
+        + '</li>';
+    }).join('');
+  }
+  // 가진 걸로 최대한: 목표를 고르면 목표를, 안 고르면 울트라·레전드를 최대한 많이 (같은 캐릭은 한 마리로)
+  function runBudget() {
+    const out = $('plOut');
+    const B = pl.bud;
+    const lim = { R: B.rare, K: Math.floor(B.cans / 150), P: B.plat, L: B.leg };
+    const goals = pl.grp.size + pl.keys.size > 0;
+    if (!lim.R && !lim.K && !lim.P && !lim.L) {
+      out.innerHTML = '<div class="plhint">위에 가진 통조림이랑 티켓 수를 넣어줘. ' + (goals ? '고른 목표를 최대한 많이 받는 길을 찾아.' : '목표를 고르면 그 캐릭을, 안 고르면 울트라·레전드를 최대한 많이 받는 길을 찾아.') + '</div>';
+      return;
+    }
+    const helpers = plHelpers();
+    if (state.seed == null || isNaN(state.seed) || !helpers.length) { out.innerHTML = '<div class="plhint"><b>경로가 없어.</b> 시드랑 가챠를 먼저 골라줘.</div>'; return; }
+    const isT = goals ? goalFn(pl.grp, pl.keys) : null;
+    const value = goals ? (cat, r) => (isT(cat, r) ? 1 : 0) : (cat, r) => (r === 3 ? 1001 : r === 2 ? 1000 : 0);
+    if (goals && !helpers.some((h) => PKEYS.some((k, r) => (h.b.pools[k] || []).some((e) => isT(pCatOf(e), r))))) {
+      out.innerHTML = '<div class="plhint"><b>경로가 없어.</b> 고른 목표가 ' + (pl.all ? '쓸 수 있는 가챠' : '지금 고른 가챠') + '에 없어요.</div>';
+      return;
+    }
+    const s = E.seeds(state.seed, rows * 2 + 80);
+    const r = window.NyankoPlan.best({ s, last: state.last, helpers, value, lim, maxC: rows * 2 - 1 });
+    const more = r.cut ? '표 범위(' + rows + '줄) 끝까지 봤어. "100줄 더 보기"로 늘리면 더 받을 수도 있어.' : '';
+    if (!r.got.length) {
+      out.innerHTML = '<div class="plhint"><b>가진 걸로는 ' + (goals ? '목표가' : '울트라가') + ' 안 나와.</b> ' + (more || '표 범위(' + rows + '줄) 안에서 찾아봤어.') + '</div>';
+      return;
+    }
+    r.s = s;
+    pl.res = { r, helpers, budget: true };
+    const n = planCount(r, helpers);
+    const lg = r.got.filter((g) => g.rarity === 3).length, ub = r.got.length - lg;
+    const head = goals ? '목표 ' + r.got.length + '마리' : [ub ? '울트라 ' + ub + '마리' : '', lg ? '레전드 ' + lg + '마리' : ''].filter(Boolean).join(' · ');
+    // 레어 티켓을 단챠에 먼저 쓰고 나머지는 통조림
+    const singles = r.use.u - r.use.e * 10;
+    const tk = Math.min(B.rare, singles);
+    const cans = r.use.e * 1500 + (singles - tk) * 150;
+    const won = (v) => v.toLocaleString('ko-KR');
+    const used = [tk ? '레어 티켓 ' + tk + '장' : '', cans ? '통조림 ' + won(cans) + '개' : '', r.use.p ? '플래티넘 티켓 ' + r.use.p + '장' : '', r.use.l ? '레전드 티켓 ' + r.use.l + '장' : ''].filter(Boolean).join(', ');
+    const left = [B.cans - cans ? '통조림 ' + won(B.cans - cans) + '개' : '', B.rare - tk ? '레어 티켓 ' + (B.rare - tk) + '장' : '', B.plat - r.use.p ? '플래티넘 티켓 ' + (B.plat - r.use.p) + '장' : '', B.leg - r.use.l ? '레전드 티켓 ' + (B.leg - r.use.l) + '장' : ''].filter(Boolean).join(', ');
+    const steps = routeSteps(r.edges, helpers, (e, xi) => e.gain.includes(xi));
+    out.innerHTML = '<div class="plres"><div class="plhead"><span class="eyebrow">가진 걸로 받을 수 있는 최대</span>'
+      + '<strong>' + head + '</strong>'
+      + '<div class="plgot">' + r.got.map((g) => '<span class="' + RCLS[g.rarity] + ' ' + tagCls(g.cat) + '">' + esc(g.cat.name) + badges(g.cat) + '</span>').join('') + '</div>'
+      + '<span class="plsum">' + esc(n.text) + '</span>'
+      + '<span class="plmeta">쓰는 거 <b>' + used + '</b> · ' + (left ? '남는 거 ' + left : '다 써') + ' · 끝나면 다음 시작 <b class="mono">' + E.label(r.end) + '</b></span></div>'
+      + '<ol class="route">' + steps + '</ol>'
+      + (more ? '<p class="alone">' + more + '</p>' : '')
+      + '<div class="frow"><button type="button" class="btn primary" id="plApply">이 경로대로 다 뽑았어</button></div></div>';
+  }
   function plApply() {
     if (!pl.res) return;
-    const { r } = pl.res, hi = planHit(r);
-    pending = { seed: r.s[r.end], last: { id: r.last.id ?? null, name: r.last.name }, label: '경로', cat: hi.cat.name + ' 경로', msg: hi.cat.name + '까지 경로대로 뽑음' };
+    const { r } = pl.res;
+    if (pl.res.budget) {
+      pending = { seed: r.s[r.end], last: { id: r.last.id ?? null, name: r.last.name }, label: '경로', cat: '가진 걸로 최대한 경로', msg: '경로대로 뽑음 · ' + r.got.length + '마리 받음' };
+    } else {
+      const hi = planHit(r);
+      pending = { seed: r.s[r.end], last: { id: r.last.id ?? null, name: r.last.name }, label: '경로', cat: hi.cat.name + ' 경로', msg: hi.cat.name + '까지 경로대로 뽑음' };
+    }
     $('planner').hidden = true;
     applyPending();
   }
@@ -2369,6 +2618,7 @@ window.NyankoUI = (function () {
         + '<small class="mono">' + esc(on ? state.seed : sl.seed) + '</small></button>'
         + '<button type="button" class="x" data-del="' + esc(sl.id) + '" aria-label="' + esc(sl.name) + ' 지우기">×</button></span>';
     }).join('') + (list.length < 10 ? '<button type="button" class="slotplus" data-add="1">+ 저장</button>' : '');
+    if (!$('shareBox').hidden) renderShare();
   }
   function openSlotForm() {
     $('slotForm').hidden = false;
@@ -2463,6 +2713,17 @@ window.NyankoUI = (function () {
   $('plPlat').addEventListener('change', (e) => { pl.plat = e.target.checked; savePl(); renderPlanner(); });
   $('plLeg').addEventListener('change', (e) => { pl.leg = e.target.checked; savePl(); renderPlanner(); });
   $('plAllList').addEventListener('click', () => { pl.list = !pl.list; renderPlanner(); });
+  $('plMode').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-pm]'); if (!t) return;
+    pl.mode = t.dataset.pm === 'budget' ? 'budget' : 'cheap';
+    savePl(); renderPlanner();
+  });
+  let budTimer = null;
+  BUD_IDS.forEach(([id, k]) => $(id).addEventListener('input', (e) => {
+    pl.bud[k] = budNum(k, e.target.value);
+    clearTimeout(budTimer);
+    budTimer = setTimeout(() => { savePl(); runPlanner(); }, 300);
+  }));
   $('plOut').addEventListener('click', (e) => { if (e.target.id === 'plApply') plApply(); });
   $('viewSeg').addEventListener('click', (e) => {
     const t = e.target.closest('button[data-view]'); if (!t) return;
@@ -2503,6 +2764,211 @@ window.NyankoUI = (function () {
   $('slotSave').addEventListener('click', saveSlot);
   $('slotCancel').addEventListener('click', () => { $('slotForm').hidden = true; });
   ['slotName', 'slotSeed'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveSlot(); } }));
+
+  // ---------- 링크로 보내기 · 백업 · 가져오기 ----------
+  // 링크 끝 #k= 뒤에 시드 정보를 JSON → base64url 로 넣음 (서버에 안 감)
+  const SITE_URL = 'https://apostolichiro-cmd.github.io/nyanko-baeyeol/';
+  const linkBase = () => (location.hostname === 'apostolichiro-cmd.github.io' ? location.origin + location.pathname : SITE_URL);
+  function packCode(obj) {
+    const bytes = new TextEncoder().encode(JSON.stringify(obj));
+    let bin = '';
+    bytes.forEach((b) => { bin += String.fromCharCode(b); });
+    return btoa(bin).split('+').join('-').split('/').join('_').replace(/=+$/, '');
+  }
+  function unpackCode(code) {
+    let t = String(code).split('-').join('+').split('_').join('/');
+    while (t.length % 4) t += '=';
+    const bin = atob(t);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  const okSeed = (v) => (Number.isSafeInteger(v) && v >= 1 && v <= 4294967295 ? v : null);
+  const okLast = (l) => (Array.isArray(l) && typeof l[1] === 'string' && l[1] && l[1].length <= 40 ? { id: Number.isSafeInteger(l[0]) ? l[0] : null, name: l[1] } : null);
+  const okItem = (x) => (typeof x === 'string' && /^[a-z0-9-]{1,40}$/.test(x) ? x : null);
+  const okName = (n) => (typeof n === 'string' ? n.trim().slice(0, 12) : '');
+  const packLast = (l) => (l && l.name ? [l.id ?? null, l.name] : null);
+  // 붙여넣은 글이나 주소에서 읽기 → { kind: 'c', ... } 또는 { kind: 'b', slots } 또는 null
+  function parseShared(text) {
+    const t = String(text || '').trim();
+    const m = t.match(/[#&?]k=([A-Za-z0-9_-]+)/);
+    const code = m ? m[1] : (/^[A-Za-z0-9_-]{8,}$/.test(t) ? t : null);
+    if (!code) return null;
+    let d;
+    try { d = unpackCode(code); } catch (e) { return null; }
+    if (!d || d.v !== 1) return null;
+    if (d.t === 'c') {
+      const seed = okSeed(d.r && d.r.s), nseed = okSeed(d.m && d.m.s);
+      if (seed == null && nseed == null) return null;
+      return { kind: 'c', name: okName(d.n), seed, last: seed != null ? okLast(d.r.l) : null, nseed, nlast: nseed != null ? okItem(d.m.l) : null,
+        bannerId: typeof d.b === 'string' && d.b.length <= 80 ? d.b : null };
+    }
+    if (d.t === 'b' && Array.isArray(d.sl)) {
+      const slots = d.sl.slice(0, 10).map((x) => x && ({ name: okName(x.n), seed: okSeed(x.s), last: okLast(x.l), nseed: okSeed(x.ns), nlast: okItem(x.nl) }))
+        .filter((x) => x && x.seed != null);
+      return slots.length ? { kind: 'b', slots } : null;
+    }
+    return null;
+  }
+  function shareData(kind) {
+    syncSlot();
+    const list = state.slots || [];
+    const active = list.find((x) => x.id === state.slotId);
+    if (active) captureNormal(active);
+    if (kind === 'cur') {
+      if (state.seed == null || isNaN(state.seed)) return null;
+      const nb = NB(), nv = nb ? nb.get() : null;
+      const d = { v: 1, t: 'c', r: { s: state.seed, l: packLast(state.last) } };
+      if (active) d.n = active.name;
+      if (state.bannerId) d.b = state.bannerId;
+      if (nv && nv.seed != null) d.m = { s: nv.seed, l: nv.last ?? null };
+      return d;
+    }
+    const sl = list.filter((x) => x.seed != null);
+    if (!sl.length) return null;
+    return { v: 1, t: 'b', sl: sl.map((x) => ({ n: x.name, s: x.seed, l: packLast(x.last), ns: x.nseed ?? null, nl: x.nlast ?? null })) };
+  }
+  let shareUrl = '';
+  async function copyLink(msg) {
+    try { await navigator.clipboard.writeText(shareUrl); toast(msg); }
+    catch (e) { const i = $('shareLink'); i.focus(); i.select(); toast('선택했어요. 길게 눌러 복사해줘'); }
+  }
+  function makeLink(kind) {
+    const d = shareData(kind);
+    if (!d) { toast(kind === 'cur' ? '시드를 먼저 넣어줘' : '저장한 시드가 아직 없어요'); return; }
+    shareUrl = linkBase() + '#k=' + packCode(d);
+    $('shareOut').hidden = false;
+    $('shareLink').value = shareUrl;
+    $('shareSend').hidden = !navigator.share;
+    copyLink(kind === 'cur' ? '시드 링크를 복사했어요' : '백업 링크를 복사했어요 (' + d.sl.length + '개)');
+  }
+  function renderShare() {
+    const n = (state.slots || []).filter((x) => x.seed != null).length;
+    $('shareBak').disabled = !n;
+    $('shareBakNote').textContent = n ? '저장한 시드 ' + n + '개를 링크 하나로. 폰 바꿀 때나 다른 기기에서 열 때 써.' : '"시드 저장"으로 저장한 시드가 있으면 링크 하나로 다 옮길 수 있어.';
+  }
+  // 받은 링크 확인 상자
+  let imp = null;
+  function showImport(d) {
+    imp = d;
+    const box = $('importBox');
+    if (!d) { box.hidden = true; box.innerHTML = ''; return; }
+    if (d.kind === 'c') {
+      const b = d.bannerId ? bannerById(d.bannerId) : null;
+      const mine = state.seed != null && !isNaN(state.seed) && state.seed !== DEMO_SEED;
+      box.innerHTML = '<div class="ihead"><b>링크로 받은 시드' + (d.name ? ' · ' + esc(d.name) : '') + '</b><small>' + (mine ? '보던 시드는 "저장한 시드"에 남겨 두고 바꿔.' : '누르면 이 시드로 배열을 보여줘.') + '</small></div>'
+        + '<dl>' + (d.seed != null ? '<dt>레어 뽑기</dt><dd class="mono">' + d.seed + (d.last ? '<small>직전 ' + esc(d.last.name) + '</small>' : '') + '</dd>' : '')
+        + (d.nseed != null ? '<dt>냥코 티켓</dt><dd class="mono">' + d.nseed + '</dd>' : '')
+        + (b ? '<dt>가챠</dt><dd>' + esc(b.title || shortName(b)) + '</dd>' : '') + '</dl>'
+        + '<div class="frow"><button type="button" class="btn primary" data-imp="use">이 시드로 보기</button><button type="button" class="btn" data-imp="no">닫기</button></div>';
+    } else {
+      box.innerHTML = '<div class="ihead"><b>백업한 시드 ' + d.slots.length + '개</b><small>지금 저장한 시드는 그대로 두고, 없는 것만 더해.</small></div>'
+        + '<div class="ilist">' + d.slots.map((x) => '<span>' + esc(x.name || '이름 없음') + '<small class="mono">' + x.seed + '</small></span>').join('') + '</div>'
+        + '<div class="frow"><button type="button" class="btn primary" data-imp="add">가져오기</button><button type="button" class="btn" data-imp="no">닫기</button></div>';
+    }
+    box.hidden = false;
+  }
+  const newId = (i) => 's' + (Date.now() + (i || 0)).toString(36);
+  const sameSlot = (a, b) => a.seed === b.seed && (a.nseed ?? null) === (b.nseed ?? null);
+  function importUse(d) {
+    const snap = snapshot();
+    if (!Array.isArray(state.slots)) state.slots = [];
+    const list = state.slots, added = [];
+    const from = list.find((x) => x.id === state.slotId);
+    if (from) { syncSlot(); captureNormal(from); }
+    // 지금 보던 시드가 저장 안 돼 있으면 "내 시드"로 남겨 둠
+    let kept = '';
+    const nb = NB(), nv = nb ? nb.get() : null;
+    const hasMine = (state.seed != null && !isNaN(state.seed) && state.seed !== DEMO_SEED) || (nv && nv.seed != null);
+    if (!from && hasMine && list.length < 10) {
+      const mine = { id: newId(0), name: '내 시드', seed: state.seed === DEMO_SEED ? null : state.seed, last: state.last, history: state.history.slice(-30) };
+      captureNormal(mine);
+      if (!list.some((x) => sameSlot(x, mine))) { list.push(mine); added.push(mine.id); kept = mine.name; }
+    }
+    // 저장한 시드가 있으면 받은 시드도 하나 더 만들어서 오가며 볼 수 있게
+    let slotId = null;
+    if (list.length) {
+      const ex = list.find((x) => sameSlot(x, d));
+      if (ex) slotId = ex.id;
+      else if (list.length < 10) {
+        const sl = { id: newId(1), name: d.name || '받은 시드', seed: d.seed, last: d.last, history: [], nseed: d.nseed, nlast: d.nlast, nhistory: [] };
+        list.push(sl); added.push(sl.id); slotId = sl.id;
+      }
+    }
+    if (!slotId && state.seed != null && !isNaN(state.seed)) state.history.push({ seed: state.seed, last: state.last, label: '시드 입력', cat: '받은 시드' });
+    else state.history = [];
+    state.slotId = slotId;
+    state.seed = d.seed; state.last = d.seed != null ? d.last : null; rows = STEP;
+    if (d.bannerId && bannerById(d.bannerId)) state.bannerId = d.bannerId;
+    if (nb) nb.set(d.nseed ?? null, d.nlast ?? null, []);
+    showImport(null);
+    persist(); renderAll();
+    UI.toast('받은 시드로 바꿨어요', '되돌리기', () => {
+      state.slots = (state.slots || []).filter((x) => !added.includes(x.id));
+      restore(snap);
+    }, kept ? '보던 시드는 "' + kept + '"로 저장해 뒀어요' : (slotId ? '저장한 시드에서 오가며 볼 수 있어요' : ''));
+  }
+  function importAdd(d) {
+    const snap = snapshot();
+    if (!Array.isArray(state.slots)) state.slots = [];
+    const list = state.slots, added = [];
+    let full = false;
+    d.slots.forEach((x, i) => {
+      if (list.some((y) => sameSlot(y, x))) return;
+      if (list.length >= 10) { full = true; return; }
+      const sl = { id: newId(i), name: x.name || '시드 ' + (list.length + 1), seed: x.seed, last: x.last, history: [], nseed: x.nseed, nlast: x.nlast, nhistory: [] };
+      list.push(sl); added.push(sl.id);
+    });
+    showImport(null);
+    if (!added.length) { persist(); renderAll(); toast(full ? '시드는 10개까지 저장돼요' : '이미 다 저장돼 있는 시드예요'); return; }
+    // 보던 시드가 없으면 가져온 첫 시드로 바꿈
+    const empty = !state.slotId && (state.seed == null || state.seed === DEMO_SEED);
+    if (empty) {
+      const to = list.find((x) => x.id === added[0]);
+      state.slotId = to.id; state.seed = to.seed; state.last = to.last; state.history = []; rows = STEP;
+      const nb = NB();
+      if (nb) nb.set(to.nseed ?? null, to.nlast || null, []);
+    }
+    persist(); renderAll();
+    UI.toast('시드 ' + added.length + '개 가져왔어요', '되돌리기', () => {
+      state.slots = (state.slots || []).filter((x) => !added.includes(x.id));
+      if (empty) restore(snap); else { persist(); renderAll(); }
+    }, full ? '10개까지만 저장돼서 몇 개는 못 넣었어요' : '위 "저장한 시드"에서 골라 봐');
+  }
+  function checkHash() {
+    const d = parseShared(location.hash);
+    if (!d) return;
+    showImport(d);
+    try { window.history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ }
+  }
+  $('shareOpen').addEventListener('click', () => {
+    const open = $('shareBox').hidden;
+    $('shareBox').hidden = !open;
+    $('shareOpen').setAttribute('aria-expanded', String(open));
+    if (open) renderShare(); else $('shareOut').hidden = true;
+  });
+  $('shareBox').addEventListener('click', (e) => { const t = e.target.closest('button[data-share]'); if (t && !t.disabled) makeLink(t.dataset.share); });
+  $('shareCopy').addEventListener('click', () => copyLink('복사했어요'));
+  $('shareSend').addEventListener('click', () => { if (navigator.share) navigator.share({ title: '냥코 배열', url: shareUrl }).catch(() => {}); });
+  function readPasted() {
+    const inp = $('shareIn');
+    const d = parseShared(inp.value);
+    if (!d) { inp.setAttribute('aria-invalid', 'true'); toast('링크나 코드를 못 읽었어요'); return; }
+    inp.value = ''; inp.setAttribute('aria-invalid', 'false');
+    showImport(d);
+    $('importBox').scrollIntoView({ block: 'nearest', behavior: smooth() });
+  }
+  $('shareImport').addEventListener('click', readPasted);
+  $('shareIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); readPasted(); } });
+  $('shareIn').addEventListener('input', (e) => e.target.setAttribute('aria-invalid', 'false'));
+  $('importBox').addEventListener('click', (e) => {
+    const t = e.target.closest('button[data-imp]'); if (!t || !imp) return;
+    const d = imp;
+    if (t.dataset.imp === 'use') importUse(d);
+    else if (t.dataset.imp === 'add') importAdd(d);
+    else showImport(null);
+  });
+  window.addEventListener('hashchange', checkHash);
 
   // ---------- events ----------
   $('strip').addEventListener('click', (e) => {
@@ -2749,6 +3215,7 @@ window.NyankoUI = (function () {
   readLocal();
   renderAll();
   connect();
+  checkHash();
 })();
 </script>
 <script>
