@@ -1991,7 +1991,8 @@ window.NyankoUI = (function () {
   const RNAME = ['레어', '슈퍼레어', '울트라', '레전드'];
   const RCLS = ['r-rare', 'r-supa', 'r-uber', 'r-legend'];
   // 블루 아이즈: 초·하이퍼 고양이 축제 한정 20종 (레전드 이자나기·이자나미 포함) / 버스터즈: 바스터즈 시리즈별 대장 5마리
-  const BLUE_IDS = new Set([838, 780, 691, 642, 586, 530, 381, 319, 270, 860, 788, 706, 658, 610, 544, 442, 379, 334, 732, 739]);
+  // 새로 나온 블루 아이즈는 매일 자동 업데이트가 data.js 의 tags.blue 에 추가함
+  const BLUE_IDS = new Set([838, 780, 691, 642, 586, 530, 381, 319, 270, 860, 788, 706, 658, 610, 544, 442, 379, 334, 732, 739].concat(((window.NYANKO_DATA && window.NYANKO_DATA.tags && window.NYANKO_DATA.tags.blue) || []).map(Number)));
   // 레드 묘반권 파이파이 · 에어 광전기병 레이 · 메탈 사쿠라 · 파동 지옥 경찰 엠마 · 초생명체 빛의 여신 시리우스
   const BUSTER_IDS = new Set([284, 287, 398, 560, 687]);
   const tagCls = (cat) => (!cat || cat.id == null) ? '' : BLUE_IDS.has(Number(cat.id)) ? 'c-blue' : BUSTER_IDS.has(Number(cat.id)) ? 'c-buster' : '';
@@ -3519,6 +3520,7 @@ window.NyankoUI = (function () {
       state.history = Array.isArray(d.history) ? d.history.slice() : [];
       state.slots = Array.isArray(d.slots) ? d.slots.slice(0, 10) : [];
       state.slotId = state.slots.some((x) => x.id === d.slotId) ? d.slotId : null;
+      if (tidySlots()) state.updatedAt = Date.now();
       if (d.gifts && GF()) GF().set(d.gifts);
       state.updatedAt = d.updatedAt || 0;
       rows = STEP; writeLocal(); renderAll();
@@ -3528,7 +3530,28 @@ window.NyankoUI = (function () {
   };
 
   // ---------- boot ----------
+  // 세션 정리: 예전에 예시 냥티 시드(3141592653)가 내 시드처럼 들어간 건 비우고,
+  // 그 때문에 이름·시드가 똑같아진 세션은 하나로 합침 (보상 받은 건 둘 다 남김)
+  function tidySlots() {
+    if (!Array.isArray(state.slots)) { state.slots = []; return false; }
+    let changed = false;
+    const out = [];
+    for (const sl of state.slots) {
+      if (!sl) { changed = true; continue; }
+      if (sl.nseed === 3141592653) { sl.nseed = null; sl.nlast = null; sl.nhistory = []; changed = true; }
+      const i = out.findIndex((x) => (x.name || '') === (sl.name || '') && x.seed === sl.seed && (x.nseed ?? null) === (sl.nseed ?? null));
+      if (i < 0) { out.push(sl); continue; }
+      changed = true;
+      const keep = sl.id === state.slotId ? sl : out[i], drop = keep === sl ? out[i] : sl;
+      keep.gifts = Object.assign({}, drop.gifts || {}, keep.gifts || {});
+      out[i] = keep;
+    }
+    state.slots = out;
+    if (state.slotId && !out.some((x) => x.id === state.slotId)) state.slotId = null;
+    return changed;
+  }
   readLocal();
+  if (tidySlots()) writeLocal();
   renderAll();
   connect();
   checkHash();
