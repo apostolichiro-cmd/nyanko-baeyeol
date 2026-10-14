@@ -239,12 +239,16 @@ button { cursor: pointer; }
 }
 .tile .v { font-weight: 700; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
 .tile .m { font-size: 12px; color: var(--muted); }
+.tile .alt { font-size: 12px; color: var(--ink-soft); line-height: 1.4; margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.tile .alt b { font-weight: 700; margin-right: 2px; }
+.tile.uber .alt b { color: var(--uber); }
+.tile.legend .alt b { color: var(--legend); }
 .tile.uber .v { color: var(--uber); }
 .tile.legend .v { color: var(--legend); }
 @media (max-width: 560px) {
   .summary { grid-template-columns: 1fr; }
   .tile { grid-template-columns: 92px minmax(0, 1fr); align-items: baseline; column-gap: 10px; }
-  .tile .m { grid-column: 2; }
+  .tile .m, .tile .alt { grid-column: 2; }
 }
 
 /* ---------- tools ---------- */
@@ -514,6 +518,8 @@ button.tile .eyebrow::after { content: ' ›'; }
 .ftoggle[data-grp="buster"] { color: var(--yel); }
 .ftoggle[data-grp="buster"][aria-pressed="true"] { background: var(--yel-bg); border-color: var(--yel); color: var(--yel); box-shadow: inset 0 0 0 1px var(--yel); }
 .ftoggle[data-grp="legend"] { color: var(--legend); }
+.ftoggle[data-grp="uber"] { color: var(--uber); }
+.ftoggle[data-grp="uber"][aria-pressed="true"] { background: var(--uber); border-color: var(--uber); color: var(--on-ink); }
 .ftoggle[data-grp="legend"][aria-pressed="true"] { background: var(--legend); border-color: var(--legend); color: var(--on-ink); }
 .flist .it em { font-style: normal; font-weight: 600; }
 .chk { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); font-weight: 500; min-height: 40px; }
@@ -910,6 +916,7 @@ button.tile .eyebrow::after { content: ' ›'; }
     <div class="ftools" id="plGrp">
       <button type="button" class="ftoggle" data-grp="blue" aria-pressed="false">블루 아이즈 아무나</button>
       <button type="button" class="ftoggle" data-grp="buster" aria-pressed="false">버스터즈 대장 아무나</button>
+      <button type="button" class="ftoggle" data-grp="uber" aria-pressed="false">울트라 아무나</button>
       <button type="button" class="ftoggle" data-grp="legend" aria-pressed="false">레전드 아무나</button>
     </div>
     <div class="ftools">
@@ -2277,13 +2284,15 @@ window.NyankoUI = (function () {
     const tiles = [];
     if (!tk) {
       const u = findR(2);
-      tiles.push(u ? tile('uber', '다음 울트라', esc(u.p.cat.name), '단챠 ' + (u.i + 1) + '번째 · ' + E.label(u.p.c))
-        : tile('uber', '다음 울트라', '없음', planRows() + '줄 안에서는 안 나와요'));
+      const ua = altRoute('uber', u);
+      tiles.push(u ? tile('uber', '다음 울트라', esc(u.p.cat.name), '단챠 ' + (u.i + 1) + '번째 · ' + E.label(u.p.c), ua && 'uber', ua)
+        : tile('uber', '다음 울트라', '없음', planRows() + '줄 안에서는 안 나와요', ua && 'uber', ua));
     }
     if (!tk || b.kind === 'legend') {
       const l = findR(3);
-      tiles.push(l ? tile('legend', '다음 레전드', esc(l.p.cat.name), (tk ? '티켓 ' + (l.i + 1) + '장째' : '단챠 ' + (l.i + 1) + '번째') + ' · ' + E.label(l.p.c))
-        : tile('legend', '다음 레전드', '없음', b.rates[3] ? planRows() + '줄 안에서는 안 나와요' : '이 가챠엔 레전드가 없어요'));
+      const la = tk ? '' : altRoute('legend', l);
+      tiles.push(l ? tile('legend', '다음 레전드', esc(l.p.cat.name), (tk ? '티켓 ' + (l.i + 1) + '장째' : '단챠 ' + (l.i + 1) + '번째') + ' · ' + E.label(l.p.c), la && 'legend', la)
+        : tile('legend', '다음 레전드', '없음', b.rates[3] ? planRows() + '줄 안에서는 안 나와요' : '이 가챠엔 레전드가 없어요', la && 'legend', la));
     }
     tiles.push(goalTile('blue', 'blue', '다음 블루 아이즈'), goalTile('buster', 'buster', '다음 버스터즈 대장'));
     for (let i = 0; tiles.length < 4 && i < pathPulls.length; i++) {
@@ -2292,8 +2301,20 @@ window.NyankoUI = (function () {
     }
     box.innerHTML = tiles.join('');
   }
-  function tile(cls, k, v, m) {
-    return '<div class="tile ' + cls + '"><span class="eyebrow">' + k + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span></div>';
+  // 단챠로만 가는 길 말고, 지금 가챠에서 확정 11연을 섞어 트랙을 바꾸면 더 싸게 받는 칸이 있으면 같이 보여줌
+  function altRoute(grp, single) {
+    if (!current || isTk(current.b)) return '';
+    const hs = [helperOf(current.b)];
+    const r = planRun(hs, goalFn(new Set([grp]), null));
+    if (r.none) return '';
+    const n = planCount(r, hs);
+    if (!n.ele || (single && n.cans >= (single.i + 1) * 150)) return '';
+    const hi = planHit(r);
+    return '<span class="alt"><b>11연 섞으면</b> ' + esc(hi.label) + ' ' + esc(hi.cat.name) + ' · ' + esc(n.text) + '</span>';
+  }
+  function tile(cls, k, v, m, grp, extra) {
+    const open = grp ? 'button type="button" data-goal="' + grp + '"' : 'div';
+    return '<' + open + ' class="tile ' + cls + '"><span class="eyebrow">' + k + '</span><span class="v">' + v + '</span><span class="m">' + m + '</span>' + (extra || '') + '</' + (grp ? 'button' : 'div') + '>';
   }
 
   // ---------- search ----------
@@ -2408,7 +2429,8 @@ window.NyankoUI = (function () {
     return (cat, rarity) => !!cat && ((!!keys && keys.has(E.catKey(cat)))
       || (grp.has('blue') && BLUE_IDS.has(Number(cat.id)))
       || (grp.has('buster') && BUSTER_IDS.has(Number(cat.id)))
-      || (grp.has('legend') && rarity === 3));
+      || (grp.has('legend') && rarity === 3)
+      || (grp.has('uber') && rarity === 2));
   }
   // 지금 시드에서 목표까지 제일 싼 경로 (표에 보이는 줄 안에서)
   function planRun(helpers, isT) {
