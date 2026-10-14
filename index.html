@@ -1820,7 +1820,7 @@ window.NyankoUI = (function () {
 
   const lastKey = (cat, rarity) => (cat && rarity === 0 ? E.catKey(cat) : '-');
 
-  // opts: { s, last, helpers: [{ b, single, eleven }], isTarget(cat, rarity), maxC, budget }
+  // opts: { s, last, helpers: [{ b, single, eleven }], isTarget(cat, rarity, isG), maxC, budget }  (isG: 11연 확정 칸)
   // 반환: { cost, edges: [{ kind: 's'|'e', bi, c, end, cats: [{ cat, rarity, c, rr, g }], last }], hitIdx, end, last } 또는 null
   function find(opts) {
     const { s, helpers, isTarget, maxC } = opts;
@@ -1863,7 +1863,7 @@ window.NyankoUI = (function () {
             const cats = g.steps.map((p) => ({ cat: p.cat, rarity: p.rarity, c: p.c, rr: p.rerolled }));
             cats.push({ cat: g.uber, rarity: 2, c, g: true });
             let hit = -1;
-            for (let i = 0; i < cats.length; i++) if (isTarget(cats[i].cat, cats[i].rarity)) { hit = i; break; }
+            for (let i = 0; i < cats.length; i++) if (isTarget(cats[i].cat, cats[i].rarity, !!cats[i].g)) { hit = i; break; }
             const edge = { kind: 'e', bi, c, end: g.end, cats, last: g.uber };
             relax(key, cost + h.eleven, n + 1, g.end, g.uber, '-', edge, hit);
           }
@@ -2310,6 +2310,7 @@ window.NyankoUI = (function () {
     const n = planCount(r, hs);
     if (!n.ele || (single && n.cans >= (single.i + 1) * 150)) return '';
     const hi = planHit(r);
+    if (single && hi.label === E.label(single.p.c)) return ''; // 단챠로 가는 칸이랑 같은 칸이면 안 보여줌
     return '<span class="alt"><b>11연 섞으면</b> ' + esc(hi.label) + ' ' + esc(hi.cat.name) + ' · ' + esc(n.text) + '</span>';
   }
   function tile(cls, k, v, m, grp, extra) {
@@ -2426,11 +2427,12 @@ window.NyankoUI = (function () {
   const longName = (b) => (b.kind === 'legend' ? '레전드 뽑기' : b.kind === 'platinum' ? '플래티넘 뽑기' : shortName(b));
 
   function goalFn(grp, keys) {
-    return (cat, rarity) => !!cat && ((!!keys && keys.has(E.catKey(cat)))
+    return (cat, rarity, isG) => !!cat && ((!!keys && keys.has(E.catKey(cat)))
       || (grp.has('blue') && BLUE_IDS.has(Number(cat.id)))
       || (grp.has('buster') && BUSTER_IDS.has(Number(cat.id)))
       || (grp.has('legend') && rarity === 3)
-      || (grp.has('uber') && rarity === 2));
+      // 울트라 아무나: 11연 확정 칸으로 받는 건 빼고 (확정은 11연만 하면 무조건 나오니까)
+      || (grp.has('uber') && rarity === 2 && !isG));
   }
   // 지금 시드에서 목표까지 제일 싼 경로 (표에 보이는 줄 안에서)
   function planRun(helpers, isT) {
