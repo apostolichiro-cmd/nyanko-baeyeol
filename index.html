@@ -2,6 +2,32 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<script>
+/* 주소 이사: 옛 주소(github.io)로 들어오면 이 브라우저에 저장된 시드·세션을 들고 catseedviewer.com으로 넘김 */
+(function () {
+  var OLD = 'apostolichiro-cmd.github.io', NEW = 'https://catseedviewer.com/';
+  try {
+    if (location.hostname === OLD) {
+      var data = {}, n = 0;
+      try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf('nyanko-') === 0) { data[k] = localStorage.getItem(k); n++; } } } catch (e) {}
+      var h = (location.hash || '').replace(/^#/, '');
+      var mig = n ? 'mig=' + btoa(unescape(encodeURIComponent(JSON.stringify(data)))).replace(/[+]/g, '-').replace(/[/]/g, '_').replace(/=+$/, '') : '';
+      var hash = [mig, h].filter(Boolean).join('&');
+      location.replace(NEW + (hash ? '#' + hash : ''));
+      return;
+    }
+    var m = (location.hash || '').match(/(?:^#|&)mig=([A-Za-z0-9_-]+)/);
+    if (!m) return;
+    if (document.referrer.indexOf('https://' + OLD + '/') === 0) {
+      var b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+      var d = JSON.parse(decodeURIComponent(escape(atob(b))));
+      for (var key in d) if (key.indexOf('nyanko-') === 0 && typeof d[key] === 'string' && localStorage.getItem(key) == null) localStorage.setItem(key, d[key]);
+    }
+    var rest = location.hash.replace(/(^#|&)mig=[A-Za-z0-9_-]+/, '$1').replace(/^#&/, '#');
+    history.replaceState(null, '', location.pathname + location.search + (rest === '#' ? '' : rest));
+  } catch (e) {}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F3F6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E1014" media="(prefers-color-scheme: dark)">
@@ -11,8 +37,8 @@
 <meta property="og:site_name" content="냥코 배열 뷰어">
 <meta property="og:title" content="냥코 배열 뷰어">
 <meta property="og:description" content="시드만 넣으면 레어 티켓·냥코 티켓 다음 뽑기랑 목표 캐릭터까지 경로를 보여줘요">
-<meta property="og:url" content="https://apostolichiro-cmd.github.io/nyanko-baeyeol/">
-<meta property="og:image" content="https://apostolichiro-cmd.github.io/nyanko-baeyeol/og3.jpg">
+<meta property="og:url" content="https://catseedviewer.com/">
+<meta property="og:image" content="https://catseedviewer.com/og3.jpg">
 <meta property="og:image:width" content="1536">
 <meta property="og:image:height" content="730">
 <meta property="og:image:alt" content="냥코 배열 뷰어 — A/B 배열 표와 목표까지 경로">
@@ -3030,8 +3056,8 @@ window.NyankoUI = (function () {
 
   // ---------- 링크로 보내기 · 백업 · 가져오기 ----------
   // 링크 끝 #k= 뒤에 시드 정보를 JSON → base64url 로 넣음 (서버에 안 감)
-  const SITE_URL = 'https://apostolichiro-cmd.github.io/nyanko-baeyeol/';
-  const linkBase = () => (location.hostname === 'apostolichiro-cmd.github.io' ? location.origin + location.pathname : SITE_URL);
+  const SITE_URL = 'https://catseedviewer.com/';
+  const linkBase = () => (/(^|\.)catseedviewer\.com$/.test(location.hostname) ? location.origin + location.pathname : SITE_URL);
   function packCode(obj) {
     const bytes = new TextEncoder().encode(JSON.stringify(obj));
     let bin = '';
