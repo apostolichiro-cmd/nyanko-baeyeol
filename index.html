@@ -2049,7 +2049,8 @@ window.NyankoUI = (function () {
     if (writing || !dirty || !userRef) return;
     writing = true; dirty = false;
     try {
-      await userRef.set({ seed: state.seed, last: state.last, bannerId: state.bannerId, history: state.history.slice(-40), updatedAt: state.updatedAt, slots: state.slots || [], slotId: state.slotId || null });
+      // 보상 받은 기록(gifts)까지 같이 올림. 예전엔 이게 빠져서 다른 기기에서 로그인하면 보상 받기가 비어 보였음
+      await userRef.set(window.NyankoRareSync.get());
     } catch (e) {
       if (e && e.code === 'invalid_argument') userRef = null; // this viewer cannot save; keep local only
     } finally {
@@ -3542,10 +3543,14 @@ window.NyankoUI = (function () {
       state.seed = d.seed ?? null; state.last = d.last ?? null;
       if (d.bannerId) state.bannerId = d.bannerId;
       state.history = Array.isArray(d.history) ? d.history.slice() : [];
+      const prevSlot = state.slotId || null;
       state.slots = Array.isArray(d.slots) ? d.slots.slice(0, 10) : [];
       state.slotId = state.slots.some((x) => x.id === d.slotId) ? d.slotId : null;
       if (tidySlots()) state.updatedAt = Date.now();
-      if (d.gifts && GF()) GF().set(d.gifts);
+      // 보상 받은 기록: 계정 쪽 기록이 없으면 지금 세션에 저장된 기록을 쓰고, 같은 세션이면 이 기기 기록이랑 합침 (지우지 않음)
+      const act = state.slots.find((x) => x.id === state.slotId);
+      const gin = d.gifts || (act && act.gifts) || null;
+      if (gin && GF()) GF().set((state.slotId || null) === prevSlot ? Object.assign({}, GF().get(), gin) : gin);
       state.updatedAt = d.updatedAt || 0;
       rows = STEP; writeLocal(); renderAll();
     },
@@ -4406,7 +4411,9 @@ function mergeRare(L, R) {
     changed = true;
   }
   // 보상 받은 건 양쪽 다 합침
-  if (older.gifts || out.gifts) {
+  // 합침. 단, 양쪽이 서로 다른 세션을 보고 있으면 안 합침 (그 기록은 각 세션 안에 따로 저장돼 있음)
+  const sa = older.slotId || null, sb = out.slotId || null;
+  if ((older.gifts || out.gifts) && (sa === sb || !sa || !sb)) {
     const gu = Object.assign({}, older.gifts || {}, out.gifts || {});
     if (Object.keys(gu).length !== Object.keys(out.gifts || {}).length) changed = true;
     out.gifts = gu;
